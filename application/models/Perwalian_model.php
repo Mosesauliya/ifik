@@ -1063,9 +1063,8 @@ class Perwalian_model extends CI_Model {
             elseif ($st1 === 'revisi') $stats['tahap1_revisi']++;
             else $stats['tahap1_draft']++;
 
-            // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' DAN sudah menginput nilai yang dihitung di Tahap 2
-            $totDinilai = (int)($r['total_dinilai'] ?? 0);
-            if ($st1 === 'disetujui' && $totDinilai > 0) {
+            // Selalu tampilkan & hitung mahasiswa yang Tahap 1-nya sudah 'Disetujui' pada Tahap 2
+            if ($st1 === 'disetujui') {
                 $stats['tahap2_total']++;
                 $totMk = (int)($r['total_mk'] ?? 0);
                 $totApproved = (int)($r['total_approved_mk'] ?? 0);

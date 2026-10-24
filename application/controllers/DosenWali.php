@@ -940,13 +940,12 @@ class DosenWali extends CI_Controller {
         $nip_primary = $this->_get_current_nip();
 
         $filters = [
-            'search'         => trim($this->input->get('search', true) ?? ''),
-            'status_tahap1'  => 'Disetujui', // Hanya mahasiswa yang KRS Tahap 1-nya sudah Disetujui (ACC)
-            'only_has_nilai' => true,        // Hanya mahasiswa yang sudah menginput nilai yang muncul di Tahap 2
-            'status_tahap2'  => trim($this->input->get('status_tahap2', true) ?? 'all'),
-            'tahun_ajaran'   => trim($this->input->get('tahun_ajaran', true) ?? 'all'),
-            'semester'       => trim($this->input->get('semester', true) ?? 'all'),
-            'prodi'          => trim($this->input->get('prodi', true) ?? 'all'),
+            'search'        => trim($this->input->get('search', true) ?? ''),
+            'status_tahap1' => 'Disetujui', // Selalu tampilkan mahasiswa yang KRS Tahap 1-nya sudah Disetujui (ACC)
+            'status_tahap2' => trim($this->input->get('status_tahap2', true) ?? 'all'),
+            'tahun_ajaran'  => trim($this->input->get('tahun_ajaran', true) ?? 'all'),
+            'semester'      => trim($this->input->get('semester', true) ?? 'all'),
+            'prodi'         => trim($this->input->get('prodi', true) ?? 'all'),
         ];
 
         $filter_options = $this->Perwalian_model->get_filter_options();

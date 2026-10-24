@@ -851,89 +851,147 @@
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL: PERSETUJUAN NILAI TAHAP 2 (SATU-SATU PER MK & MULTIPLE APPROVE)    -->
+    <!-- MODAL: PERSETUJUAN NILAI TAHAP 2 + CROSS-CHECK BERKAS KRS (SPLIT/TABS)    -->
     <!-- ========================================================================= -->
-    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
+    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-3 md:p-4">
+        <div class="clay-card w-full max-w-[96vw] xl:max-w-7xl h-[80vh] max-h-[82dvh] sm:h-[92vh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
             <!-- Modal Header -->
-            <div class="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 shrink-0">
-                <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
-                        <i class="fa-solid fa-award text-base sm:text-lg"></i>
+            <div class="px-3.5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-xs">
+                <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
+                        <i class="fa-solid fa-award text-sm sm:text-base"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-bold text-sm sm:text-base leading-tight truncate" id="m2MhsNama">Nama Mahasiswa</h3>
-                        <p class="text-[11px] sm:text-xs text-purple-200 truncate">
-                            NIM: <span class="font-mono font-bold" id="m2MhsNim">-</span> | 
-                            Prodi: <span id="m2MhsProdi">-</span> | 
-                            Periode: <span id="m2MhsPeriode">-</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h3 class="font-bold text-xs sm:text-base leading-tight truncate" id="m2MhsNama">Nama Mahasiswa</h3>
+                            <span id="m2StatusBadge" class="px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full bg-white/20 text-white border border-white/30 shrink-0"></span>
+                        </div>
+                        <p class="text-[10px] sm:text-xs text-purple-200 truncate mt-0.5">
+                            NIM: <span class="font-mono font-bold text-white" id="m2MhsNim">-</span> | 
+                            Prodi: <span class="text-white font-medium" id="m2MhsProdi">-</span> | 
+                            <span class="hidden sm:inline">Periode: <span class="text-white font-medium" id="m2MhsPeriode">-</span> | </span>
+                            Beban: <span class="font-mono font-bold text-white"><span id="m2TotalSks">0</span> SKS</span> (<span id="m2CountMk">0 Mata Kuliah</span>)
                         </p>
                     </div>
                 </div>
                 <button type="button" onclick="closeGradingModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shrink-0 cursor-pointer">
-                    <i class="fa-solid fa-xmark text-sm"></i>
+                    <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-3.5 sm:space-y-4">
-                <!-- Info Banner & Multiple Approve Toolbar -->
-                <div class="p-3 sm:p-4 rounded-xl bg-purple-50/80 border border-purple-200 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
-                    <div>
-                        <h4 class="text-xs font-bold text-purple-900 flex items-center">
-                            <i class="fa-solid fa-circle-info text-purple-600 mr-1.5"></i> Persetujuan Nilai Mata Kuliah (Tahap 2)
-                        </h4>
-                        <p class="text-[11px] text-purple-800 mt-0.5 leading-relaxed">
-                            Nilai diinput oleh mahasiswa (<strong class="text-emerald-700">A–C = Lulus 🟢</strong>, <strong class="text-rose-700">D–E = Tidak Lulus 🔴</strong>). Anda dapat melakukan <strong>Approve satu per satu</strong> per mata kuliah atau mencentang beberapa MK untuk <strong>Multiple Approve</strong>.
-                        </p>
+            <!-- Mobile Tab Switcher (Hanya Muncul di Tampilan Layar HP / < lg) -->
+            <div class="block lg:hidden px-3 py-2 bg-slate-100 border-b border-slate-200 shrink-0">
+                <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-xl text-[11px] sm:text-xs font-bold gap-1 select-none">
+                    <button type="button" onclick="switchMobileModalTabT2('input')" id="m2TabBtnInput" class="py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-purple-700 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-list-check shrink-0"></i>
+                        <span class="truncate">Approval Nilai</span>
+                        <span class="text-[10px] leading-none px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 font-mono whitespace-nowrap shrink-0" id="m2TabBadgeMk">0 MK</span>
+                    </button>
+                    <button type="button" onclick="switchMobileModalTabT2('berkas')" id="m2TabBtnBerkas" class="py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i class="fa-solid fa-file-pdf text-rose-500 shrink-0"></i>
+                        <span class="truncate">Berkas KRS</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Modal Body: Side-by-Side on Desktop (lg), Tabbed Full-Height on Mobile (< lg) -->
+            <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-100 min-h-0 relative">
+                <!-- Panel Kiri: Dokumen Berkas KRS Mahasiswa (Selalu Ditampilkan) -->
+                <div id="m2PanelBerkas" class="hidden lg:flex lg:col-span-5 xl:col-span-5 flex-col h-full border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-900 overflow-hidden min-h-0">
+                    <div class="px-3.5 py-2 sm:py-2.5 bg-slate-800 text-slate-200 border-b border-slate-700/80 flex items-center justify-between gap-2 shrink-0">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <i class="fa-solid fa-file-invoice text-purple-400 text-xs sm:text-sm shrink-0"></i>
+                            <span class="text-xs font-bold text-slate-100 truncate">Berkas KRS / KHS Mahasiswa</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5 shrink-0" id="m2DocActions">
+                            <a id="m2DocOpenNewTab" href="#" target="_blank" class="px-2.5 py-1 text-[11px] font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Tab Baru
+                            </a>
+                        </div>
                     </div>
-                    <div class="flex flex-wrap items-center gap-2 shrink-0">
-                        <button type="button" id="btnBulkApproveMk" onclick="submitBulkApproveMkTahap2()" disabled class="flex-1 sm:flex-none px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-45 disabled:pointer-events-none rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
-                            <i class="fa-solid fa-check-double"></i>
-                            <span id="btnBulkApproveText">Approve Terpilih (0)</span>
-                        </button>
-                        <button type="button" id="btnApproveAllMk" onclick="submitApproveAllMkTahap2()" class="flex-1 sm:flex-none px-3.5 py-2 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
-                            <i class="fa-solid fa-circle-check"></i>
-                            <span>Approve Semua MK</span>
+
+                    <!-- Viewer Container (PDF / Image Iframe) -->
+                    <div class="flex-grow relative bg-slate-950 overflow-hidden flex items-center justify-center min-h-0" id="m2DocViewerBox">
+                        <iframe id="m2DocFrame" src="" class="w-full h-full border-0 bg-white"></iframe>
+                        <div id="m2DocEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-400 bg-slate-900/95 z-10">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center mx-auto mb-2 text-xl">
+                                <i class="fa-solid fa-file-circle-xmark"></i>
+                            </div>
+                            <p class="font-bold text-xs sm:text-sm text-slate-300">Belum Ada Berkas KRS Diunggah</p>
+                            <p class="text-[11px] text-slate-400 mt-1 max-w-xs leading-relaxed">Mahasiswa belum mengunggah file slip/draft KRS fisik. Anda tetap dapat meninjau daftar mata kuliah dan nilai pada panel kanan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Beralih Cepat ke Input di Mobile -->
+                    <div class="p-2.5 bg-slate-800 border-t border-slate-700 block lg:hidden shrink-0">
+                        <button type="button" onclick="switchMobileModalTabT2('input')" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-list-check"></i> Kembali ke Tabel Approval Nilai ➔
                         </button>
                     </div>
                 </div>
 
-                <!-- Approval Table -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 flex-wrap">
-                        <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer select-none">
-                            <input type="checkbox" id="checkAllMkTahap2" onchange="toggleSelectAllMkTahap2(this.checked)" class="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer">
-                            <span class="uppercase tracking-wider">Pilih Semua Mata Kuliah</span>
-                            <span id="m2SelectedCountBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 hidden">0 dipilih</span>
-                        </label>
-                        <span class="text-xs font-mono font-bold text-slate-600" id="m2GradingProgressText">0 / 0 MK Disetujui</span>
-                    </div>
-                    <div class="block sm:hidden text-[10px] text-slate-400 text-right px-3 py-1 bg-slate-50/50 border-b border-slate-100">
-                        Geser tabel ke kanan untuk melihat nilai & tombol approve 👉
-                    </div>
-                    <div class="overflow-x-auto sm:overflow-x-visible">
-                        <table class="w-full min-w-[620px] sm:min-w-0 text-left text-xs">
-                            <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="py-2.5 px-2.5 w-10 text-center whitespace-nowrap">Pilih</th>
-                                    <th class="py-2.5 px-2 w-10 text-center whitespace-nowrap">No</th>
-                                    <th class="py-2.5 px-2.5 whitespace-nowrap">Kode MK</th>
-                                    <th class="py-2.5 px-2.5">Nama Mata Kuliah</th>
-                                    <th class="py-2.5 px-2.5 text-center w-12 whitespace-nowrap">SKS</th>
-                                    <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Nilai Huruf</th>
-                                    <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Status Kelulusan</th>
-                                    <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Aksi Approve</th>
-                                </tr>
-                            </thead>
-                            <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-                        </table>
+                <!-- Panel Kanan: Tabel Persetujuan Nilai Mata Kuliah (Satu-Satu & Multiple Approve) -->
+                <div id="m2PanelInput" class="flex lg:flex lg:col-span-7 xl:col-span-7 flex-col h-full bg-white overflow-hidden min-h-0">
+                    <div class="p-3 sm:p-4 overflow-y-auto flex-grow space-y-3 min-h-0">
+                        <!-- Info Banner & Multiple Approve Toolbar -->
+                        <div class="p-3 rounded-xl bg-purple-50/80 border border-purple-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
+                            <div>
+                                <h4 class="text-xs font-bold text-purple-900 flex items-center">
+                                    <i class="fa-solid fa-circle-info text-purple-600 mr-1.5"></i> Persetujuan Nilai Mata Kuliah (Tahap 2)
+                                </h4>
+                                <p class="text-[11px] text-purple-800 mt-0.5 leading-relaxed">
+                                    Cocokkan dengan berkas KRS di sebelah kiri. Nilai diinput oleh mahasiswa (<strong class="text-emerald-700">A–C = Lulus 🟢</strong>, <strong class="text-rose-700">D–E = Tidak Lulus 🔴</strong>). Approve satu per satu atau centang untuk <strong>Multiple Approve</strong>.
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <button type="button" id="btnBulkApproveMk" onclick="submitBulkApproveMkTahap2()" disabled class="flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-45 disabled:pointer-events-none rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                                    <i class="fa-solid fa-check-double"></i>
+                                    <span id="btnBulkApproveText">Approve Terpilih (0)</span>
+                                </button>
+                                <button type="button" id="btnApproveAllMk" onclick="submitApproveAllMkTahap2()" class="flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>Approve Semua MK</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Approval Table -->
+                        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                            <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 flex-wrap">
+                                <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer select-none">
+                                    <input type="checkbox" id="checkAllMkTahap2" onchange="toggleSelectAllMkTahap2(this.checked)" class="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer">
+                                    <span class="uppercase tracking-wider">Pilih Semua Mata Kuliah</span>
+                                    <span id="m2SelectedCountBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 hidden">0 dipilih</span>
+                                </label>
+                                <span class="text-xs font-mono font-bold text-slate-600" id="m2GradingProgressText">0 / 0 MK Disetujui</span>
+                            </div>
+                            <div class="block sm:hidden text-[10px] text-slate-400 text-right px-3 py-1 bg-slate-50/50 border-b border-slate-100">
+                                Geser tabel ke kanan untuk melihat nilai & tombol approve 👉
+                            </div>
+                            <div class="overflow-x-auto sm:overflow-x-visible">
+                                <table class="w-full min-w-[600px] sm:min-w-0 text-left text-xs">
+                                    <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
+                                        <tr>
+                                            <th class="py-2.5 px-2 w-9 text-center whitespace-nowrap">Pilih</th>
+                                            <th class="py-2.5 px-2 w-9 text-center whitespace-nowrap">No</th>
+                                            <th class="py-2.5 px-2 whitespace-nowrap">Kode MK</th>
+                                            <th class="py-2.5 px-2">Nama Mata Kuliah</th>
+                                            <th class="py-2.5 px-2 text-center w-11 whitespace-nowrap">SKS</th>
+                                            <th class="py-2.5 px-2 text-center whitespace-nowrap">Nilai Huruf</th>
+                                            <th class="py-2.5 px-2 text-center whitespace-nowrap">Status Kelulusan</th>
+                                            <th class="py-2.5 px-2 text-center whitespace-nowrap">Aksi Approve</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
 
             <!-- Modal Footer -->
-            <div class="hidden sm:flex px-4 py-2.5 sm:px-6 sm:py-3 bg-slate-50 border-t border-slate-200 items-center justify-between shrink-0">
+            <div class="hidden sm:flex px-4 py-2 sm:py-2.5 bg-slate-50 border-t border-slate-200 items-center justify-between shrink-0">
                 <span class="text-[11px] text-slate-500 italic">Persetujuan tersimpan otomatis ke sistem saat tombol Approve diklik.</span>
                 <button type="button" onclick="closeGradingModal()" class="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center cursor-pointer">
                     Tutup
@@ -1067,6 +1125,45 @@
         let parsedImportRows = [];
         let importTargetIdPerwalian = null;
 
+        function switchMobileModalTabT2(tab) {
+            const panelBerkas = document.getElementById('m2PanelBerkas');
+            const panelInput = document.getElementById('m2PanelInput');
+            const btnInput = document.getElementById('m2TabBtnInput');
+            const btnBerkas = document.getElementById('m2TabBtnBerkas');
+
+            if (tab === 'berkas') {
+                if (panelBerkas) {
+                    panelBerkas.classList.remove('hidden');
+                    panelBerkas.classList.add('flex');
+                }
+                if (panelInput) {
+                    panelInput.classList.add('hidden');
+                    panelInput.classList.remove('flex');
+                }
+                if (btnBerkas) {
+                    btnBerkas.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-purple-700 shadow-xs cursor-pointer";
+                }
+                if (btnInput) {
+                    btnInput.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            } else {
+                if (panelBerkas) {
+                    panelBerkas.classList.add('hidden');
+                    panelBerkas.classList.remove('flex');
+                }
+                if (panelInput) {
+                    panelInput.classList.remove('hidden');
+                    panelInput.classList.add('flex');
+                }
+                if (btnInput) {
+                    btnInput.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-purple-700 shadow-xs cursor-pointer";
+                }
+                if (btnBerkas) {
+                    btnBerkas.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            }
+        }
+
         async function openGradingModal(idPerwalian) {
             Swal.fire({
                 title: 'Memuat Form Penilaian...',
@@ -1093,6 +1190,50 @@
                 document.getElementById('m2MhsProdi').innerText = p.prodi || p.user_prodi || '-';
                 document.getElementById('m2MhsPeriode').innerText = `${p.tahun_ajaran} (${p.semester})`;
 
+                const stEl = document.getElementById('m2StatusBadge');
+                if (stEl) {
+                    const st2 = p.status_tahap2 || 'Belum Dinilai';
+                    stEl.innerText = st2;
+                    stEl.className = 'px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full border shrink-0 ' +
+                        (st2 === 'Selesai' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-300/40' :
+                        (st2 === 'Proses Penilaian' ? 'bg-amber-500/20 text-amber-100 border-amber-300/40' :
+                        'bg-white/20 text-white border-white/30'));
+                }
+
+                const elTotalSks = document.getElementById('m2TotalSks');
+                if (elTotalSks) elTotalSks.innerText = currentPerwalian2.total_sks || 0;
+
+                const elCountMk = document.getElementById('m2CountMk');
+                if (elCountMk) elCountMk.innerText = `${mkList.length} Mata Kuliah`;
+
+                const elTabBadgeMk = document.getElementById('m2TabBadgeMk');
+                if (elTabBadgeMk) elTabBadgeMk.innerText = `${mkList.length} MK`;
+
+                // Selalu Tampilkan Berkas KRS di Panel Kiri (Split-View Cross-Check)
+                const docFrame = document.getElementById('m2DocFrame');
+                const docEmpty = document.getElementById('m2DocEmpty');
+                const docOpenNewTab = document.getElementById('m2DocOpenNewTab');
+                const docActions = document.getElementById('m2DocActions');
+
+                if (p.file_krs && p.file_krs.trim() !== '') {
+                    const docUrl = `<?= base_url('uploads/krs/'); ?>${p.file_krs}`;
+                    if (docFrame) {
+                        docFrame.src = docUrl;
+                        docFrame.classList.remove('hidden');
+                    }
+                    if (docEmpty) docEmpty.classList.add('hidden');
+                    if (docOpenNewTab) docOpenNewTab.href = docUrl;
+                    if (docActions) docActions.classList.remove('hidden');
+                } else {
+                    if (docFrame) {
+                        docFrame.src = '';
+                        docFrame.classList.add('hidden');
+                    }
+                    if (docEmpty) docEmpty.classList.remove('hidden');
+                    if (docActions) docActions.classList.add('hidden');
+                }
+
+                switchMobileModalTabT2('input');
                 renderGradingModalTable(mkList);
                 document.getElementById('modalGradingTahap2').classList.remove('hidden');
             } catch (err) {
@@ -1383,6 +1524,15 @@
                     const progEl = document.getElementById('m2GradingProgressText');
                     if (progEl) {
                         progEl.innerText = `${json.data.total_approved_mk} / ${json.data.total_mk} MK Disetujui`;
+                    }
+                    const stEl = document.getElementById('m2StatusBadge');
+                    if (stEl && json.data.status_tahap2) {
+                        const st2 = json.data.status_tahap2;
+                        stEl.innerText = st2;
+                        stEl.className = 'px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full border shrink-0 ' +
+                            (st2 === 'Selesai' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-300/40' :
+                            (st2 === 'Proses Penilaian' ? 'bg-amber-500/20 text-amber-100 border-amber-300/40' :
+                            'bg-white/20 text-white border-white/30'));
                     }
                     onMkCheckboxChange();
 
