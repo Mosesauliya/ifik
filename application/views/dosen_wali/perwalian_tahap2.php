@@ -854,7 +854,7 @@
     <!-- MODAL: PERSETUJUAN NILAI TAHAP 2 + CROSS-CHECK BERKAS KRS (SPLIT/TABS)    -->
     <!-- ========================================================================= -->
     <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-3 md:p-4">
-        <div class="clay-card w-full max-w-[96vw] xl:max-w-7xl h-[80vh] max-h-[82dvh] sm:h-[92vh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
+        <div class="clay-card w-full max-w-[96vw] xl:max-w-[88rem] h-[80vh] max-h-[82dvh] sm:h-[92vh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
             <!-- Modal Header -->
             <div class="px-3.5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-xs">
                 <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
@@ -969,17 +969,16 @@
                                 Geser tabel ke kanan untuk melihat nilai & tombol approve 👉
                             </div>
                             <div class="overflow-x-auto sm:overflow-x-visible">
-                                <table class="w-full min-w-[600px] sm:min-w-0 text-left text-xs">
+                                <table class="w-full text-left text-xs">
                                     <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
                                         <tr>
-                                            <th class="py-2.5 px-2 w-9 text-center whitespace-nowrap">Pilih</th>
-                                            <th class="py-2.5 px-2 w-9 text-center whitespace-nowrap">No</th>
-                                            <th class="py-2.5 px-2 whitespace-nowrap">Kode MK</th>
-                                            <th class="py-2.5 px-2">Nama Mata Kuliah</th>
-                                            <th class="py-2.5 px-2 text-center w-11 whitespace-nowrap">SKS</th>
-                                            <th class="py-2.5 px-2 text-center whitespace-nowrap">Nilai Huruf</th>
-                                            <th class="py-2.5 px-2 text-center whitespace-nowrap">Status Kelulusan</th>
-                                            <th class="py-2.5 px-2 text-center whitespace-nowrap">Aksi Approve</th>
+                                            <th class="py-2.5 pl-3 pr-1.5 w-8 text-center whitespace-nowrap">Pilih</th>
+                                            <th class="py-2.5 px-1.5 w-8 text-center whitespace-nowrap">No</th>
+                                            <th class="py-2.5 px-2">Mata Kuliah</th>
+                                            <th class="py-2.5 px-1.5 text-center w-10 whitespace-nowrap">SKS</th>
+                                            <th class="py-2.5 px-1.5 text-center whitespace-nowrap">Nilai</th>
+                                            <th class="py-2.5 px-1.5 text-center whitespace-nowrap">Status</th>
+                                            <th class="py-2.5 pl-1.5 pr-3 text-center whitespace-nowrap">Aksi</th>
                                         </tr>
                                     </thead>
                                     <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -1258,7 +1257,7 @@
             if (!mkList || mkList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="py-8 text-center text-slate-400">
+                        <td colspan="7" class="py-8 text-center text-slate-400">
                             <i class="fa-solid fa-book-open text-2xl text-slate-300 mb-2 block"></i>
                             <p class="font-medium text-slate-600">Belum ada mata kuliah yang dikontrak untuk semester ini.</p>
                             <p class="text-xs text-slate-400 mt-1">Mata kuliah ditentukan dari hasil pengajuan KRS di Tahap 1 atau setup oleh Admin Prodi.</p>
@@ -1285,7 +1284,7 @@
                     // Header Pemisah Semester
                     tbody.innerHTML += `
                         <tr class="bg-gradient-to-r from-purple-50/90 via-indigo-50/60 to-purple-50/90 border-y border-purple-200/80">
-                            <td colspan="8" class="py-2 px-3.5">
+                            <td colspan="7" class="py-2 px-3">
                                 <div class="flex items-center justify-between text-xs font-bold text-purple-950">
                                     <span class="flex items-center gap-1.5">
                                         <i class="fa-solid fa-graduation-cap text-purple-600 text-sm"></i>
@@ -1312,33 +1311,35 @@
                         const isTidakLulus = (status === 'Tidak Lulus');
 
                         const gradeBadgeHtml = hasGrade
-                            ? `<span class="inline-flex items-center justify-center min-w-[2.25rem] px-2.5 py-0.5 text-xs font-mono font-extrabold rounded-lg border whitespace-nowrap ${isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}">${escapeHtml(grade)}</span>`
-                            : `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium text-slate-400 bg-slate-100 rounded-md border border-slate-200 whitespace-nowrap">Belum Diinput</span>`;
+                            ? `<span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-xs font-mono font-extrabold rounded-md border whitespace-nowrap ${isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}">${escapeHtml(grade)}</span>`
+                            : `<span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-[11px] font-mono font-bold text-slate-400 bg-slate-100 rounded-md border border-slate-200 whitespace-nowrap" title="Mahasiswa belum menginput nilai">-</span>`;
 
                         const statusBadgeHtml = isLulus 
-                            ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Lulus</span>`
+                            ? `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Lulus</span>`
                             : (isTidakLulus 
-                                ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i> Tidak Lulus</span>`
-                                : `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Ada Nilai</span>`);
+                                ? `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i> Tidak Lulus</span>`
+                                : `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Ada Nilai</span>`);
 
                         const approveActionHtml = renderMkApproveActionHtml(mk.id, isApproved, hasGrade);
 
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-50/60 transition ${isApproved ? 'bg-emerald-50/20' : (!hasGrade ? 'bg-slate-50/40' : '')}" id="m2Row_${mk.id}">
-                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
+                                <td class="py-2.5 pl-3 pr-1.5 text-center whitespace-nowrap">
                                     <input type="checkbox" class="mk-approve-cb w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 ${hasGrade ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}" value="${mk.id}" data-approved="${isApproved ? '1' : '0'}" data-has-grade="${hasGrade ? '1' : '0'}" ${hasGrade ? '' : 'disabled title="Mahasiswa belum menginput nilai pada mata kuliah ini"'} onchange="onMkCheckboxChange()">
                                 </td>
-                                <td class="py-2.5 px-2 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
-                                <td class="py-2.5 px-2.5 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(mk.kode_mk)}</td>
-                                <td class="py-2.5 px-2.5 font-medium text-slate-800 max-w-[160px] sm:max-w-[220px]">
-                                    <div class="truncate" title="${escapeHtml(mk.nama_mk)}">${escapeHtml(mk.nama_mk)}</div>
+                                <td class="py-2.5 px-1.5 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
+                                <td class="py-2.5 px-2 text-slate-800">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-slate-100 text-slate-800 rounded border border-slate-200 shrink-0">${escapeHtml(mk.kode_mk)}</span>
+                                        <span class="font-medium text-slate-800 truncate max-w-[130px] xl:max-w-[175px]" title="${escapeHtml(mk.nama_mk)}">${escapeHtml(mk.nama_mk)}</span>
+                                    </div>
                                 </td>
-                                <td class="py-2.5 px-2.5 text-center font-mono font-semibold whitespace-nowrap">${mk.sks}</td>
-                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap">${gradeBadgeHtml}</td>
-                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="m2StatusCol_${mk.id}">
+                                <td class="py-2.5 px-1.5 text-center font-mono font-semibold whitespace-nowrap">${mk.sks}</td>
+                                <td class="py-2.5 px-1.5 text-center whitespace-nowrap">${gradeBadgeHtml}</td>
+                                <td class="py-2.5 px-1.5 text-center whitespace-nowrap" id="m2StatusCol_${mk.id}">
                                     ${statusBadgeHtml}
                                 </td>
-                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="m2ApproveCol_${mk.id}">
+                                <td class="py-2.5 pl-1.5 pr-3 text-center whitespace-nowrap" id="m2ApproveCol_${mk.id}">
                                     ${approveActionHtml}
                                 </td>
                             </tr>
@@ -1357,26 +1358,26 @@
         function renderMkApproveActionHtml(idDetail, isApproved, hasGrade = true) {
             if (!hasGrade && !isApproved) {
                 return `
-                    <span class="inline-flex items-center justify-center px-2.5 py-1 text-[11px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded-lg cursor-not-allowed whitespace-nowrap select-none" title="Tidak dapat di-approve karena mahasiswa belum menginput nilai">
-                        <i class="fa-solid fa-lock mr-1 text-[10px]"></i> Belum Dinilai
+                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded-lg cursor-not-allowed whitespace-nowrap select-none" title="Tidak dapat di-approve karena mahasiswa belum menginput nilai">
+                        <i class="fa-solid fa-lock mr-1 text-[9px]"></i> Belum Dinilai
                     </span>
                 `;
             }
             if (isApproved) {
                 return `
-                    <div class="inline-flex items-center justify-center gap-1.5">
-                        <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-bold rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    <div class="inline-flex items-center justify-center gap-1">
+                        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300">
                             <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Approved
                         </span>
-                        <button type="button" onclick="approveSingleMkTahap2(${idDetail}, 0)" class="px-2 py-1 text-[10px] font-semibold text-slate-500 hover:text-rose-700 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg transition cursor-pointer" title="Batalkan Approval MK Ini">
+                        <button type="button" onclick="approveSingleMkTahap2(${idDetail}, 0)" class="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-rose-700 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg transition cursor-pointer" title="Batalkan Approval MK Ini">
                             Batal
                         </button>
                     </div>
                 `;
             }
             return `
-                <button type="button" onclick="approveSingleMkTahap2(${idDetail}, 1)" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-lg shadow-2xs transition cursor-pointer whitespace-nowrap">
-                    <i class="fa-solid fa-check mr-1.5"></i> Approve
+                <button type="button" onclick="approveSingleMkTahap2(${idDetail}, 1)" class="inline-flex items-center justify-center px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-lg shadow-2xs transition cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-check mr-1"></i> Approve
                 </button>
             `;
         }
