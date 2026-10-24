@@ -889,17 +889,17 @@
                         Geser tabel ke kanan untuk melihat nilai & tombol approve 👉
                     </div>
                     <div class="overflow-x-auto">
-                        <table class="w-full min-w-[660px] text-left text-xs">
+                        <table class="w-full min-w-[700px] text-left text-xs">
                             <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
                                 <tr>
-                                    <th class="py-2.5 px-3 w-10 text-center">Pilih</th>
-                                    <th class="py-2.5 px-2.5 w-10 text-center">No</th>
-                                    <th class="py-2.5 px-3">Kode MK</th>
+                                    <th class="py-2.5 px-3 w-10 text-center whitespace-nowrap">Pilih</th>
+                                    <th class="py-2.5 px-2.5 w-10 text-center whitespace-nowrap">No</th>
+                                    <th class="py-2.5 px-3 whitespace-nowrap">Kode MK</th>
                                     <th class="py-2.5 px-3">Nama Mata Kuliah</th>
-                                    <th class="py-2.5 px-3 text-center w-14">SKS</th>
-                                    <th class="py-2.5 px-3 text-center w-28">Nilai Huruf</th>
-                                    <th class="py-2.5 px-3 text-center w-36">Status Kelulusan</th>
-                                    <th class="py-2.5 px-3 text-center w-40">Aksi Approve</th>
+                                    <th class="py-2.5 px-3 text-center w-14 whitespace-nowrap">SKS</th>
+                                    <th class="py-2.5 px-3 text-center whitespace-nowrap">Nilai Huruf</th>
+                                    <th class="py-2.5 px-3 text-center whitespace-nowrap">Status Kelulusan</th>
+                                    <th class="py-2.5 px-3 text-center whitespace-nowrap">Aksi Approve</th>
                                 </tr>
                             </thead>
                             <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -1146,28 +1146,28 @@
                         const isTidakLulus = (status === 'Tidak Lulus');
 
                         const gradeBadgeHtml = grade
-                            ? `<span class="inline-flex items-center justify-center min-w-[2.25rem] px-2.5 py-1 text-xs font-mono font-extrabold rounded-lg border ${isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}">${escapeHtml(grade)}</span>`
-                            : `<span class="inline-flex items-center px-2 py-0.5 text-[11px] font-medium text-slate-400 bg-slate-100 rounded-md border border-slate-200">Belum Diinput</span>`;
+                            ? `<span class="inline-flex items-center justify-center min-w-[2.25rem] px-2.5 py-0.5 text-xs font-mono font-extrabold rounded-lg border whitespace-nowrap ${isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}">${escapeHtml(grade)}</span>`
+                            : `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium text-slate-400 bg-slate-100 rounded-md border border-slate-200 whitespace-nowrap">Belum Diinput</span>`;
 
                         const statusBadgeHtml = isLulus 
-                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
+                            ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Lulus</span>`
                             : (isTidakLulus 
-                                ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
-                                : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Ada Nilai</span>`);
+                                ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i> Tidak Lulus</span>`
+                                : `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Ada Nilai</span>`);
 
                         const approveActionHtml = renderMkApproveActionHtml(mk.id, isApproved);
 
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-50/60 transition ${isApproved ? 'bg-emerald-50/20' : ''}" id="m2Row_${mk.id}">
-                                <td class="py-2.5 px-3 text-center">
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
                                     <input type="checkbox" class="mk-approve-cb w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer" value="${mk.id}" data-approved="${isApproved ? '1' : '0'}" onchange="onMkCheckboxChange()">
                                 </td>
-                                <td class="py-2.5 px-2.5 text-center font-mono text-slate-400">${idx + 1}</td>
-                                <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
+                                <td class="py-2.5 px-2.5 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
+                                <td class="py-2.5 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(mk.kode_mk)}</td>
                                 <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
-                                <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
-                                <td class="py-2.5 px-3 text-center">${gradeBadgeHtml}</td>
-                                <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
+                                <td class="py-2.5 px-3 text-center font-mono font-semibold whitespace-nowrap">${mk.sks}</td>
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap">${gradeBadgeHtml}</td>
+                                <td class="py-2.5 px-3 text-center whitespace-nowrap" id="m2StatusCol_${mk.id}">
                                     ${statusBadgeHtml}
                                 </td>
                                 <td class="py-2.5 px-3 text-center whitespace-nowrap" id="m2ApproveCol_${mk.id}">
