@@ -977,8 +977,10 @@ class Perwalian_model extends CI_Model {
         $rows = $this->db->get()->result_array();
 
         // Self-healing: pastikan status_tahap2 selalu sinkron dengan jumlah MK yang sudah di-approve Dosen Wali
+        $filteredRows = [];
         foreach ($rows as &$r) {
             $totMk = (int)($r['total_mk'] ?? 0);
+            $totDinilai = (int)($r['total_dinilai'] ?? 0);
             $totApproved = (int)($r['total_approved_mk'] ?? 0);
             $curSt2 = $r['status_tahap2'] ?? 'Belum Dinilai';
 
@@ -996,10 +998,16 @@ class Perwalian_model extends CI_Model {
                     'status_tahap2' => $fixedSt2,
                 ]);
             }
+
+            // Jika filter only_has_nilai aktif (Tahap 2), hanya tampilkan mahasiswa yang sudah menginput nilai
+            if (!empty($filters['only_has_nilai']) && $totDinilai === 0) {
+                continue;
+            }
+            $filteredRows[] = $r;
         }
         unset($r);
 
-        return $rows;
+        return $filteredRows;
     }
 
     /**
@@ -1042,6 +1050,7 @@ class Perwalian_model extends CI_Model {
             'tahap1_diajukan'     => 0,
             'tahap1_disetujui'    => 0,
             'tahap1_revisi'       => 0,
+            'tahap2_total'        => 0,
             'tahap2_belum_dinilai'=> 0,
             'tahap2_proses'       => 0,
             'tahap2_selesai'      => 0,
@@ -1054,8 +1063,10 @@ class Perwalian_model extends CI_Model {
             elseif ($st1 === 'revisi') $stats['tahap1_revisi']++;
             else $stats['tahap1_draft']++;
 
-            // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' yang dihitung pada statistik Tahap 2
-            if ($st1 === 'disetujui') {
+            // Hanya mahasiswa yang Tahap 1-nya sudah 'Disetujui' DAN sudah menginput nilai yang dihitung di Tahap 2
+            $totDinilai = (int)($r['total_dinilai'] ?? 0);
+            if ($st1 === 'disetujui' && $totDinilai > 0) {
+                $stats['tahap2_total']++;
                 $totMk = (int)($r['total_mk'] ?? 0);
                 $totApproved = (int)($r['total_approved_mk'] ?? 0);
 
@@ -1172,7 +1183,12 @@ class Perwalian_model extends CI_Model {
             $this->db->where([
                 'id_perwalian' => $id_perwalian,
                 'status_tahap' => 'akan_diambil',
-            ])->update('perwalian_detail', [
+            ]);
+            if ($approve === 1) {
+                $this->db->where('nilai_huruf IS NOT NULL', null, false);
+                $this->db->where('nilai_huruf !=', '');
+            }
+            $this->db->update('perwalian_detail', [
                 'is_approved_wali'  => $approve,
                 'tgl_approved_wali' => $approve ? $now : null,
                 'updated_at'        => $now,
@@ -1187,12 +1203,16 @@ class Perwalian_model extends CI_Model {
             }
 
             $this->db->where('id_perwalian', $id_perwalian)
-                     ->where_in('id', $cleanIds)
-                     ->update('perwalian_detail', [
-                         'is_approved_wali'  => $approve,
-                         'tgl_approved_wali' => $approve ? $now : null,
-                         'updated_at'        => $now,
-                     ]);
+                     ->where_in('id', $cleanIds);
+            if ($approve === 1) {
+                $this->db->where('nilai_huruf IS NOT NULL', null, false);
+                $this->db->where('nilai_huruf !=', '');
+            }
+            $this->db->update('perwalian_detail', [
+                'is_approved_wali'  => $approve,
+                'tgl_approved_wali' => $approve ? $now : null,
+                'updated_at'        => $now,
+            ]);
         }
 
         // Hitung ulang progress approval untuk menentukan status_tahap2 secara otomatis

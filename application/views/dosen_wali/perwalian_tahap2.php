@@ -301,7 +301,7 @@
         <main class="w-full px-3 sm:px-8 py-4 sm:py-8 flex-grow">
 
             <?php
-                $totMhs2 = (int)($stats['tahap1_disetujui'] ?? 0);
+                $totMhs2 = (int)($stats['tahap2_total'] ?? 0);
                 $belumDinilai = (int)($stats['tahap2_belum_dinilai'] ?? 0);
                 $selesai = (int)($stats['tahap2_selesai'] ?? 0);
                 $proses = (int)($stats['tahap2_proses'] ?? 0);
@@ -605,8 +605,8 @@
                                         <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                             <i class="fa-solid fa-award"></i>
                                         </div>
-                                        <p class="font-medium text-slate-600">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
-                                        <p class="text-xs text-slate-400 mt-1">Mahasiswa akan otomatis muncul di Tahap 2 setelah KRS pada Tahap 1 Anda setujui.</p>
+                                        <p class="font-medium text-slate-600">Belum ada mahasiswa yang menginput nilai hasil studi untuk dievaluasi pada Tahap 2.</p>
+                                        <p class="text-xs text-slate-400 mt-1">Mahasiswa akan otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui dan mahasiswa menginput nilai mata kuliah.</p>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -728,8 +728,8 @@
                             <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                 <i class="fa-solid fa-award"></i>
                             </div>
-                            <p class="font-medium text-slate-600 text-xs">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
-                            <p class="text-[11px] text-slate-400 mt-1">Mahasiswa otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui.</p>
+                            <p class="font-medium text-slate-600 text-xs">Belum ada mahasiswa yang menginput nilai hasil studi untuk dievaluasi pada Tahap 2.</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Mahasiswa otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui dan mahasiswa menginput nilai mata kuliah.</p>
                         </div>
                     <?php else: ?>
                         <div id="noSearchResultCardT2" class="py-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80 p-5" style="display: none;">
@@ -1137,6 +1137,7 @@
 
                     mks.forEach((mk, idx) => {
                         const grade = (mk.nilai_huruf || '').toUpperCase().trim();
+                        const hasGrade = (grade !== '');
                         const isApproved = parseInt(mk.is_approved_wali || 0) === 1;
                         if (isApproved) approvedCount++;
 
@@ -1146,7 +1147,7 @@
                         const isLulus = (status === 'Lulus');
                         const isTidakLulus = (status === 'Tidak Lulus');
 
-                        const gradeBadgeHtml = grade
+                        const gradeBadgeHtml = hasGrade
                             ? `<span class="inline-flex items-center justify-center min-w-[2.25rem] px-2.5 py-0.5 text-xs font-mono font-extrabold rounded-lg border whitespace-nowrap ${isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}">${escapeHtml(grade)}</span>`
                             : `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium text-slate-400 bg-slate-100 rounded-md border border-slate-200 whitespace-nowrap">Belum Diinput</span>`;
 
@@ -1156,12 +1157,12 @@
                                 ? `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i> Tidak Lulus</span>`
                                 : `<span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Ada Nilai</span>`);
 
-                        const approveActionHtml = renderMkApproveActionHtml(mk.id, isApproved);
+                        const approveActionHtml = renderMkApproveActionHtml(mk.id, isApproved, hasGrade);
 
                         tbody.innerHTML += `
-                            <tr class="hover:bg-slate-50/60 transition ${isApproved ? 'bg-emerald-50/20' : ''}" id="m2Row_${mk.id}">
+                            <tr class="hover:bg-slate-50/60 transition ${isApproved ? 'bg-emerald-50/20' : (!hasGrade ? 'bg-slate-50/40' : '')}" id="m2Row_${mk.id}">
                                 <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
-                                    <input type="checkbox" class="mk-approve-cb w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer" value="${mk.id}" data-approved="${isApproved ? '1' : '0'}" onchange="onMkCheckboxChange()">
+                                    <input type="checkbox" class="mk-approve-cb w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 ${hasGrade ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}" value="${mk.id}" data-approved="${isApproved ? '1' : '0'}" data-has-grade="${hasGrade ? '1' : '0'}" ${hasGrade ? '' : 'disabled title="Mahasiswa belum menginput nilai pada mata kuliah ini"'} onchange="onMkCheckboxChange()">
                                 </td>
                                 <td class="py-2.5 px-2 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
                                 <td class="py-2.5 px-2.5 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(mk.kode_mk)}</td>
@@ -1189,7 +1190,14 @@
             onMkCheckboxChange();
         }
 
-        function renderMkApproveActionHtml(idDetail, isApproved) {
+        function renderMkApproveActionHtml(idDetail, isApproved, hasGrade = true) {
+            if (!hasGrade && !isApproved) {
+                return `
+                    <span class="inline-flex items-center justify-center px-2.5 py-1 text-[11px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded-lg cursor-not-allowed whitespace-nowrap select-none" title="Tidak dapat di-approve karena mahasiswa belum menginput nilai">
+                        <i class="fa-solid fa-lock mr-1 text-[10px]"></i> Belum Dinilai
+                    </span>
+                `;
+            }
             if (isApproved) {
                 return `
                     <div class="inline-flex items-center justify-center gap-1.5">
@@ -1210,7 +1218,7 @@
         }
 
         function toggleSelectAllMkTahap2(checked) {
-            const cbs = document.querySelectorAll('#m2GradingTableBody .mk-approve-cb');
+            const cbs = document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled)');
             cbs.forEach(cb => {
                 cb.checked = checked;
             });
@@ -1218,14 +1226,26 @@
         }
 
         function onMkCheckboxChange() {
-            const allCbs = Array.from(document.querySelectorAll('#m2GradingTableBody .mk-approve-cb'));
-            const checkedCbs = allCbs.filter(cb => cb.checked);
+            const enabledCbs = Array.from(document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled)'));
+            const checkedCbs = enabledCbs.filter(cb => cb.checked);
             const count = checkedCbs.length;
 
             const checkAllEl = document.getElementById('checkAllMkTahap2');
             if (checkAllEl) {
-                checkAllEl.checked = (allCbs.length > 0 && count === allCbs.length);
-                checkAllEl.indeterminate = (count > 0 && count < allCbs.length);
+                checkAllEl.disabled = (enabledCbs.length === 0);
+                checkAllEl.checked = (enabledCbs.length > 0 && count === enabledCbs.length);
+                checkAllEl.indeterminate = (count > 0 && count < enabledCbs.length);
+            }
+
+            const btnApproveAll = document.getElementById('btnApproveAllMk');
+            if (btnApproveAll) {
+                if (enabledCbs.length > 0) {
+                    btnApproveAll.removeAttribute('disabled');
+                    btnApproveAll.classList.remove('opacity-45', 'pointer-events-none');
+                } else {
+                    btnApproveAll.setAttribute('disabled', 'true');
+                    btnApproveAll.classList.add('opacity-45', 'pointer-events-none');
+                }
             }
 
             const badge = document.getElementById('m2SelectedCountBadge');
@@ -1261,10 +1281,10 @@
         async function submitBulkApproveMkTahap2() {
             if (!currentPerwalian2 || !currentPerwalian2.perwalian) return;
             const idPerwalian = currentPerwalian2.perwalian.id_perwalian;
-            const checkedIds = Array.from(document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:checked')).map(cb => parseInt(cb.value));
+            const checkedIds = Array.from(document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled):checked')).map(cb => parseInt(cb.value));
 
             if (checkedIds.length === 0) {
-                Swal.fire('Pilih Mata Kuliah', 'Silakan centang minimal satu mata kuliah yang ingin di-approve.', 'info');
+                Swal.fire('Pilih Mata Kuliah', 'Silakan centang minimal satu mata kuliah yang sudah memiliki nilai untuk di-approve.', 'info');
                 return;
             }
 
@@ -1274,12 +1294,15 @@
         async function submitApproveAllMkTahap2() {
             if (!currentPerwalian2 || !currentPerwalian2.perwalian) return;
             const idPerwalian = currentPerwalian2.perwalian.id_perwalian;
-            const allCbs = document.querySelectorAll('#m2GradingTableBody .mk-approve-cb');
-            if (allCbs.length === 0) return;
+            const enabledCbs = document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled)');
+            if (enabledCbs.length === 0) {
+                Swal.fire('Belum Ada Nilai', 'Tidak ada mata kuliah yang dapat di-approve karena mahasiswa belum menginput nilai.', 'warning');
+                return;
+            }
 
             const conf = await Swal.fire({
                 title: 'Approve Semua Mata Kuliah?',
-                text: `Setujui seluruh ${allCbs.length} mata kuliah mahasiswa ini sekaligus?`,
+                text: `Setujui ${enabledCbs.length} mata kuliah yang sudah memiliki nilai sekaligus?`,
                 icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#059669',
@@ -1312,10 +1335,11 @@
                         currentPerwalian2.mata_kuliah.forEach(mk => {
                             const id = parseInt(mk.id);
                             const isApp = approvedSet.has(id);
+                            const hasGrade = String(mk.nilai_huruf || '').trim() !== '';
                             mk.is_approved_wali = isApp ? 1 : 0;
 
                             const col = document.getElementById(`m2ApproveCol_${id}`);
-                            if (col) col.innerHTML = renderMkApproveActionHtml(id, isApp);
+                            if (col) col.innerHTML = renderMkApproveActionHtml(id, isApp, hasGrade);
 
                             const row = document.getElementById(`m2Row_${id}`);
                             if (row) {
@@ -2256,7 +2280,7 @@
 
             // 4. Update top summary statistics
             if (stats) {
-                const tot = parseInt(stats.tahap1_disetujui || 0);
+                const tot = parseInt(stats.tahap2_total ?? stats.tahap1_disetujui ?? 0);
                 const belum = parseInt(stats.tahap2_belum_dinilai || 0);
                 const proses = parseInt(stats.tahap2_proses || 0);
                 const selesai = parseInt(stats.tahap2_selesai || 0);
