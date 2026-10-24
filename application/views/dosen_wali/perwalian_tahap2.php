@@ -584,18 +584,18 @@
                 </div>
 
                 <!-- 1. Desktop Table View (>= 768px) -->
-                <div class="hidden md:block overflow-x-auto">
+                <div class="hidden md:block">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
                             <tr>
-                                <th class="py-3 px-3 w-10 text-center whitespace-nowrap">No</th>
-                                <th class="py-3 px-3 whitespace-nowrap">Mahasiswa</th>
-                                <th class="py-3 px-3 whitespace-nowrap">Program Studi</th>
-                                <th class="py-3 px-3 text-center whitespace-nowrap">Periode</th>
-                                <th class="py-3 px-3 text-center whitespace-nowrap">Mata Kuliah</th>
-                                <th class="py-3 px-3 text-center whitespace-nowrap">Progress Approval</th>
-                                <th class="py-3 px-3 text-center whitespace-nowrap">Status Evaluasi</th>
-                                <th class="py-3 px-3 text-center whitespace-nowrap">Aksi</th>
+                                <th class="py-3 px-2.5 w-10 text-center whitespace-nowrap">No</th>
+                                <th class="py-3 px-2.5 whitespace-nowrap">Mahasiswa</th>
+                                <th class="py-3 px-2.5 whitespace-nowrap">Program Studi</th>
+                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Periode</th>
+                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Mata Kuliah</th>
+                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Progress</th>
+                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Status Evaluasi</th>
+                                <th class="py-3 px-2.5 text-center whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -621,7 +621,8 @@
                                 </tr>
                                 <?php $no = 1; foreach ($list_perwalian as $item): 
                                     $rowNim = strtolower(htmlspecialchars($item['nim'] ?? ''));
-                                    $rowNama = strtolower(htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: '')));
+                                    $fullNamaMhs = htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: 'Mahasiswa'));
+                                    $rowNama = strtolower($fullNamaMhs);
                                     $rowProdi = strtolower(htmlspecialchars($item['prodi'] ?? ''));
                                     $rowStatus = strtolower(htmlspecialchars($item['status_tahap2'] ?? 'Belum Dinilai'));
                                     $rowPeriode = strtolower(htmlspecialchars(($item['tahun_ajaran'] ?? '') . ' ' . ($item['semester'] ?? '')));
@@ -636,33 +637,33 @@
                                         data-status="<?= $rowStatus; ?>"
                                         data-periode="<?= $rowPeriode; ?>"
                                     >
-                                        <td class="py-2.5 px-3 text-center font-mono text-slate-400 whitespace-nowrap"><?= $no++; ?></td>
+                                        <td class="py-2.5 px-2.5 text-center font-mono text-slate-400 whitespace-nowrap"><?= $no++; ?></td>
                                         
                                         <!-- Mahasiswa Identity -->
-                                        <td class="py-2.5 px-3 whitespace-nowrap">
-                                            <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug">
-                                                <?= htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: 'Mahasiswa')); ?>
+                                        <td class="py-2.5 px-2.5 max-w-[150px] lg:max-w-[190px] xl:max-w-[240px]">
+                                            <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug truncate" title="<?= $fullNamaMhs; ?>">
+                                                <?= $fullNamaMhs; ?>
                                             </div>
-                                            <div class="text-[11px] font-mono text-slate-500 leading-tight">
+                                            <div class="text-[11px] font-mono text-slate-500 leading-tight whitespace-nowrap truncate">
                                                 NIM: <?= htmlspecialchars($item['nim']); ?>
                                             </div>
                                         </td>
 
                                         <!-- Prodi -->
-                                        <td class="py-2.5 px-3 whitespace-nowrap">
+                                        <td class="py-2.5 px-2.5 whitespace-nowrap">
                                             <span class="inline-block px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 rounded-md whitespace-nowrap">
                                                 <?= htmlspecialchars($item['prodi'] ?: '-'); ?>
                                             </span>
                                         </td>
 
                                         <!-- Periode -->
-                                        <td class="py-2.5 px-3 text-center font-mono text-[11px] whitespace-nowrap leading-tight">
+                                        <td class="py-2.5 px-2.5 text-center font-mono text-[11px] whitespace-nowrap leading-tight">
                                             <div><?= htmlspecialchars($item['tahun_ajaran']); ?></div>
                                             <div class="text-slate-400"><?= htmlspecialchars($item['semester']); ?></div>
                                         </td>
 
                                         <!-- Total MK & SKS -->
-                                        <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
                                             <span class="font-mono font-bold text-slate-900">
                                                 <?= (int)$item['total_mk']; ?> MK
                                             </span>
@@ -670,7 +671,7 @@
                                         </td>
 
                                         <!-- Progress Approval -->
-                                        <td class="py-2.5 px-3 text-center whitespace-nowrap" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
                                             <div class="font-mono font-bold text-slate-800 whitespace-nowrap" id="t2DinilaiText_<?= (int)$item['id_perwalian']; ?>">
                                                 <?= (int)($item['total_approved_mk'] ?? 0); ?> / <?= (int)$item['total_mk']; ?> Disetujui
                                             </div>
@@ -681,7 +682,7 @@
                                         </td>
 
                                         <!-- Badge Status Tahap 2 -->
-                                        <td class="py-2.5 px-3 text-center whitespace-nowrap" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php
                                                 $st2 = isset($item['status_tahap2']) && $item['status_tahap2'] !== '' ? $item['status_tahap2'] : 'Belum Dinilai';
                                                 $badge2ClassMap = [
@@ -702,7 +703,7 @@
                                         </td>
 
                                         <!-- Action Button -->
-                                        <td class="py-2.5 px-3 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php if ($st2 === 'Selesai'): ?>
                                                 <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
                                                     <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Approval
@@ -888,18 +889,18 @@
                     <div class="block sm:hidden text-[10px] text-slate-400 text-right px-3 py-1 bg-slate-50/50 border-b border-slate-100">
                         Geser tabel ke kanan untuk melihat nilai & tombol approve 👉
                     </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[700px] text-left text-xs">
+                    <div class="overflow-x-auto sm:overflow-x-visible">
+                        <table class="w-full min-w-[620px] sm:min-w-0 text-left text-xs">
                             <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
                                 <tr>
-                                    <th class="py-2.5 px-3 w-10 text-center whitespace-nowrap">Pilih</th>
-                                    <th class="py-2.5 px-2.5 w-10 text-center whitespace-nowrap">No</th>
-                                    <th class="py-2.5 px-3 whitespace-nowrap">Kode MK</th>
-                                    <th class="py-2.5 px-3">Nama Mata Kuliah</th>
-                                    <th class="py-2.5 px-3 text-center w-14 whitespace-nowrap">SKS</th>
-                                    <th class="py-2.5 px-3 text-center whitespace-nowrap">Nilai Huruf</th>
-                                    <th class="py-2.5 px-3 text-center whitespace-nowrap">Status Kelulusan</th>
-                                    <th class="py-2.5 px-3 text-center whitespace-nowrap">Aksi Approve</th>
+                                    <th class="py-2.5 px-2.5 w-10 text-center whitespace-nowrap">Pilih</th>
+                                    <th class="py-2.5 px-2 w-10 text-center whitespace-nowrap">No</th>
+                                    <th class="py-2.5 px-2.5 whitespace-nowrap">Kode MK</th>
+                                    <th class="py-2.5 px-2.5">Nama Mata Kuliah</th>
+                                    <th class="py-2.5 px-2.5 text-center w-12 whitespace-nowrap">SKS</th>
+                                    <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Nilai Huruf</th>
+                                    <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Status Kelulusan</th>
+                                    <th class="py-2.5 px-2.5 text-center whitespace-nowrap">Aksi Approve</th>
                                 </tr>
                             </thead>
                             <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
@@ -1159,18 +1160,20 @@
 
                         tbody.innerHTML += `
                             <tr class="hover:bg-slate-50/60 transition ${isApproved ? 'bg-emerald-50/20' : ''}" id="m2Row_${mk.id}">
-                                <td class="py-2.5 px-3 text-center whitespace-nowrap">
+                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap">
                                     <input type="checkbox" class="mk-approve-cb w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer" value="${mk.id}" data-approved="${isApproved ? '1' : '0'}" onchange="onMkCheckboxChange()">
                                 </td>
-                                <td class="py-2.5 px-2.5 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
-                                <td class="py-2.5 px-3 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(mk.kode_mk)}</td>
-                                <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
-                                <td class="py-2.5 px-3 text-center font-mono font-semibold whitespace-nowrap">${mk.sks}</td>
-                                <td class="py-2.5 px-3 text-center whitespace-nowrap">${gradeBadgeHtml}</td>
-                                <td class="py-2.5 px-3 text-center whitespace-nowrap" id="m2StatusCol_${mk.id}">
+                                <td class="py-2.5 px-2 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
+                                <td class="py-2.5 px-2.5 font-mono font-bold text-slate-900 whitespace-nowrap">${escapeHtml(mk.kode_mk)}</td>
+                                <td class="py-2.5 px-2.5 font-medium text-slate-800 max-w-[160px] sm:max-w-[220px]">
+                                    <div class="truncate" title="${escapeHtml(mk.nama_mk)}">${escapeHtml(mk.nama_mk)}</div>
+                                </td>
+                                <td class="py-2.5 px-2.5 text-center font-mono font-semibold whitespace-nowrap">${mk.sks}</td>
+                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap">${gradeBadgeHtml}</td>
+                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="m2StatusCol_${mk.id}">
                                     ${statusBadgeHtml}
                                 </td>
-                                <td class="py-2.5 px-3 text-center whitespace-nowrap" id="m2ApproveCol_${mk.id}">
+                                <td class="py-2.5 px-2.5 text-center whitespace-nowrap" id="m2ApproveCol_${mk.id}">
                                     ${approveActionHtml}
                                 </td>
                             </tr>
