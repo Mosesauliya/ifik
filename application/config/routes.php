@@ -100,6 +100,16 @@ $route['mahasiswa/detail'] = 'Mahasiswa/detail_pendaftaran';
 $route['mahasiswa/detail_pendaftaran'] = 'Mahasiswa/detail_pendaftaran';
 $route['mahasiswa/edit'] = 'Mahasiswa/edit_pendaftaran';
 $route['mahasiswa/edit_pendaftaran'] = 'Mahasiswa/edit_pendaftaran';
+$route['mahasiswa/pengajuan_kp'] = 'Mahasiswa/pengajuan_kp';
+$route['mahasiswa/pengajuan-kp'] = 'Mahasiswa/pengajuan_kp';
+$route['mahasiswa/ajax_save_draft_kp'] = 'Mahasiswa/ajax_save_draft_kp';
+$route['mahasiswa/ajax_upload_file_kp'] = 'Mahasiswa/ajax_upload_file_kp';
+$route['mahasiswa/ajax_delete_file_kp'] = 'Mahasiswa/ajax_delete_file_kp';
+$route['mahasiswa/persyaratan_kp'] = 'Mahasiswa/persyaratan_kp';
+$route['mahasiswa/persyaratan-kp'] = 'Mahasiswa/persyaratan_kp';
+$route['mahasiswa/laporan_kp'] = 'Mahasiswa/laporan_kp';
+$route['mahasiswa/laporan-kp'] = 'Mahasiswa/laporan_kp';
+$route['mahasiswa/hapus_berkas_kp/(:any)'] = 'Mahasiswa/hapus_berkas_kp/$1';
 
 // Bimbingan & Preview TA + Dosen (Dosen_bimbingan)
 $route['bimbingan']                          = 'Dosen_bimbingan/index';
@@ -254,6 +264,14 @@ $route['adminlayanan/toggle_syarat_sidang/(:any)'] = 'AdminLayanan/toggle_syarat
 $route['adminlayanan/hapus_syarat_sidang/(:any)'] = 'AdminLayanan/hapus_syarat_sidang/$1';
 $route['superadmin/syarat_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
 $route['superadmin/pengaturan_berkas_sidang'] = 'AdminLayanan/pengaturan_berkas_sidang';
+
+// [SUPER ADMIN ONLY] Dinamis Syarat Berkas KP Routes
+$route['superadmin/pengaturan_berkas_kp'] = 'AdminLayanan/pengaturan_berkas_kp';
+$route['superadmin/pengaturan-berkas-kp'] = 'AdminLayanan/pengaturan_berkas_kp';
+$route['superadmin/syarat_kp'] = 'AdminLayanan/pengaturan_berkas_kp';
+$route['superadmin/simpan_syarat_kp'] = 'AdminLayanan/simpan_syarat_kp';
+$route['superadmin/toggle_syarat_kp/(:any)'] = 'AdminLayanan/toggle_syarat_kp/$1';
+$route['superadmin/hapus_syarat_kp/(:any)'] = 'AdminLayanan/hapus_syarat_kp/$1';
 $route['adminlayanan/pengaturan_jalur'] = 'AdminLayanan/pengaturan_jalur';
 $route['adminlayanan/seed_default_jalur'] = 'AdminLayanan/seed_default_jalur';
 $route['adminlayanan/ajax_get_rekomen_options'] = 'AdminLayanan/ajax_get_rekomen_options';
