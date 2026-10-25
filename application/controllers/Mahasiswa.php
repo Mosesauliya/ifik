@@ -2043,6 +2043,31 @@ public function upload_berkas_sidang_ajax() {
         $mk_kontrak = $this->Perwalian_model->get_perwalian_detail($id_perwalian, 'akan_diambil');
         $mk_sudah   = $this->Perwalian_model->get_riwayat_mk_sudah_diambil($nim);
 
+        // Auto-heal status_tahap2 sinkron dengan kondisi riil nilai mata kuliah
+        $totalMK = count($mk_kontrak);
+        $totalDinilai = 0;
+        foreach ($mk_kontrak as $m) {
+            if (!empty(trim((string)($m['nilai_huruf'] ?? '')))) {
+                $totalDinilai++;
+            }
+        }
+
+        if ($totalMK > 0) {
+            $expectedSt2 = 'Belum Dinilai';
+            if ($totalDinilai === $totalMK && ($perwalian['status_tahap2'] ?? '') === 'Selesai') {
+                $expectedSt2 = 'Selesai';
+            } elseif ($totalDinilai > 0) {
+                $expectedSt2 = 'Dinilai';
+            } else {
+                $expectedSt2 = 'Belum Dinilai';
+            }
+
+            if (($perwalian['status_tahap2'] ?? '') !== $expectedSt2) {
+                $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', ['status_tahap2' => $expectedSt2]);
+                $perwalian['status_tahap2'] = $expectedSt2;
+            }
+        }
+
         $data['title']              = 'Perwalian & Kontrak KRS - IFIK';
         $data['nim']                = $nim;
         $data['nama_mhs']           = $perwalian['nama_mahasiswa'];

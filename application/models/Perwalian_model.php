@@ -1176,12 +1176,41 @@ class Perwalian_model extends CI_Model {
         $now = date('Y-m-d H:i:s');
         $status = in_array($status, ['Disetujui', 'Revisi', 'Diajukan', 'Draft'], true) ? $status : 'Disetujui';
 
-        return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
+        $updateData = [
             'status_tahap1'       => $status,
             'catatan_wali'        => trim($catatan),
             'tgl_approval_tahap1' => ($status === 'Disetujui') ? $now : null,
             'updated_at'          => $now,
-        ]);
+        ];
+
+        // Jika disetujui, periksa apakah sudah ada nilai riil pada mata kuliah yang dikontrak
+        if ($status === 'Disetujui') {
+            $mkList = $this->db->get_where('perwalian_detail', [
+                'id_perwalian' => (int)$id_perwalian,
+                'status_tahap' => 'akan_diambil'
+            ])->result_array();
+
+            $totalMK = count($mkList);
+            $graded = 0;
+            foreach ($mkList as $m) {
+                if (!empty(trim((string)($m['nilai_huruf'] ?? '')))) {
+                    $graded++;
+                }
+            }
+
+            if ($graded === 0) {
+                $updateData['status_tahap2'] = 'Belum Dinilai';
+            } elseif ($graded < $totalMK) {
+                $updateData['status_tahap2'] = 'Dinilai';
+            } else {
+                $updateData['status_tahap2'] = 'Selesai';
+            }
+        } else {
+            // Jika dikembalikan ke Revisi/Draft, reset status Tahap 2
+            $updateData['status_tahap2'] = 'Belum Dinilai';
+        }
+
+        return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', $updateData);
     }
 
     /**
@@ -1211,6 +1240,7 @@ class Perwalian_model extends CI_Model {
 
             return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
                 'status_tahap1'       => 'Draft',
+                'status_tahap2'       => 'Belum Dinilai',
                 'file_krs'            => null,
                 'catatan_wali'        => !empty($catatan) ? trim($catatan) : 'Berkas KRS telah direset total oleh Admin Prodi.',
                 'tgl_pengajuan'       => null,
@@ -1220,8 +1250,18 @@ class Perwalian_model extends CI_Model {
         } else {
             // Mode unlock: kembalikan ke Draft atau Revisi agar form mahasiswa terbuka kembali
             $newStatus = !empty($catatan) ? 'Revisi' : 'Draft';
+
+            // Bersihkan juga nilai yang menggantung di perwalian_detail
+            $this->db->where('id_perwalian', (int)$id_perwalian)
+                     ->where('status_tahap', 'akan_diambil')
+                     ->update('perwalian_detail', [
+                         'nilai_huruf'      => null,
+                         'status_kelulusan' => null
+                     ]);
+
             return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
                 'status_tahap1'       => $newStatus,
+                'status_tahap2'       => 'Belum Dinilai',
                 'catatan_wali'        => !empty($catatan) ? trim($catatan) : $perwalian['catatan_wali'],
                 'tgl_approval_tahap1' => null,
                 'updated_at'          => $now,
