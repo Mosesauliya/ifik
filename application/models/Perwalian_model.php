@@ -180,6 +180,15 @@ class Perwalian_model extends CI_Model {
         return $this->db->where('id', (int)$id)->delete('master_mata_kuliah');
     }
 
+    public function delete_mata_kuliah_multiple($ids) {
+        if (empty($ids) || !is_array($ids)) return false;
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, function($v) { return $v > 0; });
+        if (empty($ids)) return false;
+        $this->db->where_in('id', $ids)->delete('master_mata_kuliah');
+        return $this->db->affected_rows();
+    }
+
     /**
      * Validasi baris mata kuliah sebelum import
      * Memeriksa kesalahan mengisi field, swap kolom, dan format data.
