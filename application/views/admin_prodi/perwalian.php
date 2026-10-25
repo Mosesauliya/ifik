@@ -339,9 +339,6 @@
                         <table class="w-full text-left text-xs" id="tableMhs">
                             <thead class="bg-slate-100/80 text-slate-700 uppercase font-bold text-[11px] tracking-wider border-b border-slate-200">
                                 <tr>
-                                    <th class="p-3 text-center w-10">
-                                        <input type="checkbox" id="checkAllMK" onchange="toggleCheckAllMK(this)" class="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer" title="Pilih Semua">
-                                    </th>
                                     <th class="p-3 text-center w-12">No</th>
                                     <th class="p-3">NIM</th>
                                     <th class="p-3">Nama Mahasiswa</th>
@@ -504,9 +501,6 @@
                         <table class="w-full text-left text-xs">
                             <thead class="bg-slate-100/80 text-slate-700 uppercase font-bold text-[11px] tracking-wider border-b border-slate-200">
                                 <tr>
-                                    <th class="p-3 text-center w-10">
-                                        <input type="checkbox" id="checkAllMK" onchange="toggleCheckAllMK(this)" class="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer" title="Pilih Semua">
-                                    </th>
                                     <th class="p-3 text-center w-12">No</th>
                                     <th class="p-3">Mahasiswa</th>
                                     <th class="p-3">Dosen Wali</th>
@@ -520,7 +514,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 <?php if(empty($monitoring)): ?>
                                     <tr>
-                                        <td colspan="9" class="p-8 text-center text-slate-400">Belum ada pengajuan perwalian pada periode ini.</td>
+                                        <td colspan="8" class="p-8 text-center text-slate-400">Belum ada pengajuan perwalian pada periode ini.</td>
                                     </tr>
                                 <?php else: ?>
                                     <?php $no = 1; foreach($monitoring as $row): 
