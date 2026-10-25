@@ -1947,5 +1947,116 @@ class AdminLayanan extends CI_Controller {
 
         echo json_encode($res);
     }
+
+    // =========================================================================
+    // [SUPER ADMIN ONLY] PENGATURAN DINAMIS SYARAT BERKAS KP (syarat_berkas_kp)
+    // =========================================================================
+
+    private function _require_super_admin_kp() {
+        if (!$this->session->userdata('logged_in')) {
+            redirect('login');
+            exit;
+        }
+        $role_id = (int)$this->session->userdata('role_id');
+        if ($role_id !== 22) {
+            $this->session->set_flashdata('error', 'Akses ditolak! Pengaturan Dinamis Persyaratan KP khusus untuk Super Admin.');
+            redirect('dashboard');
+            exit;
+        }
+    }
+
+    public function pengaturan_berkas_kp() {
+        $this->_require_super_admin_kp();
+        $this->load->model('Kp_model');
+        $data['title']     = 'Pengaturan Dinamis Syarat Berkas KP - Super Admin';
+        $data['syarat_kp'] = $this->Kp_model->get_all_syarat_kp();
+        $this->load->view('admin_layanan/pengaturan_berkas_kp', $data);
+    }
+
+    public function simpan_syarat_kp() {
+        $this->_require_super_admin_kp();
+        $this->load->model('Kp_model');
+
+        $id          = $this->input->post('id');
+        $nama_berkas = trim($this->input->post('nama_berkas') ?? '');
+        $kode_berkas = trim($this->input->post('kode_berkas') ?? '');
+        $deskripsi   = trim($this->input->post('deskripsi') ?? '');
+        $is_required = $this->input->post('is_required') ? 1 : 0;
+        $is_active   = $this->input->post('is_active') ? 1 : 0;
+        $urutan      = (int)($this->input->post('urutan') ?: 1);
+
+        if (empty($nama_berkas)) {
+            $this->session->set_flashdata('error', 'Nama berkas persyaratan KP wajib diisi!');
+            redirect('superadmin/pengaturan_berkas_kp');
+            return;
+        }
+
+        if (empty($kode_berkas)) {
+            $kode_berkas = strtolower(preg_replace('/[^a-zA-Z0-9_]+/', '_', trim($nama_berkas)));
+        }
+
+        $uploaded_template = null;
+        if (!empty($_FILES['file_template']['name'])) {
+            $upload_dir = FCPATH . 'uploads/templates/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $orig_ext = strtolower(pathinfo($_FILES['file_template']['name'], PATHINFO_EXTENSION));
+            $allowed_exts = array('pdf', 'doc', 'docx', 'xlsx', 'xls', 'zip');
+
+            if (!in_array($orig_ext, $allowed_exts)) {
+                $this->session->set_flashdata('error', 'Format file template tidak didukung! Gunakan .pdf, .docx, .doc, .xlsx, atau .zip.');
+                redirect('superadmin/pengaturan_berkas_kp');
+                return;
+            }
+
+            $clean_name = preg_replace('/[^a-zA-Z0-9_-]/', '_', pathinfo($_FILES['file_template']['name'], PATHINFO_FILENAME));
+            $safe_filename = 'template_kp_' . $clean_name . '_' . time() . '.' . $orig_ext;
+            $target_file = $upload_dir . $safe_filename;
+
+            if (move_uploaded_file($_FILES['file_template']['tmp_name'], $target_file)) {
+                $uploaded_template = $safe_filename;
+            }
+        }
+
+        $hapus_template = (int)($this->input->post('hapus_template') ?: 0);
+
+        $payload = [
+            'kode_berkas' => $kode_berkas,
+            'nama_berkas' => $nama_berkas,
+            'deskripsi'   => $deskripsi,
+            'is_required' => $is_required,
+            'is_active'   => $is_active,
+            'urutan'      => max(1, $urutan),
+        ];
+
+        if ($uploaded_template !== null) {
+            $payload['file_template'] = $uploaded_template;
+        } elseif ($hapus_template === 1) {
+            $payload['file_template'] = null;
+        }
+
+        $this->Kp_model->save_syarat_kp($id ?: null, $payload);
+        $msg = !empty($id) ? "Berkas persyaratan KP [{$nama_berkas}] berhasil diperbarui." : "Berkas persyaratan KP [{$nama_berkas}] berhasil ditambahkan.";
+        $this->session->set_flashdata('success', $msg);
+        redirect('superadmin/pengaturan_berkas_kp');
+    }
+
+    public function toggle_syarat_kp($id) {
+        $this->_require_super_admin_kp();
+        $this->load->model('Kp_model');
+        $this->Kp_model->toggle_syarat_kp($id);
+        $this->session->set_flashdata('success', 'Status keaktifan persyaratan berkas KP berhasil diperbarui!');
+        redirect('superadmin/pengaturan_berkas_kp');
+    }
+
+    public function hapus_syarat_kp($id) {
+        $this->_require_super_admin_kp();
+        $this->load->model('Kp_model');
+        $this->Kp_model->delete_syarat_kp($id);
+        $this->session->set_flashdata('success', 'Persyaratan berkas KP berhasil dihapus!');
+        redirect('superadmin/pengaturan_berkas_kp');
+    }
 }
 
