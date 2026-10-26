@@ -939,6 +939,43 @@ class Kp_model extends CI_Model {
             $file_path = $laporan['file'] ?? '';
             $pembimbing1_nama = $this->resolve_dosen_name($kp['dosen_pembimbing1'] ?? '');
 
+            $laporan_files_detail = [];
+            foreach ($files_laporan as $code => $fl) {
+                if (!empty($fl['file'])) {
+                    $st_item_raw = strtolower(trim((string)($fl['status_adminlaa'] ?? '')));
+                    $st_item = 'Pending';
+                    if ($this->is_status_approved($st_item_raw) || $kp['status_file'] === 'Selesai') $st_item = 'Approved';
+                    elseif ($this->is_status_rejected($st_item_raw) || $kp['status_file'] === 'Revisi Laporan') $st_item = 'Rejected';
+
+                    $laporan_files_detail[] = [
+                        'id_file'       => $fl['id'] ?? ('flkp_' . $nim . '_' . $code),
+                        'kode_berkas'   => $code,
+                        'nama_berkas'   => ($code === 'laporan_kp' ? 'Laporan KP & Form Penilaian' : ucwords(str_replace('_', ' ', $code))),
+                        'file'          => $fl['file'],
+                        'file_url'      => base_url($fl['file']),
+                        'file_basename' => basename($fl['file']),
+                        'status'        => $st_item,
+                        'poin'          => (int)($fl['poin'] ?? 0),
+                        'komentar'      => $fl['komentar'] ?? '',
+                        'date_uploaded' => $fl['date_edit'] ?: ($fl['date'] ?? '')
+                    ];
+                }
+            }
+            if (empty($laporan_files_detail) && !empty($file_path)) {
+                $laporan_files_detail[] = [
+                    'id_file'       => 'flkp_' . $nim . '_laporan_kp',
+                    'kode_berkas'   => 'laporan_kp',
+                    'nama_berkas'   => 'Laporan KP & Form Penilaian',
+                    'file'          => $file_path,
+                    'file_url'      => base_url($file_path),
+                    'file_basename' => basename($file_path),
+                    'status'        => $status_laa,
+                    'poin'          => (int)($laporan['poin'] ?? 0),
+                    'komentar'      => $laporan['komentar'] ?? '',
+                    'date_uploaded' => $laporan['date_edit'] ?: ($laporan['date'] ?? '')
+                ];
+            }
+
             $results[] = [
                 'id_kp'               => $kp['id_kp'],
                 'nim'                 => $nim,
@@ -958,7 +995,8 @@ class Kp_model extends CI_Model {
                 'status_adminlaa'     => $status_laa,
                 'komentar'            => $laporan['komentar'] ?? '',
                 'date_uploaded'       => $laporan['date_edit'] ?: ($laporan['date'] ?? ''),
-                'has_uploaded'        => $has_uploaded_laporan
+                'has_uploaded'        => $has_uploaded_laporan,
+                'files'               => $laporan_files_detail
             ];
         }
 
@@ -1107,6 +1145,42 @@ class Kp_model extends CI_Model {
             $has_p1 = ($p1 !== '' && $p1 !== '-' && $p1 !== '0');
             $p1_nama = $this->resolve_dosen_name($p1);
 
+            $files = $this->get_files_pendaftaran_kp($nim, $kp['id_kp'], $user_id);
+            $syarat_list = $this->get_active_syarat_kp();
+            $files_detail = [];
+            $uploaded_count = 0;
+
+            foreach ($syarat_list as $sb) {
+                $k = $sb['kode_berkas'];
+                $f = $files[$k] ?? null;
+                $file_path = '';
+                $file_id = '';
+                $st = 'Belum Upload';
+
+                if ($f && !empty($f['file'])) {
+                    $uploaded_count++;
+                    $file_path = $f['file'];
+                    $file_id = $f['id'] ?? ('fpkp_' . $nim . '_' . $k);
+                    $st_raw = strtolower(trim((string)($f['status_adminlaa'] ?? '')));
+                    if ($this->is_status_approved($st_raw)) $st = 'Approved';
+                    elseif ($this->is_status_rejected($st_raw)) $st = 'Rejected';
+                    else $st = 'Pending';
+                }
+
+                $files_detail[] = [
+                    'id_file'       => $file_id,
+                    'kode_berkas'   => $k,
+                    'nama_berkas'   => $sb['nama_berkas'],
+                    'deskripsi'     => $sb['deskripsi'] ?? '',
+                    'file'          => $file_path,
+                    'file_url'      => !empty($file_path) ? base_url($file_path) : '',
+                    'file_basename' => !empty($file_path) ? basename($file_path) : '',
+                    'status'        => $st,
+                    'komentar'      => $f['komentar'] ?? '',
+                    'date_uploaded' => $f['date_edit'] ?? ($f['date'] ?? '')
+                ];
+            }
+
             $item = [
                 'id_kp'               => $kp['id_kp'],
                 'nim'                 => $nim,
@@ -1124,7 +1198,10 @@ class Kp_model extends CI_Model {
                 'status_file'         => $kp['status_file'],
                 'dosen_pembimbing1'   => $p1,
                 'pembimbing1_nama'    => $p1_nama,
-                'has_pembimbing1'     => $has_p1
+                'has_pembimbing1'     => $has_p1,
+                'uploaded_count'      => $uploaded_count,
+                'total_syarat'        => count($syarat_list),
+                'files'               => $files_detail
             ];
 
             if ($has_p1) {

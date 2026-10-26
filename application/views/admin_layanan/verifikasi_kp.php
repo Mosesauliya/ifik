@@ -164,31 +164,125 @@ $total_laporan   = count($laporan ?? []);
         .animate-pop-in { animation: popInCard 0.35s cubic-bezier(0.2, 0.9, 0.2, 1) forwards; }
         .animate-preview-in { animation: fadeInSlideRight 0.35s cubic-bezier(0.2, 0.9, 0.2, 1) forwards; }
 
-        /* Modal Preview Berkas Split View */
-        #previewModalOverlay {
-            position: fixed; inset: 0; z-index: 9999; display: none;
-            background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(6px);
-            align-items: center; justify-content: center; padding: 1rem;
+        /* Multi-Preview Container (Matching dosen_bimbingan) */
+        #lihatBerkasContainer {
+            position: fixed; inset: 0; pointer-events: none; z-index: 9999; display: none;
+            align-items: stretch; justify-content: flex-start; padding: 1rem 1.25rem; gap: 1.25rem;
+            overflow: hidden; background: rgba(15, 23, 42, 0.65); backdrop-filter: blur(6px);
         }
-        #previewModalOverlay.active { display: flex; }
-        .preview-modal-box {
-            background: #ffffff; border-radius: 1.5rem; width: 1250px; max-width: 96vw;
-            height: 90vh; max-height: 94vh; overflow: hidden; display: flex;
-            box-shadow: 0 25px 60px -15px rgba(15,23,42,0.5);
-            border: 1px solid #fed7aa;
+        #lihatBerkasContainer.active { display: flex; pointer-events: auto; }
+
+        #wrapperDaftarMhs {
+            display: flex; flex-direction: column; gap: 1rem;
+            width: 480px; min-width: 420px; max-width: 520px;
+            overflow-y: auto; overflow-x: hidden; flex-shrink: 0;
+            padding: 0.25rem; height: 94vh; max-height: 96vh; pointer-events: none;
         }
-        .preview-left-pane {
-            width: 440px; min-width: 380px; max-width: 460px;
-            background: #fafaf9; border-right: 1.5px solid #e7e5e4;
-            display: flex; flex-direction: column; overflow-y: auto;
+        #wrapperDaftarMhs::-webkit-scrollbar { width: 4px; }
+        #wrapperDaftarMhs::-webkit-scrollbar-thumb { background: rgba(148, 163, 184, 0.5); border-radius: 9999px; }
+
+        #wrapperPreviewBerkas {
+            display: none; flex: 1; overflow-x: auto; overflow-y: hidden; gap: 1.25rem;
+            padding: 0.25rem; align-items: stretch; height: 94vh; max-height: 96vh; pointer-events: none;
         }
-        .preview-right-pane {
-            flex: 1; display: flex; flex-direction: column; background: #e2e8f0; min-width: 0;
+        #wrapperPreviewBerkas.active { display: flex; }
+        #wrapperPreviewBerkas::-webkit-scrollbar { height: 6px; }
+        #wrapperPreviewBerkas::-webkit-scrollbar-thumb { background: rgba(249, 115, 22, 0.6); border-radius: 9999px; }
+
+        .student-card-item {
+            pointer-events: auto; background: white; border-radius: 1.25rem;
+            box-shadow: 0 20px 40px -12px rgba(0,0,0,0.25);
+            border: 1px solid #e2e8f0; overflow: hidden; display: flex;
+            flex-direction: column; flex-shrink: 0; width: 100%; max-height: 94vh;
         }
-        @media (max-width: 900px) {
-            .preview-modal-box { flex-direction: column; height: 94vh; }
-            .preview-left-pane { width: 100%; min-width: 0; max-width: none; height: 42%; border-right: none; border-bottom: 2px solid #e2e8f0; }
-            .preview-right-pane { height: 58%; }
+
+        .preview-card-item {
+            pointer-events: auto; background: white; border-radius: 1.25rem;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.3);
+            border: 1px solid #e2e8f0; overflow: hidden; display: flex;
+            flex-direction: column; flex-shrink: 0;
+            width: 820px; max-width: 72vw; height: 94vh; max-height: 96vh;
+        }
+
+        /* Fullscreen mode via CSS overlay */
+        .preview-card-item.preview-fullscreen-mode {
+            position: fixed !important;
+            top: 0 !important; left: 0 !important; right: 0 !important; bottom: 0 !important;
+            width: 100vw !important; height: 100vh !important;
+            max-width: 100vw !important; max-height: 100vh !important;
+            z-index: 999999 !important;
+            border-radius: 0 !important; border: none !important;
+            box-shadow: none !important; margin: 0 !important;
+        }
+        .preview-card-item.preview-fullscreen-mode .preview-header {
+            background: rgba(15, 23, 42, 0.96) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+        }
+        .preview-card-item.preview-fullscreen-mode .preview-footer {
+            background: rgba(255, 255, 255, 0.98) !important;
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            box-shadow: 0 -6px 20px rgba(0, 0, 0, 0.12);
+        }
+        .preview-card-item.preview-fullscreen-mode .preview-body {
+            flex: 1 !important; min-height: 0 !important;
+        }
+
+        .preview-card-item .preview-body {
+            flex: 1; min-height: 0; position: relative; background: #e2e8f0; overflow: hidden;
+        }
+        .preview-card-item .preview-body iframe {
+            width: 100%; height: 100%; border: 0; position: relative; z-index: 10;
+        }
+        .preview-card-item .preview-body .loader {
+            position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+            z-index: 5; background: #e2e8f0; color: #94a3b8;
+            font-size: 0.75rem; font-weight: 600; gap: 0.5rem;
+        }
+        .preview-card-item .preview-body .loader i { font-size: 1.5rem; animation: spin 1s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .preview-card-item .preview-header { flex-shrink: 0; }
+        .preview-card-item .preview-footer { flex-shrink: 0; gap: 0.5rem; }
+        .btn-3d-orange {
+            background: linear-gradient(135deg, #ea580c, #f97316); color: #fff; border: none;
+            transition: all 0.2s ease; box-shadow: 0 4px 12px rgba(234,88,12,0.3);
+        }
+        .btn-3d-orange:hover { transform: scale(1.03); box-shadow: 0 6px 20px rgba(234,88,12,0.4); }
+
+        @media (max-width: 768px) {
+            #lihatBerkasContainer {
+                flex-direction: column !important;
+                align-items: stretch !important;
+                justify-content: flex-start !important;
+                overflow-y: auto !important;
+                overflow-x: hidden !important;
+                padding: 0.75rem !important;
+                gap: 0.75rem !important;
+            }
+            #wrapperDaftarMhs {
+                width: 100% !important;
+                min-width: 0 !important;
+                max-width: 100% !important;
+                max-height: none !important;
+                overflow-y: visible !important;
+                padding: 0 !important;
+            }
+            #wrapperPreviewBerkas {
+                width: 100% !important;
+                flex: none !important;
+                max-height: none !important;
+                overflow-x: auto !important;
+                overflow-y: visible !important;
+                padding: 0 !important;
+            }
+            .preview-card-item {
+                width: 90vw !important;
+                max-width: 90vw !important;
+                height: 60vh !important;
+                max-height: 60vh !important;
+            }
+            .student-card-item { max-height: none !important; }
         }
     </style>
 </head>
@@ -369,7 +463,10 @@ $total_laporan   = count($laporan ?? []);
                         <table class="table-custom-rounded text-left text-sm w-full">
                             <thead class="bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider border-b border-slate-200">
                                 <tr>
-                                    <th class="py-4 px-4 text-center w-12">No</th>
+                                    <th class="py-4 px-3 text-center w-10">
+                                        <input type="checkbox" id="selectAllPersyaratan" onchange="toggleSelectAllPersyaratan(this)" class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer" title="Pilih Semua">
+                                    </th>
+                                    <th class="py-4 px-3 text-center w-12">No</th>
                                     <th class="py-4 px-4">Mahasiswa &amp; Program Studi</th>
                                     <th class="py-4 px-4">Perusahaan / Instansi KP</th>
                                     <th class="py-4 px-4 text-center">Kelengkapan Berkas</th>
@@ -379,7 +476,7 @@ $total_laporan   = count($laporan ?? []);
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tbodyPersyaratan">
                                 <tr>
-                                    <td colspan="6" class="text-center py-10 text-slate-400">
+                                    <td colspan="7" class="text-center py-10 text-slate-400">
                                         <i class="bi bi-arrow-repeat animate-spin text-lg mr-2"></i> Memuat data pengajuan KP...
                                     </td>
                                 </tr>
@@ -469,7 +566,10 @@ $total_laporan   = count($laporan ?? []);
                         <table class="table-custom-rounded text-left text-sm w-full">
                             <thead class="bg-slate-50 text-slate-700 font-bold text-xs uppercase tracking-wider border-b border-slate-200">
                                 <tr>
-                                    <th class="py-4 px-4 text-center w-12">No</th>
+                                    <th class="py-4 px-3 text-center w-10">
+                                        <input type="checkbox" id="selectAllLaporan" onchange="toggleSelectAllLaporan(this)" class="w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer" title="Pilih Semua">
+                                    </th>
+                                    <th class="py-4 px-3 text-center w-12">No</th>
                                     <th class="py-4 px-4">Mahasiswa &amp; Program Studi</th>
                                     <th class="py-4 px-4">Instansi KP &amp; Pembimbing Lapangan</th>
                                     <th class="py-4 px-4">Dosen Pembimbing 1</th>
@@ -481,7 +581,7 @@ $total_laporan   = count($laporan ?? []);
                             </thead>
                             <tbody class="divide-y divide-slate-100 font-medium bg-white" id="tbodyLaporan">
                                 <tr>
-                                    <td colspan="8" class="text-center py-10 text-slate-400">
+                                    <td colspan="9" class="text-center py-10 text-slate-400">
                                         <i class="bi bi-arrow-repeat animate-spin text-lg mr-2"></i> Memuat data laporan KP...
                                     </td>
                                 </tr>
@@ -493,124 +593,35 @@ $total_laporan   = count($laporan ?? []);
             </div>
         </div>
 
+    
+        <!-- FLOATING BATCH ACTION BAR (ACC MASSAL) -->
+        <div id="batchActionBar" class="fixed bottom-6 left-1/2 -translate-x-1/2 z-40 bg-slate-900/95 text-white px-5 py-3 rounded-2xl shadow-2xl backdrop-blur-md border border-slate-700 hidden flex-wrap items-center gap-4 transition-all duration-300 animate-pop-in">
+            <div class="flex items-center gap-2">
+                <span class="w-7 h-7 rounded-lg bg-orange-500 text-white font-black text-xs flex items-center justify-center shadow-xs" id="selectedCountBadge">0</span>
+                <span class="text-xs font-bold tracking-tight">Mahasiswa Terpilih</span>
+            </div>
+            <div class="h-5 w-px bg-slate-700 hidden sm:block"></div>
+            <div class="flex items-center gap-2.5">
+                <button type="button" onclick="submitBatchAcc()" id="btnBatchAcc" class="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white rounded-xl text-xs font-bold shadow-md flex items-center gap-1.5 transition-all active:scale-95 cursor-pointer">
+                    <i class="bi bi-check2-all text-base"></i> <span id="btnBatchAccLabel">ACC Massal Terpilih</span>
+                </button>
+                <button type="button" onclick="unselectAllStudents()" class="px-3 py-2 bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-xl text-xs font-semibold transition-all cursor-pointer">
+                    <i class="bi bi-x-lg"></i> Batal
+                </button>
+            </div>
+        </div>
     </main>
     </div>
 
     <!-- =========================================================================
          MODAL PREVIEW & VERIFIKASI BERKAS SPLIT-VIEW (IDENTIK DOSEN BIMBINGAN)
          ========================================================================= -->
-    <div id="previewModalOverlay" onclick="if(event.target===this) closePreviewModal()">
-        <div class="preview-modal-box animate-pop-in">
-
-            <!-- LEFT PANE: INFORMASI MAHASISWA & DAFTAR BERKAS -->
-            <div class="preview-left-pane p-5 flex flex-col justify-between">
-                <div class="space-y-4">
-                    <div class="flex items-center justify-between border-b border-stone-200 pb-3">
-                        <div class="flex items-center gap-2">
-                            <div class="w-8 h-8 rounded-xl bg-orange-500 text-white flex items-center justify-center font-bold text-sm">
-                                <i class="bi bi-person-fill"></i>
-                            </div>
-                            <div>
-                                <h4 class="text-xs font-black text-slate-800 uppercase tracking-wider">Detail Mahasiswa</h4>
-                                <span class="text-[10px] text-slate-500 font-semibold" id="modalMhsProdi">Informatika</span>
-                            </div>
-                        </div>
-                        <span class="badge badge-warning text-[10px]" id="modalMhsStatusKp">Pending</span>
-                    </div>
-
-                    <!-- Profil Mahasiswa -->
-                    <div class="p-3.5 rounded-2xl bg-white border border-stone-200 space-y-1.5 shadow-2xs">
-                        <h3 class="text-sm font-extrabold text-slate-900" id="modalMhsNama">Nama Mahasiswa</h3>
-                        <p class="text-xs text-orange-600 font-bold" id="modalMhsNim">1301210000</p>
-                        <div class="text-[11px] text-slate-600 space-y-0.5 pt-1 border-t border-slate-100 mt-2">
-                            <p class="truncate"><i class="bi bi-building mr-1.5 text-slate-400"></i><strong id="modalMhsPerusahaan">-</strong></p>
-                            <p class="truncate"><i class="bi bi-geo-alt mr-1.5 text-slate-400"></i><span id="modalMhsKota">-</span></p>
-                            <p class="truncate"><i class="bi bi-person-badge mr-1.5 text-slate-400"></i><span id="modalMhsP1">Menunggu Plotting Koordinator KP</span></p>
-                        </div>
-                    </div>
-
-                    <!-- Daftar Berkas Mahasiswa -->
-                    <div class="space-y-2">
-                        <span class="text-[11px] font-black uppercase tracking-wider text-slate-500 block">Daftar Berkas Mahasiswa</span>
-                        <div class="space-y-1.5 max-h-[220px] overflow-y-auto pr-1" id="modalFilesListContainer">
-                            <!-- Diisi secara dinamis -->
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tombol Cepat: ACC Seluruh Berkas Persyaratan -->
-                <div class="pt-4 border-t border-stone-200 space-y-2" id="modalPersyaratanBulkActionArea">
-                    <button type="button" onclick="confirmBulkAccPersyaratanCurrent()"
-                            class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                        <i class="bi bi-check-all text-base"></i>
-                        <span>ACC Semua Berkas Persyaratan</span>
-                    </button>
-                    <p class="text-[10px] text-center text-slate-400">Menyetujui seluruh persyaratan mahasiswa ini sekaligus.</p>
-                </div>
-            </div>
-
-            <!-- RIGHT PANE: IFRAME PREVIEW PDF & AKSI VERIFIKASI -->
-            <div class="preview-right-pane">
-                <!-- Header Preview -->
-                <div class="p-3.5 px-5 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0 border-b border-slate-800">
-                    <div class="flex items-center gap-2.5 min-w-0">
-                        <div class="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 border border-orange-500/40 flex items-center justify-center shrink-0">
-                            <i class="bi bi-file-earmark-pdf-fill text-sm"></i>
-                        </div>
-                        <div class="min-w-0">
-                            <h4 class="text-xs font-bold text-white truncate" id="modalPreviewDocTitle">Pratinjau Dokumen</h4>
-                            <p class="text-[10px] text-slate-400 truncate" id="modalPreviewDocSub">-</p>
-                        </div>
-                    </div>
-                    <div class="flex items-center gap-2 shrink-0">
-                        <a href="#" id="modalDownloadBtn" target="_blank"
-                           class="px-2.5 py-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition">
-                            <i class="bi bi-download"></i> Unduh
-                        </a>
-                        <button type="button" onclick="toggleModalFullscreen()"
-                                class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-slate-200 flex items-center justify-center transition cursor-pointer" title="Perbesar Tampilan">
-                            <i class="bi bi-arrows-fullscreen text-xs"></i>
-                        </button>
-                        <button type="button" onclick="closePreviewModal()"
-                                class="w-8 h-8 rounded-lg bg-rose-500/20 hover:bg-rose-500 text-rose-300 hover:text-white flex items-center justify-center transition cursor-pointer" title="Tutup">
-                            <i class="bi bi-x-lg text-xs"></i>
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Iframe Viewer -->
-                <div class="flex-1 relative bg-slate-800 overflow-hidden" id="modalIframeContainer">
-                    <iframe id="modalPdfFrame" src="about:blank" class="w-full h-full border-none"></iframe>
-                    <div id="modalPdfEmptyPlaceholder" class="hidden absolute inset-0 flex flex-col items-center justify-center bg-slate-100 text-slate-400 p-6 text-center">
-                        <i class="bi bi-file-earmark-x text-5xl mb-2 text-slate-300"></i>
-                        <h4 class="text-sm font-bold text-slate-700">Berkas Belum Diunggah</h4>
-                        <p class="text-xs text-slate-500">Mahasiswa belum mengunggah dokumen ini.</p>
-                    </div>
-                </div>
-
-                <!-- Action Footer: Verifikasi (ACC / Tolak Revisi) -->
-                <div class="p-3.5 px-5 bg-white border-t border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                    <div class="flex items-center gap-2" id="modalCurrentStatusBadge">
-                        <span class="text-xs font-bold text-slate-500">Status Saat Ini:</span>
-                        <span class="badge badge-warning text-xs" id="modalActiveFileStatus">Pending</span>
-                    </div>
-
-                    <div class="flex items-center gap-2 flex-wrap">
-                        <button type="button" onclick="promptRejectCurrentFile()"
-                                class="px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
-                            <i class="bi bi-x-circle-fill text-rose-600"></i>
-                            <span>Tolak / Minta Revisi</span>
-                        </button>
-                        <button type="button" onclick="confirmAccCurrentFile()"
-                                class="px-5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
-                            <i class="bi bi-check-circle-fill"></i>
-                            <span>ACC / Setujui Berkas Ini</span>
-                        </button>
-                    </div>
-                </div>
-            </div>
-
-        </div>
+    <!-- =========================================================================
+         MULTI-PREVIEW BERKAS CONTAINER (MATCHING DOSEN BIMBINGAN)
+         ========================================================================= -->
+    <div id="lihatBerkasContainer" class="fixed inset-0 pointer-events-none z-50 flex items-stretch p-3 sm:p-5 gap-4 overflow-hidden" style="display: none;" onclick="handleContainerBackdropClick(event)">
+        <div id="wrapperDaftarMhs" class="flex flex-col gap-3 overflow-y-auto flex-shrink-0"></div>
+        <div id="wrapperPreviewBerkas" class="flex-1 overflow-x-auto overflow-y-hidden gap-4 flex items-stretch hidden"></div>
     </div>
 
     <!-- DATASET DARI SERVER UNTUK JAVASCRIPT TABLE & FILTER -->
@@ -875,7 +886,7 @@ $total_laporan   = count($laporan ?? []);
             if (total === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center py-12 text-slate-400">
+                        <td colspan="7" class="text-center py-12 text-slate-400">
                             <i class="bi bi-inbox text-4xl block mb-2 text-slate-300"></i>
                             <p class="font-semibold text-sm">Tidak ada data mahasiswa ${currentSubTabPersyaratan === 'belum_acc' ? 'yang belum di-ACC' : 'yang sudah di-ACC'}.</p>
                             <p class="text-xs text-slate-400 mt-1">Coba sesuaikan kata kunci pencarian pada filter multi-kriteria.</p>
@@ -923,9 +934,14 @@ $total_laporan   = count($laporan ?? []);
                     statusFileBadge = `<span class="badge badge-primary">${st}</span>`;
                 }
 
+                const isChecked = window.selectedPersyaratanNims.has(mhs.nim);
                 rowsHtml += `
-                    <tr class="hover:bg-orange-50/40 transition">
-                        <td class="py-4 px-4 text-center font-bold text-slate-500">${rowNo}</td>
+                    <tr class="hover:bg-orange-50/40 transition ${isChecked ? 'bg-orange-50/70' : ''}">
+                        <td class="py-4 px-3 text-center">
+                            <input type="checkbox" class="cb-mhs-persyaratan w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer"
+                                   value="${mhs.nim}" ${isChecked ? 'checked' : ''} onchange="handleCheckboxChangePersyaratan()">
+                        </td>
+                        <td class="py-4 px-3 text-center font-bold text-slate-500">${rowNo}</td>
                         <td class="py-4 px-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 font-extrabold flex items-center justify-center shrink-0 text-xs">
@@ -948,9 +964,11 @@ $total_laporan   = count($laporan ?? []);
                         <td class="py-4 px-4 text-center">${statusFileBadge}</td>
                         <td class="py-4 px-4 text-center">
                             <div class="flex items-center justify-center gap-1.5 flex-wrap">
-                                <button type="button" onclick="openPreviewPersyaratan('${mhs.nim}')"
-                                        class="px-3 py-1.5 rounded-xl bg-orange-50 hover:bg-orange-100 text-orange-700 border border-orange-200 text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-2xs">
-                                    <i class="bi bi-eye-fill"></i> Periksa Berkas
+                                <button type="button" onclick="toggleLihatBerkasPanel('${mhs.nim}', 'persyaratan')" id="btnLihatBerkas_${mhs.nim}"
+                                        class="inline-flex items-center gap-1.5 text-white font-bold px-3 py-1.5 rounded-xl text-xs cursor-pointer shadow-md transition-transform btn-3d-orange">
+                                    <i class="bi bi-folder-open text-xs"></i>
+                                    <span>Lihat Berkas</span>
+                                    <span class="bg-white/30 text-white px-1.5 py-0.5 rounded-full text-[10px] font-black">${(mhs.files || []).filter(f => f.file && f.file.length > 0).length}/${(mhs.files || []).length || 4}</span>
                                 </button>
                                 ${!mhs.is_all_approved ? `
                                     <button type="button" onclick="confirmBulkAccPersyaratan('${mhs.nim}', '${(mhs.nama || '').replace(/'/g, "\\'")}')"
@@ -967,6 +985,7 @@ $total_laporan   = count($laporan ?? []);
 
             tbody.innerHTML = rowsHtml;
             renderPaginationControls('persyaratan', total, startIdx, endIdx);
+            updateBatchActionBar();
         }
 
         // =========================================================================
@@ -983,7 +1002,7 @@ $total_laporan   = count($laporan ?? []);
             if (total === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="8" class="text-center py-12 text-slate-400">
+                        <td colspan="9" class="text-center py-12 text-slate-400">
                             <i class="bi bi-inbox text-4xl block mb-2 text-slate-300"></i>
                             <p class="font-semibold text-sm">Tidak ada data laporan KP mahasiswa yang cocok.</p>
                             <p class="text-xs text-slate-400 mt-1">Laporan akan muncul setelah mahasiswa mengunggah berkas di menu Laporan KP.</p>
@@ -1017,9 +1036,14 @@ $total_laporan   = count($laporan ?? []);
                     statusBadge = `<span class="badge badge-warning"><i class="bi bi-hourglass-split"></i> Pending Review</span>`;
                 }
 
+                const isChecked = window.selectedLaporanNims.has(mhs.nim);
                 rowsHtml += `
-                    <tr class="hover:bg-orange-50/40 transition">
-                        <td class="py-4 px-4 text-center font-bold text-slate-500">${rowNo}</td>
+                    <tr class="hover:bg-orange-50/40 transition ${isChecked ? 'bg-orange-50/70' : ''}">
+                        <td class="py-4 px-3 text-center">
+                            <input type="checkbox" class="cb-mhs-laporan w-4 h-4 rounded text-orange-600 focus:ring-orange-500 border-slate-300 cursor-pointer"
+                                   value="${mhs.nim}" ${isChecked ? 'checked' : ''} onchange="handleCheckboxChangeLaporan()">
+                        </td>
+                        <td class="py-4 px-3 text-center font-bold text-slate-500">${rowNo}</td>
                         <td class="py-4 px-4">
                             <div class="flex items-center gap-3">
                                 <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 font-extrabold flex items-center justify-center shrink-0 text-xs">
@@ -1044,7 +1068,7 @@ $total_laporan   = count($laporan ?? []);
                         </td>
                         <td class="py-4 px-4 text-center">
                             ${hasFile ? `
-                                <button type="button" onclick="openPreviewLaporan('${mhs.nim}')"
+                                <button type="button" onclick="toggleLihatBerkasPanel('${mhs.nim}', 'laporan')" id="btnLihatBerkas_${mhs.nim}"
                                         class="px-2.5 py-1 rounded-xl bg-emerald-50 text-emerald-700 border border-emerald-300 text-xs font-bold hover:bg-emerald-100 transition inline-flex items-center gap-1.5 cursor-pointer">
                                     <i class="bi bi-file-earmark-pdf-fill text-rose-500"></i> Lihat PDF
                                 </button>
@@ -1058,7 +1082,7 @@ $total_laporan   = count($laporan ?? []);
                         <td class="py-4 px-4 text-center">${statusBadge}</td>
                         <td class="py-4 px-4 text-center">
                             <div class="flex items-center justify-center gap-1.5">
-                                <button type="button" onclick="openPreviewLaporan('${mhs.nim}')"
+                                <button type="button" onclick="toggleLihatBerkasPanel('${mhs.nim}', 'laporan')" id="btnLihatBerkas_${mhs.nim}"
                                         class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs">
                                     <i class="bi bi-shield-check"></i> Verifikasi
                                 </button>
@@ -1070,6 +1094,7 @@ $total_laporan   = count($laporan ?? []);
 
             tbody.innerHTML = rowsHtml;
             renderPaginationControls('laporan', total, startIdx, endIdx);
+            updateBatchActionBar();
         }
 
         // =========================================================================
@@ -1148,224 +1173,798 @@ $total_laporan   = count($laporan ?? []);
         }
 
         // =========================================================================
-        // PREVIEW MODAL LOGIC (PERSYARATAN & LAPORAN)
+        // MULTIPLE SELECT & ACC MASSAL LOGIC (MATCHING DOSEN BIMBINGAN)
         // =========================================================================
-        function openPreviewPersyaratan(nim) {
-            const allList = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc);
-            const mhs = allList.find(m => m.nim === nim);
-            if (!mhs) return;
+        window.selectedPersyaratanNims = new Set();
+        window.selectedLaporanNims     = new Set();
 
-            activeModalData = {
-                mode: 'persyaratan',
-                mhs: mhs,
-                activeFileIndex: 0
-            };
+        function handleCheckboxChangePersyaratan() {
+            const cbs = document.querySelectorAll('.cb-mhs-persyaratan');
+            cbs.forEach(cb => {
+                if (cb.checked) window.selectedPersyaratanNims.add(cb.value);
+                else window.selectedPersyaratanNims.delete(cb.value);
+            });
+            updateBatchActionBar();
+        }
 
-            // Cari file pertama yang terunggah jika ada
-            const uploadedIdx = (mhs.files || []).findIndex(f => f.file && f.file.length > 0);
-            if (uploadedIdx !== -1) {
-                activeModalData.activeFileIndex = uploadedIdx;
+        function toggleSelectAllPersyaratan(masterCb) {
+            const cbs = document.querySelectorAll('.cb-mhs-persyaratan');
+            cbs.forEach(cb => {
+                cb.checked = masterCb.checked;
+                if (cb.checked) window.selectedPersyaratanNims.add(cb.value);
+                else window.selectedPersyaratanNims.delete(cb.value);
+            });
+            updateBatchActionBar();
+        }
+
+        function handleCheckboxChangeLaporan() {
+            const cbs = document.querySelectorAll('.cb-mhs-laporan');
+            cbs.forEach(cb => {
+                if (cb.checked) window.selectedLaporanNims.add(cb.value);
+                else window.selectedLaporanNims.delete(cb.value);
+            });
+            updateBatchActionBar();
+        }
+
+        function toggleSelectAllLaporan(masterCb) {
+            const cbs = document.querySelectorAll('.cb-mhs-laporan');
+            cbs.forEach(cb => {
+                cb.checked = masterCb.checked;
+                if (cb.checked) window.selectedLaporanNims.add(cb.value);
+                else window.selectedLaporanNims.delete(cb.value);
+            });
+            updateBatchActionBar();
+        }
+
+        function updateBatchActionBar() {
+            const bar = document.getElementById('batchActionBar');
+            const badge = document.getElementById('selectedCountBadge');
+            const label = document.getElementById('btnBatchAccLabel');
+            if (!bar || !badge) return;
+
+            const isPersyaratan = (currentMainTab === 'persyaratan');
+            const count = isPersyaratan ? window.selectedPersyaratanNims.size : window.selectedLaporanNims.size;
+            badge.textContent = count;
+
+            if (count > 0) {
+                bar.classList.remove('hidden');
+                bar.classList.add('flex');
+                if (label) {
+                    label.textContent = isPersyaratan
+                        ? 'ACC Semua Persyaratan (' + count + ' Mahasiswa)'
+                        : 'ACC Laporan (' + count + ' Mahasiswa)';
+                }
+            } else {
+                bar.classList.add('hidden');
+                bar.classList.remove('flex');
             }
 
-            document.getElementById('modalPersyaratanBulkActionArea').classList.remove('hidden');
-            renderPreviewModalContent();
-            document.getElementById('previewModalOverlay').classList.add('active');
+            // Sync select all master checkbox
+            if (isPersyaratan) {
+                const master = document.getElementById('selectAllPersyaratan');
+                const cbs = document.querySelectorAll('.cb-mhs-persyaratan');
+                if (master && cbs.length > 0) {
+                    master.checked = Array.from(cbs).every(cb => cb.checked);
+                }
+            } else {
+                const master = document.getElementById('selectAllLaporan');
+                const cbs = document.querySelectorAll('.cb-mhs-laporan');
+                if (master && cbs.length > 0) {
+                    master.checked = Array.from(cbs).every(cb => cb.checked);
+                }
+            }
         }
 
-        function openPreviewLaporan(nim) {
-            const mhs = RAW_DATA.laporan.find(m => m.nim === nim);
-            if (!mhs) return;
-
-            activeModalData = {
-                mode: 'laporan',
-                mhs: mhs,
-                activeFileIndex: 0
-            };
-
-            document.getElementById('modalPersyaratanBulkActionArea').classList.add('hidden');
-            renderPreviewModalContent();
-            document.getElementById('previewModalOverlay').classList.add('active');
+        function unselectAllStudents() {
+            if (currentMainTab === 'persyaratan') {
+                window.selectedPersyaratanNims.clear();
+                document.querySelectorAll('.cb-mhs-persyaratan').forEach(cb => cb.checked = false);
+                const m = document.getElementById('selectAllPersyaratan');
+                if (m) m.checked = false;
+            } else {
+                window.selectedLaporanNims.clear();
+                document.querySelectorAll('.cb-mhs-laporan').forEach(cb => cb.checked = false);
+                const m = document.getElementById('selectAllLaporan');
+                if (m) m.checked = false;
+            }
+            updateBatchActionBar();
         }
 
-        function closePreviewModal() {
-            document.getElementById('previewModalOverlay').classList.remove('active');
-            document.getElementById('modalPdfFrame').src = 'about:blank';
+        function submitBatchAcc() {
+            const isPersyaratan = (currentMainTab === 'persyaratan');
+            const nims = isPersyaratan ? Array.from(window.selectedPersyaratanNims) : Array.from(window.selectedLaporanNims);
+            if (nims.length === 0) return;
+
+            const title = isPersyaratan ? 'ACC Massal Persyaratan KP?' : 'ACC Massal Laporan KP?';
+            const htmlText = isPersyaratan
+                ? 'Apakah Anda yakin ingin menyetujui (ACC) seluruh berkas persyaratan untuk <strong>' + nims.length + ' mahasiswa terpilih</strong> sekaligus?<br><br><span class="text-xs text-slate-500">Status seluruh mahasiswa tersebut akan berubah menjadi <strong>Disetujui LAA</strong> dan siap di-plotting oleh Koordinator KP.</span>'
+                : 'Apakah Anda yakin ingin menyetujui (ACC) Laporan KP untuk <strong>' + nims.length + ' mahasiswa terpilih</strong> sekaligus?<br><br><span class="text-xs text-slate-500">Status Kerja Praktik mahasiswa tersebut akan dinyatakan <strong>Selesai</strong>.</span>';
+
+            Swal.fire({
+                title: title,
+                html: htmlText,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, ACC Massal (' + nims.length + ')',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#94a3b8'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    Swal.fire({ title: 'Memproses ACC Massal...', allowOutsideClick: false, didOpen: () => Swal.showLoading() });
+                    const formData = new FormData();
+                    nims.forEach(nim => formData.append('nims[]', nim));
+
+                    const endpoint = isPersyaratan ? 'adminlayanan/ajax_acc_semua_kp' : 'adminlayanan/ajax_acc_laporan_kp';
+
+                    fetch(SITE_URL + endpoint, { method: 'POST', body: formData })
+                        .then(r => r.json())
+                        .then(res => {
+                            if (res.status === 'success') {
+                                Swal.fire({ icon: 'success', title: 'Berhasil!', text: res.message, timer: 2000, showConfirmButton: false });
+                                unselectAllStudents();
+                                reloadVerifikasiData();
+                            } else {
+                                Swal.fire({ icon: 'error', title: 'Gagal!', text: res.message || 'Terjadi kesalahan sistem.' });
+                            }
+                        })
+                        .catch(err => {
+                            Swal.fire({ icon: 'error', title: 'Error Koneksi', text: 'Gagal menghubungi server: ' + err.message });
+                        });
+                }
+            });
         }
 
-        function toggleModalFullscreen() {
-            const box = document.querySelector('.preview-modal-box');
-            if (!box) return;
-            box.classList.toggle('fixed');
-            box.classList.toggle('inset-0');
-            box.classList.toggle('w-screen');
-            box.classList.toggle('h-screen');
-            box.classList.toggle('max-w-none');
-            box.classList.toggle('max-h-none');
-            box.classList.toggle('rounded-none');
+        // =========================================================================
+        // MULTI-PREVIEW BERKAS LOGIC (PERSYARATAN & LAPORAN - MATCHING DOSEN BIMBINGAN)
+        // =========================================================================
+        window.activeLihatBerkas = []; // [{ nim: '...', mode: 'persyaratan'|'laporan' }]
+        window.activePreviews    = []; // [{ nim: '...', fileCode: '...', mode: 'persyaratan'|'laporan' }]
+
+        function previewItemKey(nim, fileCode, mode) {
+            return (nim + '_' + fileCode + '_' + mode).replace(/[^a-zA-Z0-9_-]/g, '_');
         }
 
-        function renderPreviewModalContent() {
-            const mhs = activeModalData.mhs;
-            if (!mhs) return;
+        function isPreviewItemActive(nim, fileCode, mode) {
+            return window.activePreviews.some(p => p.nim === nim && p.fileCode === fileCode && p.mode === mode);
+        }
 
-            document.getElementById('modalMhsNama').textContent = mhs.nama || 'Mahasiswa';
-            document.getElementById('modalMhsNim').textContent = mhs.nim;
-            document.getElementById('modalMhsProdi').textContent = mhs.prodi || 'Informatika';
-            document.getElementById('modalMhsPerusahaan').textContent = mhs.nama_perusahaan || '-';
-            document.getElementById('modalMhsKota').textContent = mhs.kota || mhs.alamat_perusahaan || '-';
-            document.getElementById('modalMhsP1').textContent = mhs.pembimbing1_nama ? 'Pembimbing: ' + mhs.pembimbing1_nama : 'Pembimbing: Belum di-plot';
-            document.getElementById('modalMhsStatusKp').textContent = mhs.status_file || mhs.status_file_kp || 'Pending';
+        function toggleLihatBerkasPanel(nim, mode) {
+            if (!mode) mode = currentMainTab;
+            const existingIdx = window.activeLihatBerkas.findIndex(item => item.nim === nim && item.mode === mode);
+            if (existingIdx > -1) {
+                removeStudentFromLihatBerkas(nim, mode);
+                return;
+            }
 
-            const listContainer = document.getElementById('modalFilesListContainer');
+            if (window.activeLihatBerkas.length >= 5) {
+                const removed = window.activeLihatBerkas.shift();
+                window.activePreviews = window.activePreviews.filter(p => !(p.nim === removed.nim && p.mode === removed.mode));
+            }
 
-            if (activeModalData.mode === 'persyaratan') {
-                const files = mhs.files || [];
-                listContainer.innerHTML = files.map((f, idx) => {
-                    const isActive = (idx === activeModalData.activeFileIndex);
-                    const isUp = f.file && f.file.length > 0;
-                    let stBadge = '';
-                    if (!isUp) stBadge = `<span class="badge badge-secondary text-[9px]">Belum Upload</span>`;
-                    else if (f.status === 'Approved') stBadge = `<span class="badge badge-success text-[9px]">Disetujui</span>`;
-                    else if (f.status === 'Rejected') stBadge = `<span class="badge badge-danger text-[9px]">Revisi</span>`;
-                    else stBadge = `<span class="badge badge-warning text-[9px]">Pending</span>`;
+            window.activeLihatBerkas.push({ nim, mode });
+            showLihatBerkasContainer();
+            refreshLihatBerkasView();
+        }
 
-                    return `
-                        <div onclick="selectModalFileIndex(${idx})"
-                             class="p-2.5 rounded-xl border transition cursor-pointer flex items-center justify-between gap-2 ${isActive ? 'bg-orange-100/90 border-orange-400 shadow-2xs' : 'bg-white border-stone-200 hover:bg-orange-50/50'}">
-                            <div class="min-w-0">
-                                <span class="text-xs font-bold text-slate-800 block truncate">${f.nama_berkas}</span>
-                                <span class="text-[10px] text-slate-500 block truncate">${f.file_basename || 'Tidak ada file'}</span>
+        function removeStudentFromLihatBerkas(nim, mode) {
+            const idx = window.activeLihatBerkas.findIndex(item => item.nim === nim && item.mode === mode);
+            if (idx > -1) window.activeLihatBerkas.splice(idx, 1);
+            window.activePreviews = window.activePreviews.filter(p => !(p.nim === nim && p.mode === mode));
+            if (window.activeLihatBerkas.length === 0) {
+                closeLihatBerkasPanel();
+            } else {
+                refreshLihatBerkasView();
+            }
+        }
+
+        function showLihatBerkasContainer() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.style.display = 'flex';
+                container.classList.add('active');
+            }
+            updateLihatBerkasLayout();
+        }
+
+        function closeLihatBerkasPanel() {
+            const container = document.getElementById('lihatBerkasContainer');
+            if (container) {
+                container.style.display = 'none';
+                container.classList.remove('active');
+            }
+            const wrapperDaftar = document.getElementById('wrapperDaftarMhs');
+            if (wrapperDaftar) wrapperDaftar.innerHTML = '';
+            const wrapperPreview = document.getElementById('wrapperPreviewBerkas');
+            if (wrapperPreview) {
+                wrapperPreview.innerHTML = '';
+                wrapperPreview.classList.remove('active');
+                wrapperPreview.classList.add('hidden');
+            }
+            window.activeLihatBerkas = [];
+            window.activePreviews = [];
+            updateTableButtonHighlights();
+        }
+
+        function updateLihatBerkasLayout() {
+            const container      = document.getElementById('lihatBerkasContainer');
+            const wrapperDaftar  = document.getElementById('wrapperDaftarMhs');
+            const wrapperPreview = document.getElementById('wrapperPreviewBerkas');
+            if (!container || !wrapperDaftar || !wrapperPreview) return;
+
+            const isMobile = window.innerWidth <= 768;
+            const isPreviewActive = window.activePreviews && window.activePreviews.length > 0;
+
+            container.style.display = 'flex';
+            if (isMobile) {
+                container.style.flexDirection = 'column';
+                container.style.alignItems = 'stretch';
+                container.style.justifyContent = 'flex-start';
+                container.style.overflowY = 'auto';
+                container.style.overflowX = 'hidden';
+                wrapperDaftar.className = 'flex flex-col gap-3 w-full overflow-y-auto flex-shrink-0';
+            } else {
+                container.style.flexDirection = 'row';
+                container.style.alignItems = 'stretch';
+                container.style.justifyContent = isPreviewActive ? 'flex-start' : 'center';
+                container.style.overflowY = 'hidden';
+                container.style.overflowX = 'hidden';
+                wrapperDaftar.className = 'flex flex-col gap-3 w-[500px] min-w-[440px] max-w-[540px] overflow-y-auto flex-shrink-0';
+            }
+
+            if (isPreviewActive) {
+                wrapperPreview.classList.add('active');
+                wrapperPreview.classList.remove('hidden');
+                if (isMobile) wrapperPreview.className = 'flex w-full overflow-x-auto overflow-y-visible gap-3 flex-row items-stretch flex-shrink-0';
+                else          wrapperPreview.className = 'flex-1 overflow-x-auto overflow-y-hidden gap-4 flex items-stretch';
+            } else {
+                wrapperPreview.classList.remove('active');
+                wrapperPreview.classList.add('hidden');
+            }
+        }
+
+        function previewBerkasItem(nim, fileCode, mode) {
+            if (!mode) mode = 'persyaratan';
+            const isExisting = window.activePreviews.findIndex(p => p.nim === nim && p.fileCode === fileCode && p.mode === mode);
+            if (isExisting > -1) {
+                window.activePreviews.splice(isExisting, 1);
+                refreshLihatBerkasView();
+                return;
+            }
+
+            let student = null;
+            let fileObj = null;
+            if (mode === 'persyaratan') {
+                student = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc).find(m => m.nim === nim);
+                if (student) {
+                    fileObj = (student.files || []).find(f => f.kode_berkas === fileCode);
+                }
+            } else {
+                student = RAW_DATA.laporan.find(m => m.nim === nim);
+                if (student) {
+                    fileObj = {
+                        file: student.file_laporan,
+                        file_url: student.file_laporan_url || (student.file_laporan ? BASE_URL + student.file_laporan : ''),
+                        file_basename: student.file_laporan_name || 'laporan_kp.pdf',
+                        nama_berkas: 'Laporan KP & Form Penilaian',
+                        status: student.status_adminlaa || 'Pending'
+                    };
+                }
+            }
+
+            if (!fileObj || !fileObj.file_url) {
+                Swal.fire({
+                    icon: 'info',
+                    title: 'Berkas Belum Diunggah',
+                    text: 'Mahasiswa belum mengunggah dokumen ini.',
+                    confirmButtonColor: '#ea580c'
+                });
+                return;
+            }
+
+            if (window.activePreviews.length >= 5) {
+                window.activePreviews.shift();
+            }
+
+            window.activePreviews.push({ nim, fileCode, mode });
+            refreshLihatBerkasView();
+
+            if (window.innerWidth <= 768) {
+                setTimeout(() => {
+                    const previewWrap = document.getElementById('wrapperPreviewBerkas');
+                    if (previewWrap) previewWrap.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 150);
+            }
+        }
+
+        function closeSinglePreview(index) {
+            if (index < 0 || index >= window.activePreviews.length) return;
+            window.activePreviews.splice(index, 1);
+            refreshLihatBerkasView();
+        }
+
+        function togglePreviewIframeInteraction(uniqueKey) {
+            const iframe = document.getElementById('iframePreviewBerkas_' + uniqueKey);
+            const btn    = document.getElementById('btnPreviewInteract_' + uniqueKey);
+            const icon   = document.getElementById('iconPreviewInteract_' + uniqueKey);
+            if (!iframe) return;
+
+            const isLocked = iframe.classList.contains('pointer-events-none');
+            if (isLocked) {
+                iframe.classList.remove('pointer-events-none');
+                if (btn) {
+                    btn.className = 'w-7 h-7 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs transition cursor-pointer shadow-2xs';
+                    btn.title = 'Mode Scroll Aktif';
+                }
+                if (icon) icon.className = 'bi bi-hand';
+            } else {
+                iframe.classList.add('pointer-events-none');
+                if (btn) {
+                    btn.className = 'w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer';
+                    btn.title = 'Kursor Normal (Terkunci)';
+                }
+                if (icon) icon.className = 'bi bi-arrow-pointer';
+            }
+        }
+
+        function toggleFullscreenPreview(uniqueKey) {
+            const card = document.getElementById('previewCard_' + uniqueKey);
+            if (!card) return;
+            const isFs = card.classList.contains('preview-fullscreen-mode');
+            document.querySelectorAll('.preview-card-item.preview-fullscreen-mode').forEach(c => {
+                c.classList.remove('preview-fullscreen-mode');
+                const ic = c.querySelector('[data-fs-icon]');
+                if (ic) ic.className = 'bi bi-arrows-fullscreen';
+            });
+            if (!isFs) {
+                card.classList.add('preview-fullscreen-mode');
+                const icon = card.querySelector('[data-fs-icon][data-fs-key="' + uniqueKey + '"]');
+                if (icon) icon.className = 'bi bi-fullscreen-exit';
+            }
+        }
+
+        function renderAllLihatBerkasCards() {
+            const wrapper = document.getElementById('wrapperDaftarMhs');
+            if (!wrapper) return;
+            if (!window.activeLihatBerkas || window.activeLihatBerkas.length === 0) {
+                wrapper.innerHTML = '';
+                return;
+            }
+
+            const totalActive = window.activeLihatBerkas.length;
+            let headerSummaryBar = '';
+            if (totalActive > 1) {
+                headerSummaryBar = `
+                    <div class="bg-slate-900 text-white px-4 py-2.5 rounded-2xl flex items-center justify-between shadow-lg border border-slate-800 shrink-0 pointer-events-auto w-full animate-bar-in">
+                        <div class="flex items-center gap-2">
+                            <i class="bi bi-people-fill text-orange-400 text-sm"></i>
+                            <span class="text-xs font-bold">${totalActive} Mahasiswa <span class="text-slate-400 font-normal text-[11px]">(Maks. 5)</span></span>
+                        </div>
+                        <button type="button" onclick="closeLihatBerkasPanel()" class="text-xs text-slate-300 hover:text-rose-400 font-bold transition cursor-pointer">Tutup Semua</button>
+                    </div>
+                `;
+            }
+
+            let cardsHtml = '';
+            window.activeLihatBerkas.forEach((item, cardIdx) => {
+                const nim = item.nim;
+                const mode = item.mode;
+                let mhs = null;
+
+                if (mode === 'persyaratan') {
+                    mhs = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc).find(m => m.nim === nim);
+                } else {
+                    mhs = RAW_DATA.laporan.find(m => m.nim === nim);
+                }
+                if (!mhs) return;
+
+                const cardNum = cardIdx + 1;
+                let itemsHtml = '';
+
+                if (mode === 'persyaratan') {
+                    const files = mhs.files || [];
+                    const uploadedCount = files.filter(f => f.file && f.file.length > 0).length;
+                    const totalFiles = files.length || 4;
+
+                    itemsHtml += `
+                        <div class="mb-2 flex items-center justify-between gap-2 px-1">
+                            <div class="flex items-center gap-1.5">
+                                <i class="bi bi-folder2-open text-orange-500 text-sm"></i>
+                                <span class="text-xs font-bold text-slate-700">Berkas Persyaratan (${uploadedCount}/${totalFiles} Terunggah)</span>
                             </div>
-                            <div class="shrink-0">${stBadge}</div>
+                            <span class="badge ${mhs.is_all_approved ? 'badge-success' : 'badge-warning'} text-[10px] font-bold">
+                                ${mhs.status_file || 'Pending'}
+                            </span>
                         </div>
                     `;
-                }).join('');
 
-                const activeFile = files[activeModalData.activeFileIndex] || files[0];
-                updatePreviewIframeAndActions(activeFile);
-            } else {
-                // Mode Laporan KP
-                listContainer.innerHTML = `
-                    <div class="p-3 rounded-xl border bg-orange-100/90 border-orange-400 shadow-2xs flex items-center justify-between gap-2">
-                        <div class="min-w-0">
-                            <span class="text-xs font-bold text-slate-800 block truncate">Laporan KP &amp; Form Penilaian</span>
-                            <span class="text-[10px] text-slate-500 block truncate">${mhs.file_laporan_name || 'laporan_kp.pdf'}</span>
+                    files.forEach(f => {
+                        const isUp = f.file && f.file.length > 0;
+                        const fileUrl = f.file_url || (isUp ? BASE_URL + f.file : '');
+                        const fileName = f.file_basename || (isUp ? f.file : 'Belum diunggah');
+                        const isAct = isPreviewItemActive(mhs.nim, f.kode_berkas, 'persyaratan');
+
+                        const activeCardBorder = isAct ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' : 'border-slate-200 bg-white hover:border-slate-300';
+                        const previewBtnStyle  = isAct ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
+                        const previewBtnLabel  = isAct ? 'Tutup' : 'Lihat';
+                        const previewBtnIcon   = isAct ? 'bi-x-circle-fill' : 'bi-eye-fill';
+
+                        let stBadge = '';
+                        if (!isUp) stBadge = '<span class="badge badge-secondary text-[9px]">Belum Upload</span>';
+                        else if (f.status === 'Approved') stBadge = '<span class="badge badge-success text-[9px]"><i class="bi bi-check2"></i> Disetujui</span>';
+                        else if (f.status === 'Rejected') stBadge = '<span class="badge badge-danger text-[9px]"><i class="bi bi-x"></i> Revisi</span>';
+                        else stBadge = '<span class="badge badge-warning text-[9px]"><i class="bi bi-clock"></i> Pending</span>';
+
+                        itemsHtml += `
+                            <div class="p-3 px-3.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex flex-col gap-2 ${activeCardBorder}">
+                                <div class="flex items-center justify-between gap-3">
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-center gap-2 flex-wrap">
+                                            <i class="bi bi-file-earmark-pdf-fill text-orange-500 text-sm shrink-0"></i>
+                                            <span class="font-bold text-slate-800 text-xs truncate">${f.nama_berkas}</span>
+                                            ${stBadge}
+                                        </div>
+                                        <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">
+                                            ${fileName}
+                                        </p>
+                                        ${f.komentar ? `<p class="text-[10px] text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5 mt-1 italic"><i class="bi bi-info-circle mr-1"></i>${f.komentar}</p>` : ''}
+                                    </div>
+                                    <div class="flex items-center gap-1.5 shrink-0">
+                                        ${isUp ? `
+                                            <button type="button"
+                                                    onclick="event.stopPropagation(); previewBerkasItem('${mhs.nim}', '${f.kode_berkas}', 'persyaratan')"
+                                                    class="px-3 h-8 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap ${previewBtnStyle}">
+                                                <i class="bi ${previewBtnIcon} text-xs"></i><span>${previewBtnLabel}</span>
+                                            </button>
+                                            <a href="${fileUrl}" download="${fileName}" target="_blank"
+                                                class="w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
+                                                title="Unduh Berkas">
+                                                <i class="bi bi-download text-xs"></i>
+                                            </a>
+                                        ` : `
+                                            <span class="text-[11px] text-slate-400 italic px-2 py-1">Belum diunggah</span>
+                                        `}
+                                    </div>
+                                </div>
+                            </div>
+                        `;
+                    });
+
+                    // Tombol Bulk ACC di bawah card
+                    itemsHtml += `
+                        <div class="pt-3 border-t border-slate-200 mt-2">
+                            <button type="button" onclick="confirmBulkAccPersyaratan('${mhs.nim}', '${mhs.nama}')"
+                                    class="w-full py-2.5 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+                                <i class="bi bi-check-all text-base"></i>
+                                <span>ACC Semua Berkas Persyaratan</span>
+                            </button>
                         </div>
-                        <div class="shrink-0">
-                            <span class="badge ${mhs.status_adminlaa === 'Approved' ? 'badge-success' : (mhs.status_adminlaa === 'Rejected' ? 'badge-danger' : 'badge-warning')} text-[9px]">
-                                ${mhs.status_adminlaa || 'Pending'}
-                            </span>
+                    `;
+                } else {
+                    // Mode Laporan KP
+                    const isUp = mhs.file_laporan && mhs.file_laporan.length > 0;
+                    const fileUrl = mhs.file_laporan_url || (isUp ? BASE_URL + mhs.file_laporan : '');
+                    const fileName = mhs.file_laporan_name || (isUp ? mhs.file_laporan : 'Belum diunggah');
+                    const isAct = isPreviewItemActive(mhs.nim, 'laporan_kp', 'laporan');
+
+                    const activeCardBorder = isAct ? 'ring-2 ring-orange-500 border-orange-300 bg-orange-50/45' : 'border-slate-200 bg-white hover:border-slate-300';
+                    const previewBtnStyle  = isAct ? 'bg-orange-600 text-white border-orange-600 shadow-xs ring-2 ring-orange-400' : 'bg-orange-50 hover:bg-orange-100 text-orange-700 border-orange-200 shadow-2xs';
+                    const previewBtnLabel  = isAct ? 'Tutup' : 'Lihat';
+                    const previewBtnIcon   = isAct ? 'bi-x-circle-fill' : 'bi-eye-fill';
+
+                    let stBadge = '';
+                    if (!isUp) stBadge = '<span class="badge badge-secondary text-[9px]">Belum Upload</span>';
+                    else if (mhs.status_adminlaa === 'Approved') stBadge = '<span class="badge badge-success text-[9px]"><i class="bi bi-check2"></i> Disetujui</span>';
+                    else if (mhs.status_adminlaa === 'Rejected') stBadge = '<span class="badge badge-danger text-[9px]"><i class="bi bi-x"></i> Revisi</span>';
+                    else stBadge = '<span class="badge badge-warning text-[9px]"><i class="bi bi-clock"></i> Pending</span>';
+
+                    itemsHtml += `
+                        <div class="mb-2 flex items-center justify-between gap-2 px-1">
+                            <div class="flex items-center gap-1.5">
+                                <i class="bi bi-journal-check text-orange-500 text-sm"></i>
+                                <span class="text-xs font-bold text-slate-700">Berkas Laporan KP</span>
+                            </div>
+                            ${stBadge}
+                        </div>
+                        <div class="p-3 px-3.5 rounded-xl border shadow-2xs hover:shadow-xs transition-all flex flex-col gap-2 ${activeCardBorder}">
+                            <div class="flex items-center justify-between gap-3">
+                                <div class="min-w-0 flex-1">
+                                    <div class="flex items-center gap-2 flex-wrap">
+                                        <i class="bi bi-file-earmark-pdf-fill text-orange-500 text-sm shrink-0"></i>
+                                        <span class="font-bold text-slate-800 text-xs truncate">Laporan KP &amp; Form Penilaian</span>
+                                        ${stBadge}
+                                    </div>
+                                    <p class="text-[11px] font-mono text-slate-400 truncate mt-0.5" title="${fileName}">${fileName}</p>
+                                    ${mhs.komentar ? `<p class="text-[10px] text-rose-600 bg-rose-50 border border-rose-200 rounded px-1.5 py-0.5 mt-1 italic"><i class="bi bi-info-circle mr-1"></i>${mhs.komentar}</p>` : ''}
+                                </div>
+                                <div class="flex items-center gap-1.5 shrink-0">
+                                    ${isUp ? `
+                                        <button type="button"
+                                                onclick="event.stopPropagation(); previewBerkasItem('${mhs.nim}', 'laporan_kp', 'laporan')"
+                                                class="px-3 h-8 rounded-lg border text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 whitespace-nowrap ${previewBtnStyle}">
+                                            <i class="bi ${previewBtnIcon} text-xs"></i><span>${previewBtnLabel}</span>
+                                        </button>
+                                        <a href="${fileUrl}" download="${fileName}" target="_blank"
+                                            class="w-8 h-8 rounded-lg bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 text-xs font-bold transition flex items-center justify-center cursor-pointer shadow-2xs active:scale-95"
+                                            title="Unduh Laporan">
+                                            <i class="bi bi-download text-xs"></i>
+                                        </a>
+                                    ` : `
+                                        <span class="text-[11px] text-slate-400 italic px-2 py-1">Belum diunggah</span>
+                                    `}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="pt-3 border-t border-slate-200 mt-2 flex items-center gap-2">
+                            <button type="button" onclick="promptRejectLaporanPreview('${mhs.nim}')"
+                                    class="flex-1 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-x-circle-fill text-rose-600"></i>
+                                <span>Tolak / Revisi</span>
+                            </button>
+                            <button type="button" onclick="confirmAccLaporanPreview('${mhs.nim}')"
+                                    class="flex-1 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center justify-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>ACC Laporan</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                cardsHtml += `
+                    <div class="student-card-item pointer-events-auto bg-white/95 backdrop-blur-md rounded-2xl shadow-xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 w-full animate-pop-in" id="cardMhs_${mhs.nim}">
+                        <div class="p-3 px-4 bg-slate-900 text-white flex items-center justify-between gap-3 shrink-0 border-b border-slate-800">
+                            <div class="flex items-center gap-2.5 min-w-0">
+                                <div class="w-7 h-7 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">${cardNum}</div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs sm:text-sm font-bold text-white truncate max-w-[200px] sm:max-w-[240px]">${mhs.nama || 'Mahasiswa'}</h4>
+                                    <div class="flex items-center gap-1.5 mt-0.5">
+                                        <span class="px-1.5 py-0.2 rounded bg-white/10 text-orange-300 font-mono text-[10px] font-bold">${mhs.nim}</span>
+                                        <span class="text-[10px] text-slate-400 truncate">${mhs.prodi || 'Informatika'}</span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="removeStudentFromLihatBerkas('${mhs.nim}', '${mode}')" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer" title="Tutup Mahasiswa Ini">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Info Ringkas -->
+                        <div class="p-3 bg-stone-50/80 border-b border-stone-200 text-[11px] text-slate-600 space-y-1">
+                            <p class="truncate"><i class="bi bi-building mr-1.5 text-slate-400"></i><strong>${mhs.nama_perusahaan || '-'}</strong></p>
+                            <p class="truncate"><i class="bi bi-geo-alt mr-1.5 text-slate-400"></i>${mhs.kota || mhs.alamat_perusahaan || '-'}</p>
+                            <p class="truncate"><i class="bi bi-person-badge mr-1.5 text-slate-400"></i>${mhs.pembimbing1_nama ? 'Pembimbing: ' + mhs.pembimbing1_nama : 'Pembimbing: Menunggu Plotting'}</p>
+                        </div>
+
+                        <div class="p-3 space-y-2 bg-slate-50/50 overflow-y-auto">${itemsHtml}</div>
+                    </div>
+                `;
+            });
+
+            wrapper.innerHTML = headerSummaryBar + cardsHtml;
+        }
+
+        function renderAllPreviewCards() {
+            const wrapper = document.getElementById('wrapperPreviewBerkas');
+            if (!wrapper) return;
+            if (!window.activePreviews || window.activePreviews.length === 0) {
+                wrapper.innerHTML = '';
+                wrapper.classList.remove('active');
+                wrapper.classList.add('hidden');
+                return;
+            }
+
+            wrapper.classList.add('active');
+            wrapper.classList.remove('hidden');
+
+            let html = '';
+            window.activePreviews.forEach((p, idx) => {
+                const nim = p.nim;
+                const fileCode = p.fileCode;
+                const mode = p.mode;
+
+                let mhs = null;
+                let fileObj = null;
+
+                if (mode === 'persyaratan') {
+                    mhs = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc).find(m => m.nim === nim);
+                    if (mhs) fileObj = (mhs.files || []).find(f => f.kode_berkas === fileCode);
+                } else {
+                    mhs = RAW_DATA.laporan.find(m => m.nim === nim);
+                    if (mhs) {
+                        fileObj = {
+                            id_file: 'laporan_kp',
+                            nama_berkas: 'Laporan KP & Lembar Penilaian',
+                            file: mhs.file_laporan,
+                            file_url: mhs.file_laporan_url || (mhs.file_laporan ? BASE_URL + mhs.file_laporan : ''),
+                            file_basename: mhs.file_laporan_name || 'laporan_kp.pdf',
+                            status: mhs.status_adminlaa || 'Pending',
+                            komentar: mhs.komentar || ''
+                        };
+                    }
+                }
+
+                if (!mhs || !fileObj) return;
+
+                const fileUrl = fileObj.file_url || (fileObj.file ? BASE_URL + fileObj.file : '');
+                const fileName = fileObj.file_basename || (fileObj.file ? fileObj.file : '-');
+                const fileLabel = fileObj.nama_berkas || 'Berkas';
+                const fullName = mhs.nama || 'Mahasiswa';
+                const slotNum = idx + 1;
+                const uniqueKey = previewItemKey(nim, fileCode, mode);
+
+                let fileStatusBadge = '';
+                if (fileObj.status === 'Approved') {
+                    fileStatusBadge = '<span class="badge badge-success text-[10px]"><i class="bi bi-check2"></i> Disetujui</span>';
+                } else if (fileObj.status === 'Rejected') {
+                    fileStatusBadge = '<span class="badge badge-danger text-[10px]"><i class="bi bi-x"></i> Revisi</span>';
+                } else {
+                    fileStatusBadge = '<span class="badge badge-warning text-[10px]"><i class="bi bi-clock"></i> Pending</span>';
+                }
+
+                let footerActionButtons = '';
+                if (mode === 'persyaratan') {
+                    footerActionButtons = `
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="promptRejectBerkasFromPreview('${nim}', '${fileCode}', '${fileObj.id_file || ''}')"
+                                    class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-x-circle-fill text-rose-600"></i>
+                                <span>Tolak / Revisi</span>
+                            </button>
+                            <button type="button" onclick="confirmAccBerkasFromPreview('${nim}', '${fileCode}', '${fileObj.id_file || ''}')"
+                                    class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Setujui (ACC)</span>
+                            </button>
+                        </div>
+                    `;
+                } else {
+                    footerActionButtons = `
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="promptRejectLaporanPreview('${nim}')"
+                                    class="px-3.5 py-1.5 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-300 font-bold text-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-x-circle-fill text-rose-600"></i>
+                                <span>Tolak / Revisi</span>
+                            </button>
+                            <button type="button" onclick="confirmAccLaporanPreview('${nim}')"
+                                    class="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-bold text-xs shadow-md transition flex items-center gap-1.5 cursor-pointer">
+                                <i class="bi bi-check-circle-fill"></i>
+                                <span>Setujui Laporan</span>
+                            </button>
+                        </div>
+                    `;
+                }
+
+                html += `
+                    <div class="preview-card-item pointer-events-auto bg-white rounded-3xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col shrink-0 animate-preview-in" id="previewCard_${uniqueKey}">
+                        <!-- Header Preview Card -->
+                        <div class="preview-header p-2.5 px-3.5 bg-slate-900 text-white flex items-center justify-between gap-2.5 shrink-0 border-b border-slate-800">
+                            <div class="flex items-center gap-2 min-w-0">
+                                <div class="preview-slot-badge w-7 h-7 rounded-lg bg-orange-600/30 border border-orange-500/50 text-orange-400 flex items-center justify-center font-bold text-xs shrink-0 shadow-2xs">
+                                    ${window.activePreviews.length > 1 ? slotNum : '<i class="bi bi-file-earmark-pdf"></i>'}
+                                </div>
+                                <div class="min-w-0">
+                                    <h4 class="text-xs font-bold text-white truncate max-w-[210px] sm:max-w-[280px]">${fileLabel}</h4>
+                                    <p class="text-[10px] text-slate-300 font-medium truncate">${fullName} · <span class="font-mono text-slate-400">${nim}</span></p>
+                                </div>
+                            </div>
+                            <div class="flex items-center gap-1 shrink-0">
+                                <button type="button" onclick="togglePreviewIframeInteraction('${uniqueKey}')" id="btnPreviewInteract_${uniqueKey}" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Kursor Terkunci (Normal)">
+                                    <i class="bi bi-arrow-pointer" id="iconPreviewInteract_${uniqueKey}"></i>
+                                </button>
+                                <button type="button" onclick="toggleFullscreenPreview('${uniqueKey}')" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Perbesar Tampilan">
+                                    <i class="bi bi-arrows-fullscreen" data-fs-icon data-fs-key="${uniqueKey}"></i>
+                                </button>
+                                <a href="${fileUrl}" target="_blank" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-white/20 text-slate-300 hover:text-white flex items-center justify-center text-xs transition cursor-pointer" title="Buka di tab baru">
+                                    <i class="bi bi-box-arrow-up-right"></i>
+                                </a>
+                                <button type="button" onclick="closeSinglePreview(${idx})" class="w-7 h-7 rounded-lg bg-white/10 hover:bg-rose-600/80 text-slate-300 hover:text-white flex items-center justify-center text-xs font-bold transition-colors cursor-pointer ml-0.5" title="Tutup Pratinjau Ini">
+                                    <i class="bi bi-x-lg"></i>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Body Preview Card (Iframe) -->
+                        <div class="preview-body relative flex-1 bg-slate-800">
+                            <div class="loader absolute inset-0 flex items-center justify-center bg-slate-900 text-slate-400 text-xs font-bold gap-2">
+                                <i class="bi bi-arrow-repeat text-xl text-orange-500 animate-spin"></i>
+                                <span>Memuat Dokumen...</span>
+                            </div>
+                            <iframe id="iframePreviewBerkas_${uniqueKey}" src="${fileUrl}#toolbar=0&navpanes=0" class="w-full h-full border-0 relative z-10 pointer-events-none" onload="this.previousElementSibling.style.display='none'"></iframe>
+                        </div>
+
+                        <!-- Footer Preview Card -->
+                        <div class="preview-footer p-2.5 px-4 bg-white border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs font-bold text-slate-500">Status:</span>
+                                ${fileStatusBadge}
+                            </div>
+                            ${footerActionButtons}
                         </div>
                     </div>
                 `;
+            });
 
-                const fileObj = {
-                    nama_berkas: 'Laporan KP & Lembar Penilaian Lapangan',
-                    file_basename: mhs.file_laporan_name || '',
-                    file_url: mhs.file_laporan_url || (mhs.file_laporan ? BASE_URL + mhs.file_laporan : ''),
-                    status: mhs.status_adminlaa || 'Pending',
-                    komentar: mhs.komentar || ''
-                };
-                updatePreviewIframeAndActions(fileObj);
+            wrapper.innerHTML = html;
+        }
+
+        function refreshLihatBerkasView() {
+            updateLihatBerkasLayout();
+            renderAllLihatBerkasCards();
+            renderAllPreviewCards();
+            updateTableButtonHighlights();
+        }
+
+        function updateTableButtonHighlights() {
+            document.querySelectorAll('button[id^="btnLihatBerkas_"]').forEach(btn => {
+                const nim = btn.id.replace('btnLihatBerkas_', '');
+                const isActive = window.activeLihatBerkas.some(item => item.nim === nim);
+                if (isActive) {
+                    btn.classList.add('ring-2', 'ring-orange-400', 'bg-orange-600');
+                } else {
+                    btn.classList.remove('ring-2', 'ring-orange-400', 'bg-orange-600');
+                }
+            });
+        }
+
+        function handleContainerBackdropClick(e) {
+            if (e.target.id === 'lihatBerkasContainer' || e.target.id === 'wrapperDaftarMhs' || e.target.id === 'wrapperPreviewBerkas') {
+                closeLihatBerkasPanel();
             }
         }
 
-        function selectModalFileIndex(idx) {
-            activeModalData.activeFileIndex = idx;
-            renderPreviewModalContent();
-        }
-
-        function updatePreviewIframeAndActions(fileObj) {
-            const frame = document.getElementById('modalPdfFrame');
-            const placeholder = document.getElementById('modalPdfEmptyPlaceholder');
-            const docTitle = document.getElementById('modalPreviewDocTitle');
-            const docSub = document.getElementById('modalPreviewDocSub');
-            const dwnBtn = document.getElementById('modalDownloadBtn');
-            const badge = document.getElementById('modalActiveFileStatus');
-
-            if (!fileObj) return;
-
-            docTitle.textContent = fileObj.nama_berkas || 'Dokumen Persyaratan';
-            docSub.textContent = fileObj.file_basename || (fileObj.file_url ? 'File PDF' : 'Belum diunggah');
-
-            if (fileObj.file_url && fileObj.file_url.length > 5) {
-                frame.classList.remove('hidden');
-                placeholder.classList.add('hidden');
-                frame.src = fileObj.file_url;
-                dwnBtn.href = fileObj.file_url;
-                dwnBtn.classList.remove('hidden');
-            } else {
-                frame.classList.add('hidden');
-                placeholder.classList.remove('hidden');
-                frame.src = 'about:blank';
-                dwnBtn.href = '#';
-                dwnBtn.classList.add('hidden');
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const fsCard = document.querySelector('.preview-card-item.preview-fullscreen-mode');
+                if (fsCard) {
+                    fsCard.classList.remove('preview-fullscreen-mode');
+                    const icon = fsCard.querySelector('[data-fs-icon]');
+                    if (icon) icon.className = 'bi bi-arrows-fullscreen';
+                    e.preventDefault();
+                    return;
+                }
+                if (window.activeLihatBerkas && window.activeLihatBerkas.length > 0) {
+                    closeLihatBerkasPanel();
+                }
             }
+        });
 
-            // Update badge status aktif
-            const st = fileObj.status || 'Pending';
-            badge.textContent = st;
-            if (st === 'Approved') badge.className = 'badge badge-success text-xs';
-            else if (st === 'Rejected') badge.className = 'badge badge-danger text-xs';
-            else badge.className = 'badge badge-warning text-xs';
+        window.addEventListener('resize', () => {
+            if (window.activeLihatBerkas && window.activeLihatBerkas.length > 0) updateLihatBerkasLayout();
+        });
+
+        // Helper Aksi dari Preview Card
+        function confirmAccBerkasFromPreview(nim, fileCode, idFile) {
+            const mhs = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc).find(m => m.nim === nim);
+            const fileObj = mhs ? (mhs.files || []).find(f => f.kode_berkas === fileCode) : null;
+            const docName = fileObj ? fileObj.nama_berkas : 'Berkas';
+
+            Swal.fire({
+                title: 'Setujui Berkas?',
+                html: `Apakah Anda yakin ingin menyetujui (ACC) berkas <strong>${docName}</strong> untuk mahasiswa <strong>${mhs ? mhs.nama : ''}</strong> (${nim})?`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, Setujui (ACC)',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#94a3b8'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    doAjaxAccBerkas(idFile || (fileObj ? fileObj.id_file : ''), nim);
+                }
+            });
         }
 
-        // =========================================================================
-        // AJAX AKSI ACC & TOLAK VERIFIKASI
-        // =========================================================================
-        function confirmAccCurrentFile() {
-            const mhs = activeModalData.mhs;
-            if (!mhs) return;
-
-            if (activeModalData.mode === 'persyaratan') {
-                const files = mhs.files || [];
-                const curFile = files[activeModalData.activeFileIndex];
-                if (!curFile) return;
-
-                Swal.fire({
-                    title: 'Setujui Berkas?',
-                    html: `Apakah Anda yakin ingin menyetujui (ACC) berkas <strong>${curFile.nama_berkas}</strong> untuk mahasiswa <strong>${mhs.nama}</strong> (${mhs.nim})?`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, Setujui (ACC)',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#059669',
-                    cancelButtonColor: '#94a3b8'
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        doAjaxAccBerkas(curFile.id_file, mhs.nim);
-                    }
-                });
-            } else {
-                // Mode Laporan KP
-                Swal.fire({
-                    title: 'Setujui Laporan KP?',
-                    html: `Apakah Anda yakin ingin menyetujui (ACC) Laporan KP untuk mahasiswa <strong>${mhs.nama}</strong> (${mhs.nim})? Status KP mahasiswa akan menjadi <strong>Selesai</strong>.`,
-                    icon: 'question',
-                    showCancelButton: true,
-                    confirmButtonText: 'Ya, ACC Laporan',
-                    cancelButtonText: 'Batal',
-                    confirmButtonColor: '#059669',
-                    cancelButtonColor: '#94a3b8'
-                }).then(result => {
-                    if (result.isConfirmed) {
-                        doAjaxAccLaporan(mhs.nim);
-                    }
-                });
-            }
-        }
-
-        function promptRejectCurrentFile() {
-            const mhs = activeModalData.mhs;
-            if (!mhs) return;
-
-            const isPersyaratan = (activeModalData.mode === 'persyaratan');
-            const curFile = isPersyaratan ? (mhs.files || [])[activeModalData.activeFileIndex] : null;
-            const docName = isPersyaratan ? (curFile ? curFile.nama_berkas : 'Berkas') : 'Laporan KP';
+        function promptRejectBerkasFromPreview(nim, fileCode, idFile) {
+            const mhs = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc).find(m => m.nim === nim);
+            const fileObj = mhs ? (mhs.files || []).find(f => f.kode_berkas === fileCode) : null;
+            const docName = fileObj ? fileObj.nama_berkas : 'Berkas';
 
             Swal.fire({
                 title: 'Tolak / Minta Revisi',
-                html: `<p class="text-xs text-slate-600 mb-3">Masukkan catatan perbaikan untuk mahasiswa <strong>${mhs.nama}</strong> (${mhs.nim}) terkait dokumen <strong>${docName}</strong>:</p>`,
+                html: `<p class="text-xs text-slate-600 mb-3">Masukkan catatan perbaikan untuk mahasiswa <strong>${mhs ? mhs.nama : ''}</strong> (${nim}) terkait dokumen <strong>${docName}</strong>:</p>`,
                 input: 'textarea',
                 inputPlaceholder: 'Tuliskan alasan penolakan atau petunjuk revisi berkas...',
                 inputAttributes: { 'aria-label': 'Catatan Revisi' },
@@ -1382,19 +1981,53 @@ $total_laporan   = count($laporan ?? []);
             }).then(result => {
                 if (result.isConfirmed) {
                     const komentar = result.value.trim();
-                    if (isPersyaratan) {
-                        doAjaxRejectBerkas(curFile.id_file, mhs.nim, komentar);
-                    } else {
-                        doAjaxRejectLaporan(mhs.nim, komentar);
-                    }
+                    doAjaxRejectBerkas(idFile || (fileObj ? fileObj.id_file : ''), nim, komentar);
                 }
             });
         }
 
-        function confirmBulkAccPersyaratanCurrent() {
-            const mhs = activeModalData.mhs;
-            if (!mhs) return;
-            confirmBulkAccPersyaratan(mhs.nim, mhs.nama);
+        function confirmAccLaporanPreview(nim) {
+            const mhs = RAW_DATA.laporan.find(m => m.nim === nim);
+            Swal.fire({
+                title: 'Setujui Laporan KP?',
+                html: `Apakah Anda yakin ingin menyetujui (ACC) Laporan KP untuk mahasiswa <strong>${mhs ? mhs.nama : ''}</strong> (${nim})? Status KP mahasiswa akan menjadi <strong>Selesai</strong>.`,
+                icon: 'question',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, ACC Laporan',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#059669',
+                cancelButtonColor: '#94a3b8'
+            }).then(result => {
+                if (result.isConfirmed) {
+                    doAjaxAccLaporan(nim);
+                }
+            });
+        }
+
+        function promptRejectLaporanPreview(nim) {
+            const mhs = RAW_DATA.laporan.find(m => m.nim === nim);
+            Swal.fire({
+                title: 'Tolak / Minta Revisi',
+                html: `<p class="text-xs text-slate-600 mb-3">Masukkan catatan perbaikan untuk mahasiswa <strong>${mhs ? mhs.nama : ''}</strong> (${nim}) terkait Laporan KP:</p>`,
+                input: 'textarea',
+                inputPlaceholder: 'Tuliskan alasan penolakan atau petunjuk revisi berkas...',
+                inputAttributes: { 'aria-label': 'Catatan Revisi' },
+                showCancelButton: true,
+                confirmButtonText: 'Kirim Revisi',
+                cancelButtonText: 'Batal',
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#94a3b8',
+                inputValidator: (value) => {
+                    if (!value || !value.trim()) {
+                        return 'Alasan / catatan revisi wajib diisi agar mahasiswa mengetahui bagian yang perlu diperbaiki!';
+                    }
+                }
+            }).then(result => {
+                if (result.isConfirmed) {
+                    const komentar = result.value.trim();
+                    doAjaxRejectLaporan(nim, komentar);
+                }
+            });
         }
 
         function confirmBulkAccPersyaratan(nim, nama) {
@@ -1537,22 +2170,9 @@ $total_laporan   = count($laporan ?? []);
                         renderTablePersyaratan();
                         renderTableLaporan();
 
-                        // Update isi modal jika sedang terbuka
-                        if (document.getElementById('previewModalOverlay').classList.contains('active') && activeModalData.mhs) {
-                            const curNim = activeModalData.mhs.nim;
-                            if (activeModalData.mode === 'persyaratan') {
-                                const refreshed = RAW_DATA.belum_acc.concat(RAW_DATA.sudah_acc).find(m => m.nim === curNim);
-                                if (refreshed) {
-                                    activeModalData.mhs = refreshed;
-                                    renderPreviewModalContent();
-                                }
-                            } else {
-                                const refreshed = RAW_DATA.laporan.find(m => m.nim === curNim);
-                                if (refreshed) {
-                                    activeModalData.mhs = refreshed;
-                                    renderPreviewModalContent();
-                                }
-                            }
+                        // Update isi Multi-Preview Berkas jika sedang terbuka
+                        if (window.activeLihatBerkas && window.activeLihatBerkas.length > 0) {
+                            refreshLihatBerkasView();
                         }
                     }
                 })

@@ -67,13 +67,23 @@ class KoordinatorKP extends CI_Controller {
     }
 
     /**
-     * AJAX Endpoint: Simpan Plotting Pembimbing 1
+     * AJAX Endpoint: Simpan Plotting Pembimbing 1 (Single atau Massal)
      */
     public function ajax_plot_pembimbing() {
-        $nim              = trim((string)$this->input->post('nim'));
+        $nims             = $this->input->post('nims');
         $dosen_identifier = trim((string)$this->input->post('dosen_identifier'));
 
-        if (empty($nim)) {
+        if (empty($nims)) {
+            $nim = trim((string)$this->input->post('nim'));
+            if (!empty($nim)) {
+                $nims = [$nim];
+            }
+        }
+        if (is_string($nims)) {
+            $nims = explode(',', $nims);
+        }
+
+        if (empty($nims) || !is_array($nims)) {
             $this->output->set_content_type('application/json')
                 ->set_output(json_encode(['status' => false, 'message' => 'NIM Mahasiswa wajib disertakan.']));
             return;
@@ -85,10 +95,28 @@ class KoordinatorKP extends CI_Controller {
             return;
         }
 
-        $res = $this->Kp_model->plot_pembimbing_kp($nim, $dosen_identifier);
+        $success_count = 0;
+        foreach ($nims as $n) {
+            $n = trim((string)$n);
+            if (!empty($n)) {
+                $res = $this->Kp_model->plot_pembimbing_kp($n, $dosen_identifier);
+                if (!empty($res['status'])) {
+                    $success_count++;
+                }
+            }
+        }
+
+        $dosen_nama = $this->Kp_model->resolve_dosen_name($dosen_identifier);
+        $msg = count($nims) === 1
+            ? "Dosen Pembimbing 1 ({$dosen_nama}) berhasil ditetapkan untuk mahasiswa NIM {$nims[0]}."
+            : "Berhasil menetapkan Dosen Pembimbing 1 ({$dosen_nama}) untuk {$success_count} mahasiswa terpilih secara massal!";
 
         $this->output->set_content_type('application/json')
-            ->set_output(json_encode($res));
+            ->set_output(json_encode([
+                'status'  => true,
+                'message' => $msg,
+                'count'   => $success_count
+            ]));
     }
 
     /**

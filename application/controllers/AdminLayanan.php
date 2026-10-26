@@ -2169,50 +2169,94 @@ class AdminLayanan extends CI_Controller {
     }
 
     /**
-     * AJAX: ACC Semua Berkas Persyaratan Mahasiswa (Bulk Approve)
+     * AJAX: ACC Semua Berkas Persyaratan Mahasiswa (Single / Bulk Massal Approve)
      */
     public function ajax_acc_semua_kp() {
         $this->_require_admin_laa_or_admin();
         $this->load->model('Kp_model');
 
-        $nim = trim((string)$this->input->post('nim'));
-        if (empty($nim)) {
+        $nims = $this->input->post('nims');
+        if (empty($nims)) {
+            $nim = trim((string)$this->input->post('nim'));
+            if (!empty($nim)) {
+                $nims = [$nim];
+            }
+        }
+        if (is_string($nims)) {
+            $nims = explode(',', $nims);
+        }
+
+        if (empty($nims) || !is_array($nims)) {
             $this->output->set_content_type('application/json')
                 ->set_output(json_encode(['status' => 'error', 'message' => 'NIM mahasiswa tidak boleh kosong.']));
             return;
         }
 
-        $this->Kp_model->acc_semua_persyaratan_mhs($nim);
+        $success_count = 0;
+        foreach ($nims as $n) {
+            $n = trim((string)$n);
+            if (!empty($n)) {
+                $this->Kp_model->acc_semua_persyaratan_mhs($n);
+                $success_count++;
+            }
+        }
+
+        $msg = count($nims) === 1
+            ? "Seluruh berkas persyaratan mahasiswa NIM {$nims[0]} berhasil disetujui (ACC)! Status pengajuan kini 'Disetujui LAA' dan siap di-plotting oleh Koordinator KP."
+            : "Berhasil menyetujui (ACC) massal seluruh berkas persyaratan untuk {$success_count} mahasiswa terpilih! Mahasiswa kini siap di-plotting oleh Koordinator KP.";
 
         $this->output->set_content_type('application/json')
             ->set_output(json_encode([
                 'status'  => 'success',
-                'message' => "Seluruh berkas persyaratan mahasiswa NIM {$nim} berhasil disetujui (ACC)! Status pengajuan kini 'Disetujui LAA' dan siap di-plotting oleh Koordinator KP."
+                'message' => $msg,
+                'count'   => $success_count
             ]));
     }
 
     /**
-     * AJAX: ACC Laporan KP (Tab 2)
+     * AJAX: ACC Laporan KP (Single / Bulk Massal Approve - Tab 2)
      */
     public function ajax_acc_laporan_kp() {
         $this->_require_admin_laa_or_admin();
         $this->load->model('Kp_model');
 
-        $nim      = trim((string)$this->input->post('nim'));
+        $nims     = $this->input->post('nims');
         $komentar = trim((string)$this->input->post('komentar'));
 
-        if (empty($nim)) {
+        if (empty($nims)) {
+            $nim = trim((string)$this->input->post('nim'));
+            if (!empty($nim)) {
+                $nims = [$nim];
+            }
+        }
+        if (is_string($nims)) {
+            $nims = explode(',', $nims);
+        }
+
+        if (empty($nims) || !is_array($nims)) {
             $this->output->set_content_type('application/json')
                 ->set_output(json_encode(['status' => 'error', 'message' => 'NIM mahasiswa tidak boleh kosong.']));
             return;
         }
 
-        $this->Kp_model->update_laporan_kp_status($nim, 'Approved', $komentar);
+        $success_count = 0;
+        foreach ($nims as $n) {
+            $n = trim((string)$n);
+            if (!empty($n)) {
+                $this->Kp_model->update_laporan_kp_status($n, 'Approved', $komentar);
+                $success_count++;
+            }
+        }
+
+        $msg = count($nims) === 1
+            ? "Laporan KP mahasiswa NIM {$nims[0]} berhasil disetujui (ACC)! Seluruh rangkaian Kerja Praktik mahasiswa dinyatakan Selesai."
+            : "Berhasil menyetujui (ACC) massal Laporan KP untuk {$success_count} mahasiswa terpilih! Status KP dinyatakan Selesai.";
 
         $this->output->set_content_type('application/json')
             ->set_output(json_encode([
                 'status'  => 'success',
-                'message' => "Laporan KP mahasiswa NIM {$nim} berhasil disetujui (ACC)! Seluruh rangkaian Kerja Praktik mahasiswa dinyatakan Selesai."
+                'message' => $msg,
+                'count'   => $success_count
             ]));
     }
 
