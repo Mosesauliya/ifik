@@ -645,8 +645,12 @@ class Perwalian_model extends CI_Model {
         $nama_wali = '';
 
         if (!empty($nip_wali)) {
-            $d = $this->db->get_where('user', ['nip' => $nip_wali])->row_array();
-            if (!$d) $d = $this->db->get_where('user', ['username' => $nip_wali])->row_array();
+            $d = $this->db->group_start()
+                ->where('id', $nip_wali)
+                ->or_where('nip', $nip_wali)
+                ->or_where('username', $nip_wali)
+                ->group_end()
+                ->get('user')->row_array();
             if ($d) $nama_wali = $d['name'];
         }
 
