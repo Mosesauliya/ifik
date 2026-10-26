@@ -2310,4 +2310,479 @@ public function upload_berkas_sidang_ajax() {
         $res = $this->Perwalian_model->submit_perwalian_tahap2($id_perwalian);
         $this->output->set_output(json_encode($res));
     }
+    // =========================================================
+    // KERJA PRAKTIK (KP) - PENGAJUAN, PERSYARATAN DINAMIS & LAPORAN
+    // =========================================================
+
+    public function pengajuan_kp() {
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+
+        $this->load->model('Kp_model');
+        $mahasiswa = $this->Mahasiswa_model->get_mahasiswa($nim);
+        $mhs_db    = $this->Kp_model->get_mahasiswa_db($nim, $user_id);
+        $wf        = $this->Kp_model->get_workflow_summary($nim, $user_id);
+
+        if ($this->input->post()) {
+            $kp_existing = $wf['kp'];
+            $is_form_locked = $wf['syarat_all_approved'] || $wf['has_pembimbing1'] || $wf['is_selesai'];
+
+            if ($is_form_locked) {
+                $this->session->set_flashdata('error', 'Formulir Pengajuan KP telah dikunci karena persyaratan sudah disetujui.');
+                redirect('mahasiswa/pengajuan_kp');
+                return;
+            }
+
+            $id_kp = $kp_existing['id_kp'] ?? ('kp_' . $nim);
+            $peminatan = trim($this->input->post('peminatan') ?? '');
+            if ($peminatan === '') {
+                $peminatan = $mhs_db['prodi'] ?? '';
+            }
+
+            $cur_status_file = $kp_existing['status_file'] ?? '';
+            $next_status_file = in_array($cur_status_file, [
+                'Disetujui LAA', 'Revisi Persyaratan',
+                'Sudah Plot Pembimbing', 'Sudah Upload Laporan', 'Revisi Laporan', 'Selesai'
+            ]) ? $cur_status_file : 'Sudah Upload Persyaratan';
+
+            $payload_kp = [
+                'id_kp'             => $id_kp,
+                'id_mhs'            => !empty($user_id) ? (string)$user_id : (string)$nim,
+                'peminatan'         => $peminatan,
+                'sks_lulus'         => (int)($this->input->post('sks_lulus') ?: ($kp_existing['sks_lulus'] ?? 0)),
+                'sks_berjalan'      => (int)($this->input->post('sks_berjalan') ?: ($kp_existing['sks_berjalan'] ?? 0)),
+                'nama_perusahaan'   => trim($this->input->post('nama_perusahaan') ?? ($kp_existing['nama_perusahaan'] ?? '')),
+                'alamat_perusahaan' => trim($this->input->post('alamat_perusahaan') ?? ($kp_existing['alamat_perusahaan'] ?? '')),
+                'kota'              => trim($this->input->post('kota') ?? ($kp_existing['kota'] ?? '')),
+                'kode_pos'          => trim($this->input->post('kode_pos') ?? ($kp_existing['kode_pos'] ?? '')),
+                'nama_tujuan'       => trim($this->input->post('nama_tujuan') ?? ($kp_existing['nama_tujuan'] ?? '')),
+                'jabatan'           => trim($this->input->post('jabatan') ?? ($kp_existing['jabatan'] ?? '')),
+                'posisi_pekerjaan'  => trim($this->input->post('posisi_pekerjaan') ?? ($kp_existing['posisi_pekerjaan'] ?? '')),
+                'telp_fax'          => trim($this->input->post('telp_fax') ?? ($kp_existing['telp_fax'] ?? '')),
+                'email_perusahaan'  => trim($this->input->post('email_perusahaan') ?? ($kp_existing['email_perusahaan'] ?? '')),
+                'cp'                => trim($this->input->post('cp') ?? ($kp_existing['cp'] ?? '')),
+                'jenis_kp'          => trim($this->input->post('jenis_kp') ?? ($kp_existing['jenis_kp'] ?? '')),
+                'status_file'       => $next_status_file,
+                'status_preview'    => 'Pending',
+                'tahun'             => !empty($kp_existing['tahun']) ? $kp_existing['tahun'] : date('Y'),
+                'date'              => !empty($kp_existing['date']) && $kp_existing['date'] !== '0000-00-00' ? $kp_existing['date'] : date('Y-m-d'),
+            ];
+
+            $this->Kp_model->save_kp($nim, $user_id, $payload_kp);
+
+            // Proses upload berkas persyaratan KP dinamis (Step 2) jika ada file baru saat klik Kirim
+            $syarat_list    = $wf['syarat_list'];
+            $files_existing = $wf['files_syarat'];
+            $upload_dir     = './uploads/persyaratan_kp/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $config = [
+                'upload_path'   => $upload_dir,
+                'allowed_types' => 'pdf',
+                'max_size'      => 5120,
+                'encrypt_name'  => false,
+            ];
+            $this->load->library('upload', $config);
+
+            $uploaded_count = 0;
+            $upload_errors  = [];
+
+            foreach ($syarat_list as $sb) {
+                $kode = $sb['kode_berkas'];
+                $field_name = 'file_kp_' . $kode;
+
+                $cur_file_row = $files_existing[$kode] ?? null;
+                if ($cur_file_row && $this->Kp_model->is_status_approved($cur_file_row['status_adminlaa'] ?? '')) {
+                    continue;
+                }
+
+                if (!empty($_FILES[$field_name]['name'])) {
+                    $config['file_name'] = 'kp_' . $nim . '_' . $kode . '_' . time();
+                    $err = null;
+                    $new_filename = $this->_do_upload($field_name, $config, $err);
+                    if ($new_filename) {
+                        $this->Kp_model->save_file_pendaftaran_kp($nim, $user_id, $id_kp, $kode, $new_filename, 'Pending');
+                        $uploaded_count++;
+                    } else {
+                        $upload_errors[] = ($sb['nama_berkas'] ?? $kode) . ': ' . ($err ?: 'Format harus PDF maks 5 MB');
+                    }
+                }
+            }
+
+            // Ubah seluruh berkas status 'Draft' menjadi 'Pending' agar masuk ke antrean Admin LAA
+            $this->Kp_model->submit_files_pendaftaran_kp($nim, $user_id, $id_kp);
+
+            if (!empty($upload_errors)) {
+                $this->session->set_flashdata('error', 'Pengajuan KP dikirim, namun sebagian berkas gagal diunggah: ' . implode('; ', $upload_errors));
+            } else {
+                $this->session->set_flashdata('success', 'Pengajuan KP dan seluruh berkas persyaratan berhasil dikirim ke Admin LAA untuk diverifikasi!');
+            }
+
+            redirect('mahasiswa/pengajuan_kp');
+            return;
+        }
+
+        $data['title']     = 'Pengajuan Kerja Praktik (KP)';
+        $data['mahasiswa'] = $mahasiswa;
+        $data['mhs_db']    = $mhs_db;
+        $data['wf']        = $wf;
+        $data['kp']        = $wf['kp'];
+        $data['syarat_kp'] = $wf['syarat_list'];
+        $data['files_kp']  = $wf['files_syarat'];
+
+        $this->load->view('mahasiswa/pengajuan_kp', $data);
+    }
+
+    public function ajax_save_draft_kp() {
+        header('Content-Type: application/json');
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+
+        $this->load->model('Kp_model');
+        $mhs_db = $this->Kp_model->get_mahasiswa_db($nim, $user_id);
+        $wf     = $this->Kp_model->get_workflow_summary($nim, $user_id);
+
+        $kp_existing = $wf['kp'];
+        $is_form_locked = $wf['syarat_all_approved'] || $wf['has_pembimbing1'] || $wf['is_selesai'];
+        if ($is_form_locked) {
+            echo json_encode(['status' => 'locked']);
+            return;
+        }
+
+        $id_kp = $kp_existing['id_kp'] ?? ('kp_' . $nim);
+        $peminatan = trim($this->input->post('peminatan') ?? '');
+        if ($peminatan === '') {
+            $peminatan = $kp_existing['peminatan'] ?? ($mhs_db['prodi'] ?? '');
+        }
+
+        $cur_status_file = $kp_existing['status_file'] ?? '';
+        $is_already_submitted = in_array($cur_status_file, [
+            'Sudah Upload Persyaratan', 'Disetujui LAA', 'Revisi Persyaratan',
+            'Sudah Plot Pembimbing', 'Sudah Upload Laporan', 'Revisi Laporan', 'Selesai'
+        ]);
+        $next_status_file    = $is_already_submitted ? $cur_status_file : 'Draft';
+        $next_status_preview = $is_already_submitted ? ($kp_existing['status_preview'] ?? 'Pending') : 'Draft';
+
+        $payload_kp = [
+            'id_kp'             => $id_kp,
+            'id_mhs'            => !empty($user_id) ? (string)$user_id : (string)$nim,
+            'peminatan'         => $peminatan,
+            'sks_lulus'         => (int)($this->input->post('sks_lulus') !== null && $this->input->post('sks_lulus') !== '' ? $this->input->post('sks_lulus') : ($kp_existing['sks_lulus'] ?? 0)),
+            'sks_berjalan'      => (int)($this->input->post('sks_berjalan') !== null && $this->input->post('sks_berjalan') !== '' ? $this->input->post('sks_berjalan') : ($kp_existing['sks_berjalan'] ?? 0)),
+            'nama_perusahaan'   => trim($this->input->post('nama_perusahaan') ?? ($kp_existing['nama_perusahaan'] ?? '')),
+            'alamat_perusahaan' => trim($this->input->post('alamat_perusahaan') ?? ($kp_existing['alamat_perusahaan'] ?? '')),
+            'kota'              => trim($this->input->post('kota') ?? ($kp_existing['kota'] ?? '')),
+            'kode_pos'          => trim($this->input->post('kode_pos') ?? ($kp_existing['kode_pos'] ?? '')),
+            'nama_tujuan'       => trim($this->input->post('nama_tujuan') ?? ($kp_existing['nama_tujuan'] ?? '')),
+            'jabatan'           => trim($this->input->post('jabatan') ?? ($kp_existing['jabatan'] ?? '')),
+            'posisi_pekerjaan'  => trim($this->input->post('posisi_pekerjaan') ?? ($kp_existing['posisi_pekerjaan'] ?? '')),
+            'telp_fax'          => trim($this->input->post('telp_fax') ?? ($kp_existing['telp_fax'] ?? '')),
+            'email_perusahaan'  => trim($this->input->post('email_perusahaan') ?? ($kp_existing['email_perusahaan'] ?? '')),
+            'cp'                => trim($this->input->post('cp') ?? ($kp_existing['cp'] ?? '')),
+            'jenis_kp'          => trim($this->input->post('jenis_kp') ?? ($kp_existing['jenis_kp'] ?? '')),
+            'status_file'       => $next_status_file,
+            'status_preview'    => $next_status_preview,
+            'tahun'             => !empty($kp_existing['tahun']) ? $kp_existing['tahun'] : date('Y'),
+            'date'              => !empty($kp_existing['date']) && $kp_existing['date'] !== '0000-00-00' ? $kp_existing['date'] : date('Y-m-d'),
+        ];
+
+        $this->Kp_model->save_kp($nim, $user_id, $payload_kp);
+        echo json_encode([
+            'status'      => 'ok',
+            'id_kp'       => $id_kp,
+            'status_file' => $next_status_file,
+            'saved_at'    => date('H:i:s')
+        ]);
+    }
+
+    public function ajax_upload_file_kp() {
+        header('Content-Type: application/json');
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+        $kode_berkas = trim((string)($this->input->post('kode_berkas') ?? ''));
+
+        if ($kode_berkas === '') {
+            echo json_encode(['success' => false, 'message' => 'Kode berkas tidak valid.']);
+            return;
+        }
+
+        $this->load->model('Kp_model');
+        $mhs_db = $this->Kp_model->get_mahasiswa_db($nim, $user_id);
+        $wf     = $this->Kp_model->get_workflow_summary($nim, $user_id);
+        $kp_existing = $wf['kp'];
+        $id_kp = $kp_existing['id_kp'] ?? ('kp_' . $nim);
+
+        // Pastikan row tb_kp minimal berstatus Draft sudah ada di database
+        if (!$kp_existing) {
+            $this->Kp_model->save_kp($nim, $user_id, [
+                'id_kp'          => $id_kp,
+                'id_mhs'         => !empty($user_id) ? (string)$user_id : (string)$nim,
+                'peminatan'      => $mhs_db['prodi'] ?? '',
+                'status_file'    => 'Draft',
+                'status_preview' => 'Draft',
+                'tahun'          => date('Y'),
+                'date'           => date('Y-m-d'),
+            ]);
+        }
+
+        $cur_file_row = $wf['files_syarat'][$kode_berkas] ?? null;
+        if ($cur_file_row && $this->Kp_model->is_status_approved($cur_file_row['status_adminlaa'] ?? '')) {
+            echo json_encode(['success' => false, 'message' => 'Berkas sudah disetujui LAA dan tidak dapat diubah.']);
+            return;
+        }
+
+        $field_name = 'file_kp_' . $kode_berkas;
+        if (empty($_FILES[$field_name]['name'])) {
+            echo json_encode(['success' => false, 'message' => 'File PDF tidak ditemukan.']);
+            return;
+        }
+
+        $upload_dir = './uploads/persyaratan_kp/';
+        if (!is_dir($upload_dir)) {
+            mkdir($upload_dir, 0777, true);
+        }
+
+        $config = [
+            'upload_path'   => $upload_dir,
+            'allowed_types' => 'pdf',
+            'max_size'      => 5120,
+            'encrypt_name'  => false,
+            'file_name'     => 'kp_' . $nim . '_' . $kode_berkas . '_' . time(),
+        ];
+        $this->load->library('upload', $config);
+
+        $err = null;
+        $new_filename = $this->_do_upload($field_name, $config, $err);
+        if (!$new_filename) {
+            echo json_encode(['success' => false, 'message' => $err ?: 'Format file harus PDF (Maksimal 5 MB).']);
+            return;
+        }
+
+        // Jika pengajuan KP masih Draft, status berkas di file_pendaftaran_kp juga 'Draft'.
+        // Jika sudah pernah disubmit (misal perbaikan revisi), status berkas langsung 'Pending'.
+        $cur_status_file = $kp_existing['status_file'] ?? 'Draft';
+        $is_submitted_kp = in_array($cur_status_file, [
+            'Sudah Upload Persyaratan', 'Disetujui LAA', 'Revisi Persyaratan',
+            'Sudah Plot Pembimbing', 'Sudah Upload Laporan', 'Revisi Laporan', 'Selesai'
+        ]);
+        $status_laa = $is_submitted_kp ? 'Pending' : 'Draft';
+
+        $this->Kp_model->save_file_pendaftaran_kp($nim, $user_id, $id_kp, $kode_berkas, $new_filename, $status_laa);
+
+        echo json_encode([
+            'success'     => true,
+            'kode_berkas' => $kode_berkas,
+            'file_name'   => $new_filename,
+            'file_url'    => base_url('uploads/persyaratan_kp/' . $new_filename),
+            'status_laa'  => $status_laa,
+            'message'     => 'Berkas tersimpan di database (' . $status_laa . ').'
+        ]);
+    }
+
+    public function ajax_delete_file_kp() {
+        header('Content-Type: application/json');
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+        $kode_berkas = trim((string)($this->input->post('kode_berkas') ?? ''));
+
+        if ($kode_berkas === '') {
+            echo json_encode(['success' => false, 'message' => 'Kode berkas tidak valid.']);
+            return;
+        }
+
+        $this->load->model('Kp_model');
+        $files = $this->Kp_model->get_files_pendaftaran_kp($nim, null, $user_id);
+        $f = $files[$kode_berkas] ?? null;
+        if ($f && $this->Kp_model->is_status_approved($f['status_adminlaa'] ?? '')) {
+            echo json_encode(['success' => false, 'message' => 'Berkas yang sudah disetujui LAA tidak dapat dihapus.']);
+            return;
+        }
+
+        $this->Kp_model->delete_file_pendaftaran_kp($nim, $user_id, $kode_berkas);
+        echo json_encode(['success' => true, 'kode_berkas' => $kode_berkas]);
+    }
+
+    public function persyaratan_kp() {
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+
+        $this->load->model('Kp_model');
+        $mahasiswa = $this->Mahasiswa_model->get_mahasiswa($nim);
+        $mhs_db    = $this->Kp_model->get_mahasiswa_db($nim, $user_id);
+        $wf        = $this->Kp_model->get_workflow_summary($nim, $user_id);
+
+        if ($this->input->post()) {
+            if (empty($wf['has_form'])) {
+                $this->session->set_flashdata('error', 'Harap isi dan simpan Formulir Pengajuan KP terlebih dahulu sebelum mengunggah persyaratan.');
+                redirect('mahasiswa/pengajuan_kp');
+                return;
+            }
+
+            $kp_existing    = $wf['kp'];
+            $syarat_list    = $wf['syarat_list'];
+            $files_existing = $wf['files_syarat'];
+            $id_kp          = $kp_existing['id_kp'] ?? ('kp_' . $nim);
+
+            $upload_dir = './uploads/persyaratan_kp/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $config = [
+                'upload_path'   => $upload_dir,
+                'allowed_types' => 'pdf',
+                'max_size'      => 5120,
+                'encrypt_name'  => false,
+            ];
+            $this->load->library('upload', $config);
+
+            $uploaded_count = 0;
+            $upload_errors  = [];
+
+            foreach ($syarat_list as $sb) {
+                $kode = $sb['kode_berkas'];
+                $field_name = 'file_kp_' . $kode;
+
+                $cur_file_row = $files_existing[$kode] ?? null;
+                if ($cur_file_row && $this->Kp_model->is_status_approved($cur_file_row['status_adminlaa'] ?? '')) {
+                    continue;
+                }
+
+                if (!empty($_FILES[$field_name]['name'])) {
+                    $config['file_name'] = 'kp_' . $nim . '_' . $kode . '_' . time();
+                    $err = null;
+                    $new_filename = $this->_do_upload($field_name, $config, $err);
+                    if ($new_filename) {
+                        $this->Kp_model->save_file_pendaftaran_kp($nim, $user_id, $id_kp, $kode, $new_filename);
+                        $uploaded_count++;
+                    } else {
+                        $upload_errors[] = ($sb['nama_berkas'] ?? $kode) . ': ' . ($err ?: 'Format harus PDF maks 5 MB');
+                    }
+                }
+            }
+
+            $updated_files = $this->Kp_model->get_files_pendaftaran_kp($nim, $id_kp, $user_id);
+            $all_req_uploaded = !empty($syarat_list) && !empty($updated_files);
+            foreach ($syarat_list as $sb) {
+                if ((int)($sb['is_required'] ?? 1) === 1) {
+                    $k = $sb['kode_berkas'];
+                    if (empty($updated_files[$k]['file'])) {
+                        $all_req_uploaded = false;
+                        break;
+                    }
+                }
+            }
+
+            $is_form_locked = $wf['syarat_all_approved'] || $wf['has_pembimbing1'] || $wf['is_selesai'];
+            if (!$is_form_locked && $all_req_uploaded) {
+                $this->Kp_model->save_kp($nim, $user_id, ['status_file' => 'Sudah Upload Persyaratan']);
+            }
+
+            if (!empty($upload_errors)) {
+                $this->session->set_flashdata('error', 'Sebagian berkas gagal diunggah: ' . implode('; ', $upload_errors));
+            } elseif ($uploaded_count > 0) {
+                $this->session->set_flashdata('success', "Berhasil mengunggah {$uploaded_count} berkas persyaratan KP! Menunggu verifikasi Admin LAA.");
+            } else {
+                $this->session->set_flashdata('error', 'Pilih minimal 1 berkas PDF untuk diunggah.');
+            }
+
+            redirect('mahasiswa/persyaratan_kp');
+            return;
+        }
+
+        $data['title']     = 'Tahap Upload Persyaratan Kerja Praktik (KP)';
+        $data['mahasiswa'] = $mahasiswa;
+        $data['mhs_db']    = $mhs_db;
+        $data['wf']        = $wf;
+        $data['kp']        = $wf['kp'];
+        $data['syarat_kp'] = $wf['syarat_list'];
+        $data['files_kp']  = $wf['files_syarat'];
+
+        $this->load->view('mahasiswa/persyaratan_kp', $data);
+    }
+
+    public function hapus_berkas_kp($kode_berkas = '') {
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+        $kode_berkas = trim((string)$kode_berkas);
+
+        if ($kode_berkas !== '') {
+            $this->load->model('Kp_model');
+            $files = $this->Kp_model->get_files_pendaftaran_kp($nim, null, $user_id);
+            $f = $files[$kode_berkas] ?? null;
+            if ($f && $this->Kp_model->is_status_approved($f['status_adminlaa'] ?? '')) {
+                $this->session->set_flashdata('error', 'Berkas yang sudah disetujui LAA tidak dapat dihapus.');
+            } else {
+                $this->Kp_model->delete_file_pendaftaran_kp($nim, $user_id, $kode_berkas);
+                $this->session->set_flashdata('success', 'Berkas persyaratan KP berhasil dihapus.');
+            }
+        }
+        redirect('mahasiswa/pengajuan_kp?step=2');
+    }
+
+    public function laporan_kp() {
+        $nim = $this->_get_current_nim();
+        $user_id = $this->_get_current_user_id();
+
+        $this->load->model('Kp_model');
+        $mahasiswa = $this->Mahasiswa_model->get_mahasiswa($nim);
+        $mhs_db    = $this->Kp_model->get_mahasiswa_db($nim, $user_id);
+        $wf        = $this->Kp_model->get_workflow_summary($nim, $user_id);
+
+        if ($this->input->post()) {
+            if ($wf['laporan_is_approved']) {
+                $this->session->set_flashdata('error', 'Laporan KP Anda sudah disetujui oleh LAA dan berstatus Selesai.');
+                redirect('mahasiswa/laporan_kp');
+                return;
+            }
+
+            $id_kp = $wf['kp']['id_kp'] ?? ('kp_' . $nim);
+            $poin_nilai = (int)($this->input->post('poin') ?: ($wf['laporan_item']['poin'] ?? 0));
+
+            if (empty($_FILES['file_laporan_kp']['name'])) {
+                $this->session->set_flashdata('error', 'Silakan pilih file PDF Laporan KP (beserta Form Penilaian KP) terlebih dahulu!');
+                redirect('mahasiswa/laporan_kp');
+                return;
+            }
+
+            $upload_dir = './uploads/laporan_kp/';
+            if (!is_dir($upload_dir)) {
+                mkdir($upload_dir, 0777, true);
+            }
+
+            $config = [
+                'upload_path'   => $upload_dir,
+                'allowed_types' => 'pdf',
+                'max_size'      => 10240, // Maks 10 MB untuk laporan + form penilaian
+                'file_name'     => 'laporan_kp_' . $nim . '_' . time(),
+            ];
+            $this->load->library('upload', $config);
+
+            $err = null;
+            $uploaded_file = $this->_do_upload('file_laporan_kp', $config, $err);
+            if ($uploaded_file) {
+                $this->Kp_model->save_file_laporan_kp($nim, $user_id, $id_kp, 'laporan_kp', $uploaded_file, $poin_nilai);
+                if (!empty($wf['kp'])) {
+                    $this->Kp_model->save_kp($nim, $user_id, ['status_file' => 'Sudah Upload Laporan']);
+                }
+                $this->session->set_flashdata('success', 'File Laporan KP (beserta Form Penilaian KP) berhasil diunggah! Menunggu verifikasi Admin LAA.');
+            } else {
+                $this->session->set_flashdata('error', 'Gagal mengunggah Laporan KP: ' . ($err ?: 'Pastikan file berformat PDF (Maks 10 MB).'));
+            }
+
+            redirect('mahasiswa/laporan_kp');
+            return;
+        }
+
+        $data['title']     = 'Upload Laporan & Penilaian Kerja Praktik (KP)';
+        $data['mahasiswa'] = $mahasiswa;
+        $data['mhs_db']    = $mhs_db;
+        $data['wf']        = $wf;
+        $data['kp']        = $wf['kp'];
+        $data['laporan']   = $wf['laporan_item'];
+
+        $this->load->view('mahasiswa/laporan_kp', $data);
+    }
 }

@@ -121,6 +121,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Dinamis Unit & Kategori Tiket', 'href' => site_url('superadmin/ticketing_fields'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Master Unit & Kategori Tiket'],
                 ['heading' => 'Syarat Berkas & Jenis TA', 'href' => site_url('adminlayanan/pengaturan_berkas'), 'icon_3d' => 'assets/images/icons_3d/unit_ticketing.png', 'subheading' => 'Dinamis Berkas & Jenis TA'],
                 ['heading' => 'Syarat Berkas Sidang', 'href' => site_url('adminlayanan/pengaturan_berkas_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png', 'subheading' => 'Dinamis Persyaratan Sidang'],
+                ['heading' => 'Syarat Berkas KP', 'href' => site_url('superadmin/pengaturan_berkas_kp'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Dinamis Persyaratan KP'],
                 ['heading' => 'Pengaturan Jalur TA', 'href' => site_url('adminlayanan/pengaturan_jalur'), 'icon_3d' => 'assets/images/icons_3d/daftar.png', 'subheading' => 'Jalur Sidang & Non-Sidang'],
                 ['heading' => 'Dinamis Nilai Sidang', 'href' => site_url('koordinatorta/master_rubrik'), 'icon_3d' => 'assets/images/icons_3d/preview.png', 'subheading' => 'Master Rubrik & Bobot Nilai'],
 
@@ -350,6 +351,8 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['heading' => 'Dashboard', 'href' => site_url('mahasiswa'), 'icon_3d' => 'assets/images/icons_3d/home.png'],
                 ['heading' => 'Pendaftaran TA', 'href' => site_url('mahasiswa/pendaftaran_ta'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
                 ['heading' => 'Bimbingan TA', 'href' => site_url('mahasiswa/bimbingan'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
+                ['heading' => 'Pengajuan KP', 'href' => site_url('mahasiswa/pengajuan_kp'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Upload Laporan KP', 'href' => site_url('mahasiswa/laporan_kp'), 'icon_3d' => 'assets/images/icons_3d/preview.png'],
                 ['heading' => 'Perwalian (KRS)', 'href' => site_url('mahasiswa/perwalian'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
 
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
