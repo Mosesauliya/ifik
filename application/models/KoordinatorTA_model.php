@@ -743,18 +743,25 @@ class KoordinatorTA_model extends CI_Model {
             $isApprovedKoor = (strcasecmp($item['status_approval_koor'] ?? '', 'Approved') === 0);
             $isApprovedDoswalAdmin = (strcasecmp($item['status_approval_wali'] ?? '', 'Approved') === 0 && strcasecmp($item['status_adminlaa'] ?? '', 'Approved') === 0);
 
-            // Syarat masuk Preview 2:
-            // 1. Sudah berada di pipeline preview/sidang/selesai/lulus, ATAU
-            // 2. Pembimbing sudah diplot, ATAU
-            // 3. Proposal sudah di-approve Koordinator TA, ATAU
-            // 4. Sudah di-approve Dosen Wali & Admin Layanan (siap masuk proses Koordinator TA / Bimbingan), ATAU
-            // 5. Sudah ada penguji / jadwal yang tersimpan
-            $isEligible = in_array($statusPreview, ['preview1', 'preview2', 'preview3', 'sidang', 'selesai', 'lulus'])
-                || $hasPembimbing
-                || $isApprovedKoor
-                || $isApprovedDoswalAdmin
-                || $hasAnyPenguji
-                || $hasJadwalPresentasi;
+            $statusPlottingKetuaKK = strtolower(trim($item['status_plotting'] ?? ''));
+
+            // Syarat Valid Masuk Tahap Preview 2 (Plotting Dosen Penguji & Jadwal Sidang Preview 2):
+            // 1. Status bimbingan mahasiswa di tabel guidance (status_preview) HARUS SUDAH masuk 'preview2' (atau lebih lanjut: preview3, sidang, selesai, lulus)
+            //    -> TIDAK BOLEH mahasiswa yang masih di 'pending', proposal, atau 'preview1'
+            // 2. Plotting dosen pembimbing harus SUDAH DISETUJUI oleh Ketua KK (status_plotting == 'approved')
+            //    -> TIDAK BOLEH mahasiswa yang status plotting pembimbingnya masih 'pending' (masih menunggu persetujuan Ketua KK)
+            $isAtLeastPreview2 = in_array($statusPreview, ['preview2', 'preview3', 'sidang', 'selesai', 'lulus']);
+            $isKetuaKkApproved = ($statusPlottingKetuaKK === 'approved');
+
+            // Jika status plotting pembimbing masih PENDING di Ketua KK dan belum ada penguji, JANGAN masukkan ke Preview 2!
+            if ($statusPlottingKetuaKK === 'pending' && !$hasAnyPenguji && !$hasJadwalPresentasi) {
+                continue;
+            }
+
+            // Jika tahapan mahasiswa belum masuk Preview 2 (masih pending atau preview1) dan belum ada penguji, JANGAN masukkan ke Preview 2!
+            if (!$isAtLeastPreview2 && !$hasAnyPenguji && !$hasJadwalPresentasi) {
+                continue;
+            }
 
             // Jika status proposal secara eksplisit ditolak dan belum ada penguji/jadwal, abaikan
             if (strcasecmp($item['status_approval_koor'] ?? '', 'Rejected') === 0 ||
@@ -764,6 +771,8 @@ class KoordinatorTA_model extends CI_Model {
                     continue;
                 }
             }
+
+            $isEligible = ($isAtLeastPreview2 && ($isKetuaKkApproved || empty($item['id_thesis_lecturers']))) || $hasAnyPenguji || $hasJadwalPresentasi;
 
             if (!$isEligible) {
                 continue;
