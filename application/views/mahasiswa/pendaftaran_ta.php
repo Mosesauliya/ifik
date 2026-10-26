@@ -786,6 +786,11 @@
                     </button>
                     
                     <div class="ml-auto flex items-center gap-3">
+                        <?php if(empty($is_locked) && empty($pendaftaran['is_submitted'])): ?>
+                            <button type="button" class="bg-white hover:bg-orange-50 text-orange-600 hover:text-orange-700 border border-orange-300 font-bold px-4 sm:px-5 py-2.5 rounded-xl transition flex items-center gap-2 text-xs shadow-xs box-3d cursor-pointer" id="btnSaveDraftManual" title="Simpan draft pendaftaran & berkas ke database">
+                                <i class="bi bi-cloud-arrow-up-fill text-sm"></i> <span>Simpan Draft</span>
+                            </button>
+                        <?php endif; ?>
                         <button type="button" class="btn-3d-orange flex items-center gap-2 px-6 py-2.5 rounded-xl text-white font-bold text-xs cursor-pointer" id="btnNext">
                             <span>Lanjutkan</span> <i class="bi bi-arrow-right text-sm"></i>
                         </button>

@@ -2471,18 +2471,6 @@
                 let nim_nip = row.NIM || row.nim || row.NIP || row.nip || row.ID || row.id || '';
                 let token = row.Token || row.token || '';
 
-                let rawJabatan = row.Jabatan !== undefined ? row.Jabatan : (row.jabatan !== undefined ? row.jabatan : (row.Position !== undefined ? row.Position : (row.position !== undefined ? row.position : '')));
-                let jabatan = rawJabatan ? rawJabatan.toString().trim().toLowerCase() : '';
-                if (jabatan === 'ka. ur' || jabatan === 'kaur' || jabatan.includes('kepala urusan') || jabatan.includes('ka lab')) {
-                    jabatan = 'kaur';
-                } else if (jabatan.includes('kaprodi') || jabatan.includes('ketua prodi')) {
-                    jabatan = 'kaprodi';
-                } else if (jabatan.includes('wadek') || jabatan.includes('wakil dekan')) {
-                    jabatan = 'wadek';
-                } else if (jabatan) {
-                    jabatan = 'dosen';
-                }
-
                 let rawProdi = row.Prodi !== undefined ? row.Prodi : (row.prodi !== undefined ? row.prodi : (row.ProgramStudi !== undefined ? row.ProgramStudi : (row['Program Studi'] !== undefined ? row['Program Studi'] : '')));
                 let prodi = rawProdi ? rawProdi.toString().trim() : '';
 
@@ -2501,6 +2489,24 @@
                         resolvedRoleId = id;
                         break;
                     }
+                }
+
+                let isDosenRow = (roleLower.includes('dosen') || resolvedRoleId === '3');
+                let rawJabatan = row.Jabatan !== undefined ? row.Jabatan : (row.jabatan !== undefined ? row.jabatan : (row.Position !== undefined ? row.Position : (row.position !== undefined ? row.position : '')));
+                let jabatan = '';
+                if (isDosenRow) {
+                    let parsedJab = rawJabatan ? rawJabatan.toString().trim().toLowerCase() : '';
+                    if (parsedJab === 'ka. ur' || parsedJab === 'kaur' || parsedJab.includes('kepala urusan') || parsedJab.includes('ka lab')) {
+                        jabatan = 'kaur';
+                    } else if (parsedJab.includes('kaprodi') || parsedJab.includes('ketua prodi')) {
+                        jabatan = 'kaprodi';
+                    } else if (parsedJab.includes('wadek') || parsedJab.includes('wakil dekan')) {
+                        jabatan = 'wadek';
+                    } else {
+                        jabatan = 'dosen';
+                    }
+                } else {
+                    jabatan = '';
                 }
 
                 let status = 'valid';
@@ -2563,7 +2569,7 @@
                     role: roleDisplay,
                     rawRole: roleStr,
                     nim_nip,
-                    jabatan: jabatan || 'dosen',
+                    jabatan: jabatan,
                     prodi: prodi || null,
                     token: token.trim(),
                     status,
@@ -4567,7 +4573,7 @@
             const nim_nip = document.getElementById('acc-nim-nip').value.trim();
             const isDosen = role && role.toLowerCase().includes('dosen');
             const isMhs = role && role.toLowerCase().includes('mahasiswa');
-            const jabatan = isDosen && document.getElementById('acc-jabatan') ? document.getElementById('acc-jabatan').value : 'dosen';
+            const jabatan = isDosen && document.getElementById('acc-jabatan') ? (document.getElementById('acc-jabatan').value || 'dosen') : '';
             const prodi = (isDosen || isMhs) && document.getElementById('acc-prodi') ? document.getElementById('acc-prodi').value : '';
             const id_kk = isDosen && document.getElementById('acc-kk') ? document.getElementById('acc-kk').value : '';
 
