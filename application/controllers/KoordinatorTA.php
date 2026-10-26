@@ -54,6 +54,8 @@ class KoordinatorTA extends CI_Controller {
         $data['list_sidang'] = $this->KoordinatorTA_model->get_all_mahasiswa_sidang();
         $data['dosen_list'] = $this->KoordinatorTA_model->get_dosen_list();
         $data['ruangan_list'] = $this->KoordinatorTA_model->get_available_ruangan();
+        $data['prodi_list'] = $this->KoordinatorTA_model->get_master_prodi_list();
+        $data['peminatan_list'] = $this->KoordinatorTA_model->get_master_peminatan_list();
 
         $this->load->view('koordinator_ta/dashboard', $data);
     }
@@ -887,6 +889,8 @@ class KoordinatorTA extends CI_Controller {
     public function master_rubrik() {
         $data['title'] = 'Kelola Master Rubrik Penilaian Sidang TA';
         $data['rubriks'] = $this->KoordinatorTA_model->get_all_master_rubrik();
+        $data['prodi_list'] = $this->KoordinatorTA_model->get_master_prodi_list();
+        $data['peminatan_list'] = $this->KoordinatorTA_model->get_master_peminatan_list();
         $this->load->view('koordinator_ta/master_rubrik', $data);
     }
 
@@ -897,6 +901,17 @@ class KoordinatorTA extends CI_Controller {
         echo json_encode(array(
             'status' => true,
             'data'   => $rubriks
+        ));
+    }
+
+    // AJAX Endpoint: Ambil Master Peminatan (Bisa filter kode_prodi)
+    public function ajax_get_master_peminatan() {
+        header('Content-Type: application/json');
+        $kode_prodi = $this->input->get('kode_prodi') ?: $this->input->post('kode_prodi');
+        $data = $this->KoordinatorTA_model->get_master_peminatan_list($kode_prodi);
+        echo json_encode(array(
+            'status' => true,
+            'data'   => $data
         ));
     }
 

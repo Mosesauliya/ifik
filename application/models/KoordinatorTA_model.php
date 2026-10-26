@@ -2052,6 +2052,31 @@ class KoordinatorTA_model extends CI_Model {
         return true;
     }
 
+    public function get_master_prodi_list() {
+        if (!$this->db->table_exists('master_prodi')) {
+            return array();
+        }
+        return $this->db->where('is_active', 1)
+                        ->order_by('urutan', 'ASC')
+                        ->order_by('nama_prodi', 'ASC')
+                        ->get('master_prodi')
+                        ->result_array();
+    }
+
+    public function get_master_peminatan_list($kode_prodi = null) {
+        if (!$this->db->table_exists('master_peminatan')) {
+            return array();
+        }
+        $this->db->select('*')->from('master_peminatan')->where('is_active', 1);
+        if (!empty($kode_prodi)) {
+            $this->db->where('kode_prodi', $kode_prodi);
+        }
+        return $this->db->order_by('urutan', 'ASC')
+                        ->order_by('nama_peminatan', 'ASC')
+                        ->get()
+                        ->result_array();
+    }
+
     public function get_all_master_rubrik() {
         $this->_ensure_master_rubrik_tables();
 

@@ -8851,13 +8851,26 @@
     state.masterRubrikList = [];
     state.activeMasterRubrikCriteria = [];
 
+    state.masterPeminatanList = cfg.peminatanList || window.DASHBOARD_CONFIG?.peminatanList || [];
+
     function detectProdiKey(prodiStr) {
         if (!prodiStr) return 'DKV';
-        const str = String(prodiStr).toUpperCase();
-        if (str.includes('DIB') || str.includes('BISNIS')) return 'DIB';
-        if (str.includes('INTERIOR') || str.includes('DI')) return 'DI';
-        if (str.includes('PRODUK') || str.includes('DP')) return 'DP';
-        return 'DKV';
+        const str = String(prodiStr).trim();
+        const pList = cfg.prodiList || window.DASHBOARD_CONFIG?.prodiList;
+        if (Array.isArray(pList) && pList.some(p => p.kode_prodi === str)) {
+            return str;
+        }
+        const upper = str.toUpperCase();
+        if (upper.includes('DIB') || upper.includes('BISNIS')) return 'DIB';
+        if (upper.includes('INTERIOR') || upper === 'DI') return 'DI';
+        if (upper.includes('PRODUK') || upper === 'DP') return 'DP';
+        if (upper.includes('KRIYA') || upper === 'KTF') return 'KTF';
+        if (upper.includes('SENI') || upper === 'SR') return 'SR';
+        if (upper.includes('FILM') || upper.includes('ANIMASI') || upper === 'FA') return 'FA';
+        if (upper.includes('MAGISTER') || upper === 'MD') return 'MD';
+        if (upper.includes('INFORMATIKA') || upper === 'IF') return 'IF';
+        if (upper.includes('DKV') || upper.includes('VISUAL')) return 'DKV';
+        return str;
     }
 
     // Fetch master rubrik list from server
@@ -8922,8 +8935,25 @@
         const pemSelect = document.getElementById('masterRubrikPeminatanSelect');
         if (!pemSelect) return;
 
-        const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-        const list = Object.keys(prodiData.peminatan);
+        let list = [];
+        const pList = state.masterPeminatanList || cfg.peminatanList || window.DASHBOARD_CONFIG?.peminatanList;
+        if (Array.isArray(pList) && pList.length > 0) {
+            const filtered = pList.filter(item => item.kode_prodi === prodiKey);
+            if (filtered.length > 0) {
+                list = filtered.map(item => item.nama_peminatan);
+            }
+        }
+
+        if (list.length === 0) {
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
+            if (prodiData && prodiData.peminatan) {
+                list = Object.keys(prodiData.peminatan);
+            }
+        }
+
+        if (list.length === 0) {
+            list = ['Umum'];
+        }
 
         let html = '';
         list.forEach(p => {
@@ -9695,8 +9725,25 @@
         const pemSelect = document.getElementById('batchRubrikPeminatanSelect');
         if (!pemSelect) return;
 
-        const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-        const list = Object.keys(prodiData.peminatan);
+        let list = [];
+        const pList = state.masterPeminatanList || cfg.peminatanList || window.DASHBOARD_CONFIG?.peminatanList;
+        if (Array.isArray(pList) && pList.length > 0) {
+            const filtered = pList.filter(item => item.kode_prodi === prodiKey);
+            if (filtered.length > 0) {
+                list = filtered.map(item => item.nama_peminatan);
+            }
+        }
+
+        if (list.length === 0) {
+            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
+            if (prodiData && prodiData.peminatan) {
+                list = Object.keys(prodiData.peminatan);
+            }
+        }
+
+        if (list.length === 0) {
+            list = ['Umum'];
+        }
 
         let html = '';
         list.forEach(p => {
