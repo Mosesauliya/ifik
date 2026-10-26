@@ -375,7 +375,7 @@ class AdminLayanan_model extends CI_Model {
                 $u = $this->db->get($user_tbl)->row_array();
                 if ($u) {
                     if (!empty($u['id'])) {
-                        $ids[] = $u['id'];
+                        array_unshift($ids, $u['id']);
                         $ids[] = (string)$u['id'];
                         $ids[] = 'usr_mhs_' . $u['id'];
                         $ids[] = 'mhs_' . $u['id'];
@@ -566,7 +566,27 @@ class AdminLayanan_model extends CI_Model {
                         ->update('file_pendaftaran', $fp_update);
                 }
             } else {
-                $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $clean_nim);
+                $u_id = null;
+                if ($this->db->table_exists('user')) {
+                    $u_row = $this->db->get_where('user', ['nim' => $clean_nim])->row_array();
+                    if (!$u_row) {
+                        $u_row = $this->db->get_where('user', ['id' => $clean_nim])->row_array();
+                    }
+                    if ($u_row && !empty($u_row['id'])) {
+                        $u_id = $u_row['id'];
+                    }
+                }
+                if (!$u_id && !empty($target_ids)) {
+                    foreach ($target_ids as $tid) {
+                        if (!empty($tid) && !is_numeric($tid) && strpos($tid, 'usr_mhs_') === false && strpos($tid, 'mhs_') === false) {
+                            $u_id = $tid;
+                            break;
+                        }
+                    }
+                }
+                if (!$u_id) {
+                    $u_id = !empty($target_ids) ? $target_ids[0] : ('usr_mhs_' . $clean_nim);
+                }
                 $view_val = ($status === 'Pending') ? 0 : 1;
                 $ins_fp = array(
                     'id'              => 'fp_' . $clean_nim . '_' . $kode_berkas . '_' . time(),

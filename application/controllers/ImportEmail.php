@@ -631,7 +631,9 @@ class ImportEmail extends CI_Controller {
             ];
             if ($this->db->field_exists('username', $userTbl)) $updateData['username'] = $username;
             if ($this->db->field_exists('nidn_nim', $userTbl)) $updateData['nidn_nim'] = $nimNip;
-            if ($this->db->field_exists('jabatan', $userTbl)) $updateData['jabatan'] = $jabatan ?: 'dosen';
+            if ($this->db->field_exists('jabatan', $userTbl)) {
+                $updateData['jabatan'] = $isDosenRole ? (!empty($jabatan) ? $jabatan : 'dosen') : null;
+            }
             if ($this->db->field_exists('prodi', $userTbl)) $updateData['prodi'] = $prodi;
             if ($isDosenRole) {
                 if ($this->db->field_exists('id_kk', $userTbl)) $updateData['id_kk'] = !empty($idKk) ? (int)$idKk : null;
@@ -685,7 +687,7 @@ class ImportEmail extends CI_Controller {
                 'role_id' => $targetRoleId,
                 'nidn_nim' => $nimNip,
                 'token' => $rawToken,
-                'jabatan' => $jabatan ?: 'dosen',
+                'jabatan' => $isDosenRole ? (!empty($jabatan) ? $jabatan : 'dosen') : null,
                 'prodi' => $prodi
             ];
             if ($isDosenRole) {
@@ -821,7 +823,7 @@ class ImportEmail extends CI_Controller {
                 'email' => $u['email'],
                 'role' => $roleDisplay,
                 'role_id' => (int)$u['role_id'],
-                'jabatan' => !empty($u['jabatan']) ? strtolower(trim($u['jabatan'])) : 'dosen',
+                'jabatan' => (((int)$u['role_id'] === 3) || stripos($roleDisplay, 'dosen') !== false) ? (!empty($u['jabatan']) ? strtolower(trim($u['jabatan'])) : 'dosen') : '',
                 'prodi' => !empty($u['prodi']) ? trim($u['prodi']) : '',
                 'id_kk' => !empty($u['id_kk']) ? (int)$u['id_kk'] : '',
                 'kelompok_keahlian' => !empty($u['kelompok_keahlian']) ? trim($u['kelompok_keahlian']) : '',
