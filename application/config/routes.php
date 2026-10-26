@@ -324,6 +324,27 @@ $route['adminlayanan/help/messages/(:any)'] = 'LaboranHelp/get_messages_ajax/$1'
 $route['adminlayanan/help/send'] = 'LaboranHelp/send_message_ajax';
 $route['adminlayanan/help/toggle-status'] = 'LaboranHelp/toggle_status_ajax';
 
+// Admin Layanan - Verifikasi Berkas KP (Tab 1: Persyaratan & Tab 2: Laporan)
+$route['adminlayanan/verifikasi_kp']                  = 'AdminLayanan/verifikasi_kp';
+$route['adminlayanan/verifikasi-kp']                  = 'AdminLayanan/verifikasi_kp';
+$route['adminlayanan/kp']                             = 'AdminLayanan/verifikasi_kp';
+$route['adminlayanan/ajax_acc_berkas_kp']             = 'AdminLayanan/ajax_acc_berkas_kp';
+$route['adminlayanan/ajax_reject_berkas_kp']          = 'AdminLayanan/ajax_reject_berkas_kp';
+$route['adminlayanan/ajax_acc_semua_kp']              = 'AdminLayanan/ajax_acc_semua_kp';
+$route['adminlayanan/ajax_acc_laporan_kp']            = 'AdminLayanan/ajax_acc_laporan_kp';
+$route['adminlayanan/ajax_reject_laporan_kp']         = 'AdminLayanan/ajax_reject_laporan_kp';
+$route['adminlayanan/ajax_get_verifikasi_kp_data']    = 'AdminLayanan/ajax_get_verifikasi_kp_data';
+
+// Koordinator KP (Role 23 & Admin) - Plotting Pembimbing 1 KP
+$route['koordinatorkp']                               = 'KoordinatorKP/plotting';
+$route['koordinatorkp/plotting']                      = 'KoordinatorKP/plotting';
+$route['koordinator_kp']                              = 'KoordinatorKP/plotting';
+$route['koordinator_kp/plotting']                     = 'KoordinatorKP/plotting';
+$route['koordinator-kp']                              = 'KoordinatorKP/plotting';
+$route['koordinator-kp/plotting']                     = 'KoordinatorKP/plotting';
+$route['koordinatorkp/ajax_plot_pembimbing']          = 'KoordinatorKP/ajax_plot_pembimbing';
+$route['koordinatorkp/ajax_get_plotting_data']        = 'KoordinatorKP/ajax_get_plotting_data';
+
 $route['adminlayanan/(:any)'] = 'AdminLayanan/$1';
 $route['adminlayanan/(:any)/(:any)'] = 'AdminLayanan/$1/$2';
 
