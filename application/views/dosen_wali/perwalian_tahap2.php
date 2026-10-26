@@ -290,16 +290,10 @@
             </div>
 
             <!-- Action Buttons Row -->
-            <div class="flex items-center gap-2 w-full sm:w-auto shrink-0">
-                <a href="<?= site_url('dosen/wali/perwalian_tahap1'); ?>" class="hidden sm:inline-flex items-center px-3 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition shadow-2xs shrink-0 whitespace-nowrap" title="Buka Tahap 1 (KRS)">
+            <div class="hidden sm:flex items-center gap-2 shrink-0">
+                <a href="<?= site_url('dosen/wali/perwalian_tahap1'); ?>" class="inline-flex items-center px-3.5 py-2 text-xs font-semibold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition shadow-2xs shrink-0 whitespace-nowrap" title="Buka Tahap 1 (KRS)">
                     <i class="fa-solid fa-arrow-left text-[11px] mr-1.5 text-slate-400"></i> <span>Buka Tahap 1</span>
                 </a>
-                <button type="button" onclick="downloadTemplateExcelKolektif()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 py-1.5 sm:py-2 text-xs font-medium text-slate-700 bg-white border border-slate-200 hover:bg-slate-50 rounded-xl transition shadow-2xs whitespace-nowrap" title="Download Template Format Excel Nilai Global">
-                    <i class="fa-solid fa-download mr-1.5 text-slate-500"></i> <span>Template Excel</span>
-                </button>
-                <button type="button" onclick="openImportModalKolektif()" class="flex-1 sm:flex-none inline-flex items-center justify-center px-3 sm:px-3.5 py-1.5 sm:py-2 text-xs font-semibold text-emerald-800 bg-emerald-100 hover:bg-emerald-200 rounded-xl transition shadow-sm whitespace-nowrap" title="Import Rekap Nilai Global (Semua Mahasiswa Bimbingan Sekaligus)">
-                    <i class="fa-solid fa-file-excel mr-1.5 text-emerald-600"></i> <span>Import Nilai</span>
-                </button>
             </div>
         </header>
 
@@ -307,7 +301,7 @@
         <main class="w-full px-3 sm:px-8 py-4 sm:py-8 flex-grow">
 
             <?php
-                $totMhs2 = (int)($stats['tahap1_disetujui'] ?? 0);
+                $totMhs2 = (int)($stats['tahap2_total'] ?? 0);
                 $belumDinilai = (int)($stats['tahap2_belum_dinilai'] ?? 0);
                 $selesai = (int)($stats['tahap2_selesai'] ?? 0);
                 $proses = (int)($stats['tahap2_proses'] ?? 0);
@@ -577,31 +571,44 @@
 
             <!-- Table Mahasiswa Bimbingan Tahap 2 -->
             <div class="clay-card overflow-hidden">
-                <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 space-y-1">
-                    <div class="flex items-center justify-between gap-2.5 sm:gap-4">
-                        <h2 class="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Daftar Penilaian Hasil Studi Mahasiswa (Tahap 2)</h2>
-                        <span data-sync-count class="text-[11px] sm:text-xs font-bold px-2.5 py-1 bg-slate-100 text-slate-700 rounded-lg whitespace-nowrap shrink-0">
+                <div class="px-4 sm:px-5 py-3.5 sm:py-4 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+                    <div class="space-y-0.5">
+                        <h2 class="text-xs sm:text-sm font-bold text-slate-900 leading-tight">Daftar Persetujuan Nilai Hasil Studi Mahasiswa (Tahap 2)</h2>
+                        <p class="text-[11px] sm:text-xs text-slate-500 leading-normal">
+                            Periksa nilai mutu (A-E) yang diinput mahasiswa dan lakukan persetujuan (approve) satu per satu maupun sekaligus (multiple approve)
+                        </p>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-2 shrink-0">
+                        <div class="flex items-center gap-1.5 text-[11px] sm:text-xs text-slate-600 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-xl shadow-2xs">
+                            <span class="font-medium">Tampilkan</span>
+                            <select id="recordsPerPageT2" onchange="changePageSizeT2(this.value)" class="h-6 px-1.5 text-xs font-bold bg-white border border-slate-300 rounded-lg text-slate-800 focus:outline-none focus:ring-1 focus:ring-purple-500 cursor-pointer">
+                                <option value="5">5</option>
+                                <option value="10" selected>10</option>
+                                <option value="25">25</option>
+                                <option value="50">50</option>
+                                <option value="100">100</option>
+                            </select>
+                            <span class="font-medium">data/hal</span>
+                        </div>
+                        <span data-sync-count class="text-[11px] sm:text-xs font-bold px-2.5 py-1.5 bg-slate-100 text-slate-700 rounded-xl whitespace-nowrap shrink-0 border border-slate-200/80">
                             <?= count($list_perwalian); ?> Mahasiswa
                         </span>
                     </div>
-                    <p class="text-[11px] sm:text-xs text-slate-500 leading-normal">
-                        Input nilai mutu (A-E), checklist status kelulusan, dan submit evaluasi akhir semester
-                    </p>
                 </div>
 
                 <!-- 1. Desktop Table View (>= 768px) -->
-                <div class="hidden md:block overflow-x-auto">
+                <div class="hidden md:block">
                     <table class="w-full text-left text-xs">
                         <thead class="bg-slate-50/80 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200/80">
                             <tr>
-                                <th class="py-3.5 px-4 w-12 text-center whitespace-nowrap">No</th>
-                                <th class="py-3.5 px-4 whitespace-nowrap">Mahasiswa</th>
-                                <th class="py-3.5 px-4 whitespace-nowrap">Program Studi</th>
-                                <th class="py-3.5 px-4 text-center whitespace-nowrap">Periode</th>
-                                <th class="py-3.5 px-4 text-center whitespace-nowrap">Mata Kuliah</th>
-                                <th class="py-3.5 px-4 text-center whitespace-nowrap">Progress Penilaian</th>
-                                <th class="py-3.5 px-4 text-center whitespace-nowrap">Status Evaluasi</th>
-                                <th class="py-3.5 px-4 text-center whitespace-nowrap">Aksi</th>
+                                <th class="py-3 pl-4 pr-2 w-10 text-center whitespace-nowrap">No</th>
+                                <th class="py-3 px-2 whitespace-nowrap">Mahasiswa</th>
+                                <th class="py-3 px-2 whitespace-nowrap">Prodi</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Periode</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Mata Kuliah</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Progress</th>
+                                <th class="py-3 px-2 text-center whitespace-nowrap">Status Evaluasi</th>
+                                <th class="py-3 pl-2 pr-4 text-center whitespace-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-100 text-slate-700">
@@ -611,8 +618,8 @@
                                         <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                             <i class="fa-solid fa-award"></i>
                                         </div>
-                                        <p class="font-medium text-slate-600">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
-                                        <p class="text-xs text-slate-400 mt-1">Mahasiswa akan otomatis muncul di Tahap 2 setelah KRS pada Tahap 1 Anda setujui.</p>
+                                        <p class="font-medium text-slate-600">Belum ada mahasiswa yang menginput nilai hasil studi untuk dievaluasi pada Tahap 2.</p>
+                                        <p class="text-xs text-slate-400 mt-1">Mahasiswa akan otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui dan mahasiswa menginput nilai mata kuliah.</p>
                                     </td>
                                 </tr>
                             <?php else: ?>
@@ -627,7 +634,8 @@
                                 </tr>
                                 <?php $no = 1; foreach ($list_perwalian as $item): 
                                     $rowNim = strtolower(htmlspecialchars($item['nim'] ?? ''));
-                                    $rowNama = strtolower(htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: '')));
+                                    $fullNamaMhs = htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: 'Mahasiswa'));
+                                    $rowNama = strtolower($fullNamaMhs);
                                     $rowProdi = strtolower(htmlspecialchars($item['prodi'] ?? ''));
                                     $rowStatus = strtolower(htmlspecialchars($item['status_tahap2'] ?? 'Belum Dinilai'));
                                     $rowPeriode = strtolower(htmlspecialchars(($item['tahun_ajaran'] ?? '') . ' ' . ($item['semester'] ?? '')));
@@ -642,52 +650,52 @@
                                         data-status="<?= $rowStatus; ?>"
                                         data-periode="<?= $rowPeriode; ?>"
                                     >
-                                        <td class="py-3.5 px-4 text-center font-mono text-slate-400"><?= $no++; ?></td>
+                                        <td class="py-2.5 pl-4 pr-2 text-center font-mono text-slate-400 whitespace-nowrap"><?= $no++; ?></td>
                                         
                                         <!-- Mahasiswa Identity -->
-                                        <td class="py-3.5 px-4">
-                                            <div class="font-bold text-slate-900 text-sm">
-                                                <?= htmlspecialchars($item['nama_lengkap_user'] ?: ($item['nama_mahasiswa'] ?: 'Mahasiswa')); ?>
+                                        <td class="py-2.5 px-2">
+                                            <div class="font-bold text-slate-900 text-xs sm:text-sm leading-snug truncate max-w-[130px] lg:max-w-[160px]" title="<?= $fullNamaMhs; ?>">
+                                                <?= $fullNamaMhs; ?>
                                             </div>
-                                            <div class="text-[11px] font-mono text-slate-500">
+                                            <div class="text-[11px] font-mono text-slate-500 leading-tight whitespace-nowrap">
                                                 NIM: <?= htmlspecialchars($item['nim']); ?>
                                             </div>
                                         </td>
 
                                         <!-- Prodi -->
-                                        <td class="py-3.5 px-4">
-                                            <span class="inline-block px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 rounded-md">
+                                        <td class="py-2.5 px-2 whitespace-nowrap">
+                                            <span class="inline-block px-2 py-0.5 text-[11px] font-medium bg-slate-100 text-slate-700 rounded-md whitespace-nowrap">
                                                 <?= htmlspecialchars($item['prodi'] ?: '-'); ?>
                                             </span>
                                         </td>
 
                                         <!-- Periode -->
-                                        <td class="py-3.5 px-4 text-center font-mono text-[11px]">
+                                        <td class="py-2.5 px-2 text-center font-mono text-[11px] whitespace-nowrap leading-tight">
                                             <div><?= htmlspecialchars($item['tahun_ajaran']); ?></div>
                                             <div class="text-slate-400"><?= htmlspecialchars($item['semester']); ?></div>
                                         </td>
 
                                         <!-- Total MK & SKS -->
-                                        <td class="py-3.5 px-4 text-center">
+                                        <td class="py-2.5 px-2 text-center whitespace-nowrap">
                                             <span class="font-mono font-bold text-slate-900">
                                                 <?= (int)$item['total_mk']; ?> MK
                                             </span>
                                             <span class="text-slate-400 text-[11px]">(<?= (int)$item['total_sks']; ?> SKS)</span>
                                         </td>
 
-                                        <!-- Progress Penilaian -->
-                                        <td class="py-3.5 px-4 text-center" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
-                                            <div class="font-mono font-bold text-slate-800" id="t2DinilaiText_<?= (int)$item['id_perwalian']; ?>">
-                                                <?= (int)$item['total_dinilai']; ?> / <?= (int)$item['total_mk']; ?> Dinilai
+                                        <!-- Progress Approval -->
+                                        <td class="py-2.5 px-2 text-center whitespace-nowrap" id="t2ProgressCol_<?= (int)$item['id_perwalian']; ?>">
+                                            <div class="font-mono font-bold text-slate-800 whitespace-nowrap" id="t2DinilaiText_<?= (int)$item['id_perwalian']; ?>">
+                                                <?= (int)($item['total_approved_mk'] ?? 0); ?> / <?= (int)$item['total_mk']; ?> Disetujui
                                             </div>
-                                            <div class="text-[10px] text-slate-500 mt-0.5 space-x-1" id="t2GradingCountRow_<?= (int)$item['id_perwalian']; ?>" <?= ((int)$item['total_dinilai'] > 0) ? '' : 'style="display: none;"'; ?>>
+                                            <div class="text-[10px] text-slate-500 mt-0.5 space-x-1 whitespace-nowrap" id="t2GradingCountRow_<?= (int)$item['id_perwalian']; ?>" <?= ((int)$item['total_dinilai'] > 0) ? '' : 'style="display: none;"'; ?>>
                                                 <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check text-[9px]"></i> <span id="t2LulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_lulus']; ?></span> Lulus</span>
                                                 <span class="text-rose-600 font-semibold"><i class="fa-solid fa-circle-xmark text-[9px]"></i> <span id="t2TidakLulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_tidak_lulus']; ?></span> Tidak Lulus</span>
                                             </div>
                                         </td>
 
                                         <!-- Badge Status Tahap 2 -->
-                                        <td class="py-3.5 px-4 text-center" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 px-2 text-center whitespace-nowrap" id="t2StatusCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php
                                                 $st2 = isset($item['status_tahap2']) && $item['status_tahap2'] !== '' ? $item['status_tahap2'] : 'Belum Dinilai';
                                                 $badge2ClassMap = [
@@ -695,27 +703,27 @@
                                                     'Proses Penilaian' => 'bg-purple-100 text-purple-800 border-purple-300',
                                                 ];
                                                 $badge2IconMap = [
-                                                    'Selesai'          => 'fa-lock',
-                                                    'Proses Penilaian' => 'fa-pen-clip',
+                                                    'Selesai'          => 'fa-circle-check',
+                                                    'Proses Penilaian' => 'fa-clock',
                                                 ];
                                                 $badge2Class = isset($badge2ClassMap[$st2]) ? $badge2ClassMap[$st2] : 'bg-slate-100 text-slate-600 border-slate-300';
                                                 $badge2Icon  = isset($badge2IconMap[$st2]) ? $badge2IconMap[$st2] : 'fa-hourglass-start';
                                             ?>
-                                            <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full border <?= $badge2Class; ?>">
+                                            <span class="inline-flex items-center px-2 py-0.5 text-[11px] font-semibold rounded-full border whitespace-nowrap <?= $badge2Class; ?>">
                                                 <i class="fa-solid <?= $badge2Icon; ?> mr-1 text-[10px]"></i>
                                                 <?= htmlspecialchars($st2); ?>
                                             </span>
                                         </td>
 
                                         <!-- Action Button -->
-                                        <td class="py-3.5 px-4 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
+                                        <td class="py-2.5 pl-2 pr-4 text-center whitespace-nowrap" id="t2BtnCol_<?= (int)$item['id_perwalian']; ?>">
                                             <?php if ($st2 === 'Selesai'): ?>
-                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition">
-                                                    <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Nilai
+                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
+                                                    <i class="fa-solid fa-eye mr-1 text-emerald-600"></i> Lihat / Edit
                                                 </button>
                                             <?php else: ?>
-                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition">
-                                                    <i class="fa-solid fa-pen-to-square mr-1.5"></i> Input Nilai
+                                                <button type="button" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition cursor-pointer whitespace-nowrap">
+                                                    <i class="fa-solid fa-list-check mr-1"></i> Review & Approve
                                                 </button>
                                             <?php endif; ?>
                                         </td>
@@ -733,8 +741,8 @@
                             <div class="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-2 text-slate-400 text-lg">
                                 <i class="fa-solid fa-award"></i>
                             </div>
-                            <p class="font-medium text-slate-600 text-xs">Belum ada mahasiswa yang KRS Tahap 1-nya disetujui untuk dievaluasi.</p>
-                            <p class="text-[11px] text-slate-400 mt-1">Mahasiswa otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui.</p>
+                            <p class="font-medium text-slate-600 text-xs">Belum ada mahasiswa yang menginput nilai hasil studi untuk dievaluasi pada Tahap 2.</p>
+                            <p class="text-[11px] text-slate-400 mt-1">Mahasiswa otomatis muncul di Tahap 2 setelah KRS Tahap 1 disetujui dan mahasiswa menginput nilai mata kuliah.</p>
                         </div>
                     <?php else: ?>
                         <div id="noSearchResultCardT2" class="py-10 text-center text-slate-400 bg-white rounded-2xl border border-slate-200/80 p-5" style="display: none;">
@@ -800,10 +808,10 @@
                                         </span>
                                     </div>
                                     <div class="flex items-center justify-between pt-1 border-t border-slate-200/60">
-                                        <span class="text-slate-500">Progress Nilai:</span>
+                                        <span class="text-slate-500">Progress Approval:</span>
                                         <div class="text-right">
                                             <span class="font-mono font-bold text-slate-800 text-xs" id="t2CardDinilaiText_<?= (int)$item['id_perwalian']; ?>">
-                                                <?= (int)$item['total_dinilai']; ?> / <?= (int)$item['total_mk']; ?> Dinilai
+                                                <?= (int)($item['total_approved_mk'] ?? 0); ?> / <?= (int)$item['total_mk']; ?> Disetujui
                                             </span>
                                             <div class="text-[10px] space-x-1 mt-0.5" id="t2CardGradingCount_<?= (int)$item['id_perwalian']; ?>" <?= ((int)$item['total_dinilai'] > 0) ? '' : 'style="display: none;"'; ?>>
                                                 <span class="text-emerald-600 font-semibold"><i class="fa-solid fa-circle-check text-[9px]"></i> <span id="t2CardLulusVal_<?= (int)$item['id_perwalian']; ?>"><?= (int)$item['total_lulus']; ?></span> Lulus</span>
@@ -816,110 +824,175 @@
                                 <!-- Card Action Button -->
                                 <?php if ($st2 === 'Selesai'): ?>
                                     <button type="button" id="t2CardBtn_<?= (int)$item['id_perwalian']; ?>" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="w-full py-2 px-3 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer">
-                                        <i class="fa-solid fa-eye text-emerald-600 text-[11px]"></i> Lihat / Edit Nilai
+                                        <i class="fa-solid fa-eye text-emerald-600 text-[11px]"></i> Lihat / Edit Approval
                                     </button>
                                 <?php else: ?>
                                     <button type="button" id="t2CardBtn_<?= (int)$item['id_perwalian']; ?>" onclick="openGradingModal(<?= (int)$item['id_perwalian']; ?>)" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer">
-                                        <i class="fa-solid fa-pen-to-square text-[11px]"></i> Input Nilai
+                                        <i class="fa-solid fa-list-check text-[11px]"></i> Review & Approve
                                     </button>
                                 <?php endif; ?>
                             </div>
                         <?php endforeach; ?>
                     <?php endif; ?>
                 </div>
+
+                <!-- Table Bottom Pagination Bar -->
+                <?php if (!empty($list_perwalian)): ?>
+                <div class="px-4 sm:px-5 py-3 bg-slate-50/70 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2.5 text-xs text-slate-500 font-medium">
+                    <div class="text-center sm:text-left">
+                        Menampilkan data <strong id="pageStartT2" class="text-slate-800 font-bold">1</strong> - <strong id="pageEndT2" class="text-slate-800 font-bold"><?= min(10, count($list_perwalian)); ?></strong> dari total <strong id="totalRecordsBottomT2" class="text-slate-800 font-bold"><?= count($list_perwalian); ?></strong> mahasiswa
+                    </div>
+                    <div class="flex items-center justify-center sm:justify-end gap-1 max-w-full overflow-x-auto scrollbar-none py-0.5" id="paginationContainerT2"></div>
+                </div>
+                <?php endif; ?>
             </div>
 
         </main>
     </div>
 
     <!-- ========================================================================= -->
-    <!-- MODAL: FORM PENILAIAN TAHAP 2 (GENERATE MK, INPUT NILAI, CHECKLIST, LOCK) -->
+    <!-- MODAL: PERSETUJUAN NILAI TAHAP 2 + CROSS-CHECK BERKAS KRS (SPLIT/TABS)    -->
     <!-- ========================================================================= -->
-    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
-        <div class="clay-card w-full max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl">
+    <div id="modalGradingTahap2" class="fixed inset-0 bg-slate-900/75 backdrop-blur-sm z-[100000] hidden flex items-center justify-center p-2.5 pb-6 sm:p-3 md:p-4">
+        <div class="clay-card w-full max-w-[96vw] xl:max-w-[88rem] h-[80vh] max-h-[82dvh] sm:h-[92vh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl border border-slate-200">
             <!-- Modal Header -->
-            <div class="px-4 py-3 sm:px-6 sm:py-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 shrink-0">
-                <div class="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-                    <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
-                        <i class="fa-solid fa-award text-base sm:text-lg"></i>
+            <div class="px-3.5 py-2.5 sm:px-6 sm:py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between gap-2 sm:gap-3 shrink-0 shadow-xs">
+                <div class="flex items-center space-x-2 sm:space-x-3 min-w-0">
+                    <div class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0">
+                        <i class="fa-solid fa-award text-sm sm:text-base"></i>
                     </div>
                     <div class="min-w-0">
-                        <h3 class="font-bold text-sm sm:text-base leading-tight truncate" id="m2MhsNama">Nama Mahasiswa</h3>
-                        <p class="text-[11px] sm:text-xs text-purple-200 truncate">
-                            NIM: <span class="font-mono font-bold" id="m2MhsNim">-</span> | 
-                            Prodi: <span id="m2MhsProdi">-</span> | 
-                            Periode: <span id="m2MhsPeriode">-</span>
+                        <div class="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                            <h3 class="font-bold text-xs sm:text-base leading-tight truncate" id="m2MhsNama">Nama Mahasiswa</h3>
+                            <span id="m2StatusBadge" class="px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full bg-white/20 text-white border border-white/30 shrink-0"></span>
+                        </div>
+                        <p class="text-[10px] sm:text-xs text-purple-200 truncate mt-0.5">
+                            NIM: <span class="font-mono font-bold text-white" id="m2MhsNim">-</span> | 
+                            Prodi: <span class="text-white font-medium" id="m2MhsProdi">-</span> | 
+                            <span class="hidden sm:inline">Periode: <span class="text-white font-medium" id="m2MhsPeriode">-</span> | </span>
+                            Beban: <span class="font-mono font-bold text-white"><span id="m2TotalSks">0</span> SKS</span> (<span id="m2CountMk">0 Mata Kuliah</span>)
                         </p>
                     </div>
                 </div>
-                <button type="button" onclick="closeGradingModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shrink-0">
-                    <i class="fa-solid fa-xmark text-sm"></i>
+                <button type="button" onclick="closeGradingModal()" class="w-8 h-8 rounded-lg bg-white/10 hover:bg-white/20 text-white flex items-center justify-center transition shrink-0 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm sm:text-base"></i>
                 </button>
             </div>
 
-            <!-- Modal Body -->
-            <div class="p-3.5 sm:p-6 overflow-y-auto flex-grow space-y-3.5 sm:space-y-5">
-                <!-- Info Banner & Quick Action Buttons -->
-                <div class="p-3 sm:p-4 rounded-xl bg-purple-50/80 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-3">
-                    <div>
-                        <h4 class="text-xs font-bold text-purple-900 flex items-center">
-                            <i class="fa-solid fa-circle-info text-purple-600 mr-1.5"></i> Panduan Evaluasi & Nilai Mutu
-                        </h4>
-                        <p class="text-[11px] text-purple-800 mt-0.5">
-                            Nilai <strong class="text-emerald-700">A, AB, B, BC, C = LULUS 🟢</strong> | Nilai <strong class="text-rose-700">D, E = TIDAK LULUS 🔴</strong>.
-                        </p>
-                    </div>
-                    <div class="flex items-center space-x-2 shrink-0">
-                        <!-- Single Student Import Excel -->
-                        <button type="button" onclick="openImportModalSingle()" class="w-full sm:w-auto px-3.5 py-2 text-xs font-bold text-emerald-700 bg-white border border-emerald-200 hover:bg-emerald-50 rounded-xl shadow-sm transition flex items-center justify-center" title="Import Nilai Khusus Mahasiswa Ini">
-                            <i class="fa-solid fa-file-excel mr-1.5 text-emerald-600"></i> Import Excel Mahasiswa Ini
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Grading Table -->
-                <div class="border border-slate-200 rounded-xl overflow-hidden">
-                    <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
-                        <span class="text-xs font-bold text-slate-800 uppercase tracking-wider">Form Evaluasi Nilai Mahasiswa</span>
-                        <span class="text-xs font-mono text-slate-500" id="m2GradingProgressText">0 / 0 Dinilai</span>
-                    </div>
-                    <div class="block sm:hidden text-[10px] text-slate-400 text-right px-3 py-1 bg-slate-50/50 border-b border-slate-100">
-                        Geser tabel ke kanan untuk memberi nilai & status 👉
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table class="w-full min-w-[620px] text-left text-xs">
-                            <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
-                                <tr>
-                                    <th class="py-2.5 px-3 w-10 text-center">No</th>
-                                    <th class="py-2.5 px-3">Kode MK</th>
-                                    <th class="py-2.5 px-3">Nama Mata Kuliah</th>
-                                    <th class="py-2.5 px-3 text-center w-16">SKS</th>
-                                    <th class="py-2.5 px-3 text-center w-40">Nilai Huruf</th>
-                                    <th class="py-2.5 px-3 text-center w-44">Status Kelulusan</th>
-                                </tr>
-                            </thead>
-                            <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <!-- Kunci & Selesaikan Evaluasi Tahap 2 Box -->
-                <div class="p-3.5 sm:p-4 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                    <div>
-                        <h4 class="text-xs font-bold text-emerald-950 flex items-center">
-                            <i class="fa-solid fa-lock text-emerald-700 mr-2"></i> Kunci & Selesaikan Evaluasi Tahap 2
-                        </h4>
-                        <p class="text-[11px] text-emerald-800 mt-0.5">Setelah dikunci, nilai akan tersimpan permanen ke riwayat akademik mahasiswa.</p>
-                    </div>
-                    <button type="button" onclick="submitTahap2FinalModal()" class="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition shrink-0 flex items-center justify-center">
-                        <i class="fa-solid fa-lock mr-1.5"></i> Submit & Kunci Perwalian
+            <!-- Mobile Tab Switcher (Hanya Muncul di Tampilan Layar HP / < lg) -->
+            <div class="block lg:hidden px-3 py-2 bg-slate-100 border-b border-slate-200 shrink-0">
+                <div class="grid grid-cols-2 p-1 bg-slate-200/90 rounded-xl text-[11px] sm:text-xs font-bold gap-1 select-none">
+                    <button type="button" onclick="switchMobileModalTabT2('input')" id="m2TabBtnInput" class="py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-purple-700 shadow-xs cursor-pointer">
+                        <i class="fa-solid fa-list-check shrink-0"></i>
+                        <span class="truncate">Approval Nilai</span>
+                        <span class="text-[10px] leading-none px-1.5 py-0.5 rounded-full bg-purple-100 text-purple-800 font-mono whitespace-nowrap shrink-0" id="m2TabBadgeMk">0 MK</span>
+                    </button>
+                    <button type="button" onclick="switchMobileModalTabT2('berkas')" id="m2TabBtnBerkas" class="py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer">
+                        <i class="fa-solid fa-file-pdf text-rose-500 shrink-0"></i>
+                        <span class="truncate">Berkas KRS</span>
                     </button>
                 </div>
             </div>
 
+            <!-- Modal Body: Side-by-Side on Desktop (lg), Tabbed Full-Height on Mobile (< lg) -->
+            <div class="flex-grow grid grid-cols-1 lg:grid-cols-12 overflow-hidden bg-slate-100 min-h-0 relative">
+                <!-- Panel Kiri: Dokumen Berkas KRS Mahasiswa (Selalu Ditampilkan) -->
+                <div id="m2PanelBerkas" class="hidden lg:flex lg:col-span-5 xl:col-span-5 flex-col h-full border-b lg:border-b-0 lg:border-r border-slate-200 bg-slate-900 overflow-hidden min-h-0">
+                    <div class="px-3.5 py-2 sm:py-2.5 bg-slate-800 text-slate-200 border-b border-slate-700/80 flex items-center justify-between gap-2 shrink-0">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <i class="fa-solid fa-file-invoice text-purple-400 text-xs sm:text-sm shrink-0"></i>
+                            <span class="text-xs font-bold text-slate-100 truncate">Berkas KRS / KHS Mahasiswa</span>
+                        </div>
+                        <div class="flex items-center space-x-1.5 shrink-0" id="m2DocActions">
+                            <a id="m2DocOpenNewTab" href="#" target="_blank" class="px-2.5 py-1 text-[11px] font-medium bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg flex items-center gap-1.5 transition">
+                                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i> Buka Tab Baru
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Viewer Container (PDF / Image Iframe) -->
+                    <div class="flex-grow relative bg-slate-950 overflow-hidden flex items-center justify-center min-h-0" id="m2DocViewerBox">
+                        <iframe id="m2DocFrame" src="" class="w-full h-full border-0 bg-white"></iframe>
+                        <div id="m2DocEmpty" class="hidden absolute inset-0 flex flex-col items-center justify-center p-6 text-center text-slate-400 bg-slate-900/95 z-10">
+                            <div class="w-12 h-12 rounded-2xl bg-slate-800 text-slate-500 flex items-center justify-center mx-auto mb-2 text-xl">
+                                <i class="fa-solid fa-file-circle-xmark"></i>
+                            </div>
+                            <p class="font-bold text-xs sm:text-sm text-slate-300">Belum Ada Berkas KRS Diunggah</p>
+                            <p class="text-[11px] text-slate-400 mt-1 max-w-xs leading-relaxed">Mahasiswa belum mengunggah file slip/draft KRS fisik. Anda tetap dapat meninjau daftar mata kuliah dan nilai pada panel kanan.</p>
+                        </div>
+                    </div>
+
+                    <!-- Tombol Beralih Cepat ke Input di Mobile -->
+                    <div class="p-2.5 bg-slate-800 border-t border-slate-700 block lg:hidden shrink-0">
+                        <button type="button" onclick="switchMobileModalTabT2('input')" class="w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl transition flex items-center justify-center gap-1.5 cursor-pointer shadow-sm">
+                            <i class="fa-solid fa-list-check"></i> Kembali ke Tabel Approval Nilai ➔
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Panel Kanan: Tabel Persetujuan Nilai Mata Kuliah (Satu-Satu & Multiple Approve) -->
+                <div id="m2PanelInput" class="flex lg:flex lg:col-span-7 xl:col-span-7 flex-col h-full bg-white overflow-hidden min-h-0">
+                    <div class="p-3 sm:p-4 overflow-y-auto flex-grow space-y-3 min-h-0">
+                        <!-- Info Banner & Multiple Approve Toolbar -->
+                        <div class="p-3 rounded-xl bg-purple-50/80 border border-purple-200 flex flex-col xl:flex-row xl:items-center justify-between gap-2.5">
+                            <div>
+                                <h4 class="text-xs font-bold text-purple-900 flex items-center">
+                                    <i class="fa-solid fa-circle-info text-purple-600 mr-1.5"></i> Persetujuan Nilai Mata Kuliah (Tahap 2)
+                                </h4>
+                                <p class="text-[11px] text-purple-800 mt-0.5 leading-relaxed">
+                                    Cocokkan dengan berkas KRS di sebelah kiri. Nilai diinput oleh mahasiswa (<strong class="text-emerald-700">A–C = Lulus 🟢</strong>, <strong class="text-rose-700">D–E = Tidak Lulus 🔴</strong>). Approve satu per satu atau centang untuk <strong>Multiple Approve</strong>.
+                                </p>
+                            </div>
+                            <div class="flex flex-wrap items-center gap-2 shrink-0">
+                                <button type="button" id="btnBulkApproveMk" onclick="submitBulkApproveMkTahap2()" disabled class="flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 disabled:opacity-45 disabled:pointer-events-none rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                                    <i class="fa-solid fa-check-double"></i>
+                                    <span id="btnBulkApproveText">Approve Terpilih (0)</span>
+                                </button>
+                                <button type="button" id="btnApproveAllMk" onclick="submitApproveAllMkTahap2()" class="flex-1 sm:flex-none px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-xs transition flex items-center justify-center gap-1.5 cursor-pointer whitespace-nowrap">
+                                    <i class="fa-solid fa-circle-check"></i>
+                                    <span>Approve Semua MK</span>
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Approval Table -->
+                        <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                            <div class="px-3.5 py-2.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between gap-2 flex-wrap">
+                                <label class="inline-flex items-center gap-2 text-xs font-bold text-slate-800 cursor-pointer select-none">
+                                    <input type="checkbox" id="checkAllMkTahap2" onchange="toggleSelectAllMkTahap2(this.checked)" class="w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 cursor-pointer">
+                                    <span class="uppercase tracking-wider">Pilih Semua Mata Kuliah</span>
+                                    <span id="m2SelectedCountBadge" class="text-[10px] font-mono px-2 py-0.5 rounded-full bg-purple-100 text-purple-800 border border-purple-200 hidden">0 dipilih</span>
+                                </label>
+                                <span class="text-xs font-mono font-bold text-slate-600" id="m2GradingProgressText">0 / 0 MK Disetujui</span>
+                            </div>
+                            <div class="block sm:hidden text-[10px] text-slate-400 text-right px-3 py-1 bg-slate-50/50 border-b border-slate-100">
+                                Geser tabel ke kanan untuk melihat nilai & tombol approve 👉
+                            </div>
+                            <div class="overflow-x-auto sm:overflow-x-visible">
+                                <table class="w-full text-left text-xs">
+                                    <thead class="bg-slate-100/60 text-slate-600 font-bold uppercase text-[10px]">
+                                        <tr>
+                                            <th class="py-2.5 pl-3 pr-1.5 w-8 text-center whitespace-nowrap">Pilih</th>
+                                            <th class="py-2.5 px-1.5 w-8 text-center whitespace-nowrap">No</th>
+                                            <th class="py-2.5 px-2">Mata Kuliah</th>
+                                            <th class="py-2.5 px-1.5 text-center w-10 whitespace-nowrap">SKS</th>
+                                            <th class="py-2.5 px-1.5 text-center whitespace-nowrap">Nilai</th>
+                                            <th class="py-2.5 px-1.5 text-center whitespace-nowrap">Status</th>
+                                            <th class="py-2.5 pl-1.5 pr-3 text-center whitespace-nowrap">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <!-- Modal Footer -->
-            <div class="px-4 py-2.5 sm:px-6 sm:py-3 bg-slate-50 border-t border-slate-200 flex items-center justify-end shrink-0">
-                <button type="button" onclick="closeGradingModal()" class="w-full sm:w-auto px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center">
+            <div class="hidden sm:flex px-4 py-2 sm:py-2.5 bg-slate-50 border-t border-slate-200 items-center justify-between shrink-0">
+                <span class="text-[11px] text-slate-500 italic">Persetujuan tersimpan otomatis ke sistem saat tombol Approve diklik.</span>
+                <button type="button" onclick="closeGradingModal()" class="px-4 py-1.5 text-xs font-semibold text-slate-600 hover:text-slate-800 bg-white border border-slate-200 hover:bg-slate-100 rounded-xl transition text-center cursor-pointer">
                     Tutup
                 </button>
             </div>
@@ -1051,6 +1124,45 @@
         let parsedImportRows = [];
         let importTargetIdPerwalian = null;
 
+        function switchMobileModalTabT2(tab) {
+            const panelBerkas = document.getElementById('m2PanelBerkas');
+            const panelInput = document.getElementById('m2PanelInput');
+            const btnInput = document.getElementById('m2TabBtnInput');
+            const btnBerkas = document.getElementById('m2TabBtnBerkas');
+
+            if (tab === 'berkas') {
+                if (panelBerkas) {
+                    panelBerkas.classList.remove('hidden');
+                    panelBerkas.classList.add('flex');
+                }
+                if (panelInput) {
+                    panelInput.classList.add('hidden');
+                    panelInput.classList.remove('flex');
+                }
+                if (btnBerkas) {
+                    btnBerkas.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-purple-700 shadow-xs cursor-pointer";
+                }
+                if (btnInput) {
+                    btnInput.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            } else {
+                if (panelBerkas) {
+                    panelBerkas.classList.add('hidden');
+                    panelBerkas.classList.remove('flex');
+                }
+                if (panelInput) {
+                    panelInput.classList.remove('hidden');
+                    panelInput.classList.add('flex');
+                }
+                if (btnInput) {
+                    btnInput.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap bg-white text-purple-700 shadow-xs cursor-pointer";
+                }
+                if (btnBerkas) {
+                    btnBerkas.className = "py-2 px-2 rounded-lg transition flex items-center justify-center gap-1.5 whitespace-nowrap text-slate-600 hover:text-slate-900 cursor-pointer";
+                }
+            }
+        }
+
         async function openGradingModal(idPerwalian) {
             Swal.fire({
                 title: 'Memuat Form Penilaian...',
@@ -1077,6 +1189,50 @@
                 document.getElementById('m2MhsProdi').innerText = p.prodi || p.user_prodi || '-';
                 document.getElementById('m2MhsPeriode').innerText = `${p.tahun_ajaran} (${p.semester})`;
 
+                const stEl = document.getElementById('m2StatusBadge');
+                if (stEl) {
+                    const st2 = p.status_tahap2 || 'Belum Dinilai';
+                    stEl.innerText = st2;
+                    stEl.className = 'px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full border shrink-0 ' +
+                        (st2 === 'Selesai' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-300/40' :
+                        (st2 === 'Proses Penilaian' ? 'bg-amber-500/20 text-amber-100 border-amber-300/40' :
+                        'bg-white/20 text-white border-white/30'));
+                }
+
+                const elTotalSks = document.getElementById('m2TotalSks');
+                if (elTotalSks) elTotalSks.innerText = currentPerwalian2.total_sks || 0;
+
+                const elCountMk = document.getElementById('m2CountMk');
+                if (elCountMk) elCountMk.innerText = `${mkList.length} Mata Kuliah`;
+
+                const elTabBadgeMk = document.getElementById('m2TabBadgeMk');
+                if (elTabBadgeMk) elTabBadgeMk.innerText = `${mkList.length} MK`;
+
+                // Selalu Tampilkan Berkas KRS di Panel Kiri (Split-View Cross-Check)
+                const docFrame = document.getElementById('m2DocFrame');
+                const docEmpty = document.getElementById('m2DocEmpty');
+                const docOpenNewTab = document.getElementById('m2DocOpenNewTab');
+                const docActions = document.getElementById('m2DocActions');
+
+                if (p.file_krs && p.file_krs.trim() !== '') {
+                    const docUrl = `<?= base_url('uploads/krs/'); ?>${p.file_krs}`;
+                    if (docFrame) {
+                        docFrame.src = docUrl;
+                        docFrame.classList.remove('hidden');
+                    }
+                    if (docEmpty) docEmpty.classList.add('hidden');
+                    if (docOpenNewTab) docOpenNewTab.href = docUrl;
+                    if (docActions) docActions.classList.remove('hidden');
+                } else {
+                    if (docFrame) {
+                        docFrame.src = '';
+                        docFrame.classList.add('hidden');
+                    }
+                    if (docEmpty) docEmpty.classList.remove('hidden');
+                    if (docActions) docActions.classList.add('hidden');
+                }
+
+                switchMobileModalTabT2('input');
                 renderGradingModalTable(mkList);
                 document.getElementById('modalGradingTahap2').classList.remove('hidden');
             } catch (err) {
@@ -1094,11 +1250,14 @@
             const tbody = document.getElementById('m2GradingTableBody');
             tbody.innerHTML = '';
 
-            let gradedCount = 0;
-            if (mkList.length === 0) {
+            const checkAllEl = document.getElementById('checkAllMkTahap2');
+            if (checkAllEl) checkAllEl.checked = false;
+
+            let approvedCount = 0;
+            if (!mkList || mkList.length === 0) {
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="py-8 text-center text-slate-400">
+                        <td colspan="7" class="py-8 text-center text-slate-400">
                             <i class="fa-solid fa-book-open text-2xl text-slate-300 mb-2 block"></i>
                             <p class="font-medium text-slate-600">Belum ada mata kuliah yang dikontrak untuk semester ini.</p>
                             <p class="text-xs text-slate-400 mt-1">Mata kuliah ditentukan dari hasil pengajuan KRS di Tahap 1 atau setup oleh Admin Prodi.</p>
@@ -1106,163 +1265,294 @@
                     </tr>
                 `;
             } else {
-                mkList.forEach((mk, idx) => {
-                    const grade = (mk.nilai_huruf || '').toUpperCase();
-                    if (grade) gradedCount++;
+                // Kelompokkan mata kuliah sesuai dengan semester
+                const groupedBySemester = {};
+                mkList.forEach(mk => {
+                    const sem = parseInt(mk.semester_mk || mk.semester || 1);
+                    if (!groupedBySemester[sem]) {
+                        groupedBySemester[sem] = [];
+                    }
+                    groupedBySemester[sem].push(mk);
+                });
 
-                    const status = mk.status_kelulusan || 'Belum Ditentukan';
-                    const isLulus = (status === 'Lulus');
-                    const isTidakLulus = (status === 'Tidak Lulus');
+                const sortedSemesters = Object.keys(groupedBySemester).sort((a, b) => parseInt(a) - parseInt(b));
 
-                    const statusBadgeHtml = isLulus 
-                        ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`
-                        : (isTidakLulus 
-                            ? `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`
-                            : `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`);
+                sortedSemesters.forEach(sem => {
+                    const mks = groupedBySemester[sem];
+                    const totalSksSem = mks.reduce((acc, curr) => acc + parseInt(curr.sks || 0), 0);
 
+                    // Header Pemisah Semester
                     tbody.innerHTML += `
-                        <tr class="hover:bg-slate-50/60 transition" id="m2Row_${mk.id}">
-                            <td class="py-2.5 px-3 text-center font-mono text-slate-400">${idx + 1}</td>
-                            <td class="py-2.5 px-3 font-mono font-bold text-slate-900">${escapeHtml(mk.kode_mk)}</td>
-                            <td class="py-2.5 px-3 font-medium text-slate-800">${escapeHtml(mk.nama_mk)}</td>
-                            <td class="py-2.5 px-3 text-center font-mono font-semibold">${mk.sks}</td>
-                            
-                            <!-- Dropdown Nilai Mutu -->
-                            <td class="py-2.5 px-3 text-center">
-                                <select onchange="onGradeChange(${mk.id}, this.value)" class="w-24 px-2.5 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer">
-                                    <option value="" ${!grade ? 'selected' : ''}>- Nilai -</option>
-                                    <option value="A" ${grade === 'A' ? 'selected' : ''} class="text-emerald-700 font-bold">A</option>
-                                    <option value="AB" ${grade === 'AB' ? 'selected' : ''} class="text-emerald-700 font-bold">AB</option>
-                                    <option value="B" ${grade === 'B' ? 'selected' : ''} class="text-emerald-700 font-bold">B</option>
-                                    <option value="BC" ${grade === 'BC' ? 'selected' : ''} class="text-emerald-700 font-bold">BC</option>
-                                    <option value="C" ${grade === 'C' ? 'selected' : ''} class="text-emerald-700 font-bold">C</option>
-                                    <option value="D" ${grade === 'D' ? 'selected' : ''} class="text-rose-700 font-bold">D</option>
-                                    <option value="E" ${grade === 'E' ? 'selected' : ''} class="text-rose-700 font-bold">E</option>
-                                </select>
-                            </td>
-
-                            <!-- Badge Status Kelulusan (Otomatis 100% Berdasarkan Nilai) -->
-                            <td class="py-2.5 px-3 text-center" id="m2StatusCol_${mk.id}">
-                                ${statusBadgeHtml}
+                        <tr class="bg-gradient-to-r from-purple-50/90 via-indigo-50/60 to-purple-50/90 border-y border-purple-200/80">
+                            <td colspan="7" class="py-2 px-3">
+                                <div class="flex items-center justify-between text-xs font-bold text-purple-950">
+                                    <span class="flex items-center gap-1.5">
+                                        <i class="fa-solid fa-graduation-cap text-purple-600 text-sm"></i>
+                                        <span class="tracking-wide uppercase text-[11px]">Semester ${sem}</span>
+                                    </span>
+                                    <span class="text-[11px] font-mono font-bold px-2.5 py-0.5 bg-white text-purple-800 rounded-md border border-purple-200 shadow-2xs">
+                                        Subtotal: ${totalSksSem} SKS (${mks.length} MK)
+                                    </span>
+                                </div>
                             </td>
                         </tr>
                     `;
+
+                    mks.forEach((mk, idx) => {
+                        const grade = (mk.nilai_huruf || '').toUpperCase().trim();
+                        const hasGrade = (grade !== '');
+                        const isApproved = parseInt(mk.is_approved_wali || 0) === 1;
+                        if (isApproved) approvedCount++;
+
+                        const isLulusGrade = ['A', 'AB', 'B', 'BC', 'C'].includes(grade);
+                        const isTidakLulusGrade = ['D', 'E'].includes(grade);
+                        const status = isLulusGrade ? 'Lulus' : (isTidakLulusGrade ? 'Tidak Lulus' : (mk.status_kelulusan || 'Belum Ditentukan'));
+                        const isLulus = (status === 'Lulus');
+                        const isTidakLulus = (status === 'Tidak Lulus');
+
+                        const gradeBadgeHtml = hasGrade
+                            ? `<span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-xs font-mono font-extrabold rounded-md border whitespace-nowrap ${isLulus ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-700 border-rose-200'}">${escapeHtml(grade)}</span>`
+                            : `<span class="inline-flex items-center justify-center min-w-[2rem] px-2 py-0.5 text-[11px] font-mono font-bold text-slate-400 bg-slate-100 rounded-md border border-slate-200 whitespace-nowrap" title="Mahasiswa belum menginput nilai">-</span>`;
+
+                        const statusBadgeHtml = isLulus 
+                            ? `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"><i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Lulus</span>`
+                            : (isTidakLulus 
+                                ? `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap"><i class="fa-solid fa-circle-xmark mr-1 text-rose-600"></i> Tidak Lulus</span>`
+                                : `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200 whitespace-nowrap"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Ada Nilai</span>`);
+
+                        const approveActionHtml = renderMkApproveActionHtml(mk.id, isApproved, hasGrade);
+
+                        tbody.innerHTML += `
+                            <tr class="hover:bg-slate-50/60 transition ${isApproved ? 'bg-emerald-50/20' : (!hasGrade ? 'bg-slate-50/40' : '')}" id="m2Row_${mk.id}">
+                                <td class="py-2.5 pl-3 pr-1.5 text-center whitespace-nowrap">
+                                    <input type="checkbox" class="mk-approve-cb w-4 h-4 rounded border-slate-300 text-purple-600 focus:ring-purple-500 ${hasGrade ? 'cursor-pointer' : 'cursor-not-allowed opacity-40'}" value="${mk.id}" data-approved="${isApproved ? '1' : '0'}" data-has-grade="${hasGrade ? '1' : '0'}" ${hasGrade ? '' : 'disabled title="Mahasiswa belum menginput nilai pada mata kuliah ini"'} onchange="onMkCheckboxChange()">
+                                </td>
+                                <td class="py-2.5 px-1.5 text-center font-mono text-slate-400 whitespace-nowrap">${idx + 1}</td>
+                                <td class="py-2.5 px-2 text-slate-800">
+                                    <div class="flex items-center gap-1.5">
+                                        <span class="px-1.5 py-0.5 text-[10px] font-mono font-bold bg-slate-100 text-slate-800 rounded border border-slate-200 shrink-0">${escapeHtml(mk.kode_mk)}</span>
+                                        <span class="font-medium text-slate-800 truncate max-w-[130px] xl:max-w-[175px]" title="${escapeHtml(mk.nama_mk)}">${escapeHtml(mk.nama_mk)}</span>
+                                    </div>
+                                </td>
+                                <td class="py-2.5 px-1.5 text-center font-mono font-semibold whitespace-nowrap">${mk.sks}</td>
+                                <td class="py-2.5 px-1.5 text-center whitespace-nowrap">${gradeBadgeHtml}</td>
+                                <td class="py-2.5 px-1.5 text-center whitespace-nowrap" id="m2StatusCol_${mk.id}">
+                                    ${statusBadgeHtml}
+                                </td>
+                                <td class="py-2.5 pl-1.5 pr-3 text-center whitespace-nowrap" id="m2ApproveCol_${mk.id}">
+                                    ${approveActionHtml}
+                                </td>
+                            </tr>
+                        `;
+                    });
                 });
             }
 
-            document.getElementById('m2GradingProgressText').innerText = `${gradedCount} / ${mkList.length} Mata Kuliah Dinilai`;
+            const progEl = document.getElementById('m2GradingProgressText');
+            if (progEl) {
+                progEl.innerText = `${approvedCount} / ${mkList.length} MK Disetujui`;
+            }
+            onMkCheckboxChange();
         }
 
-        async function onGradeChange(idDetail, grade) {
-            grade = grade.trim().toUpperCase();
-            let autoStatus = 'Belum Ditentukan';
-            if (['A', 'AB', 'B', 'BC', 'C'].includes(grade)) {
-                autoStatus = 'Lulus';
-            } else if (['D', 'E'].includes(grade)) {
-                autoStatus = 'Tidak Lulus';
+        function renderMkApproveActionHtml(idDetail, isApproved, hasGrade = true) {
+            if (!hasGrade && !isApproved) {
+                return `
+                    <span class="inline-flex items-center justify-center px-2 py-0.5 text-[10px] font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded-lg cursor-not-allowed whitespace-nowrap select-none" title="Tidak dapat di-approve karena mahasiswa belum menginput nilai">
+                        <i class="fa-solid fa-lock mr-1 text-[9px]"></i> Belum Dinilai
+                    </span>
+                `;
             }
-
-            // Langsung update badge kelulusan di UI secara instan (real-time)
-            updateStatusBadgeUI(idDetail, autoStatus);
-
-            const fd = new FormData();
-            fd.append('id_detail', idDetail);
-            fd.append('nilai_huruf', grade);
-            fd.append('status_kelulusan', autoStatus);
-
-            try {
-                const res = await fetch(`<?= site_url('dosen/wali/perwalian_update_nilai'); ?>`, {
-                    method: 'POST',
-                    body: fd
-                });
-                const json = await res.json();
-                if (json.status) {
-                    if (json.data && json.data.id_perwalian) {
-                        updatePerwalianTahap2Counters(json.data.id_perwalian, json.data.total_lulus, json.data.total_tidak_lulus, json.data.status_tahap2, json.stats);
-                    }
-                    refreshModalGradingProgress();
-                    showToast('Nilai & status otomatis diperbarui', 'success');
-                } else {
-                    Swal.fire('Gagal', json.message, 'error');
-                }
-            } catch (err) {
-                showToast('Gagal koneksi server', 'error');
+            if (isApproved) {
+                return `
+                    <div class="inline-flex items-center justify-center gap-1">
+                        <span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-lg bg-emerald-100 text-emerald-800 border border-emerald-300">
+                            <i class="fa-solid fa-circle-check mr-1 text-emerald-600"></i> Approved
+                        </span>
+                        <button type="button" onclick="approveSingleMkTahap2(${idDetail}, 0)" class="px-1.5 py-0.5 text-[10px] font-semibold text-slate-500 hover:text-rose-700 bg-white hover:bg-rose-50 border border-slate-200 hover:border-rose-200 rounded-lg transition cursor-pointer" title="Batalkan Approval MK Ini">
+                            Batal
+                        </button>
+                    </div>
+                `;
             }
+            return `
+                <button type="button" onclick="approveSingleMkTahap2(${idDetail}, 1)" class="inline-flex items-center justify-center px-2.5 py-1 text-[11px] font-bold text-white bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 rounded-lg shadow-2xs transition cursor-pointer whitespace-nowrap">
+                    <i class="fa-solid fa-check mr-1"></i> Approve
+                </button>
+            `;
         }
 
-        function updateStatusBadgeUI(idDetail, status) {
-            const col = document.getElementById(`m2StatusCol_${idDetail}`);
-            if (col) {
-                if (status === 'Lulus') {
-                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`;
-                } else if (status === 'Tidak Lulus') {
-                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`;
-                } else {
-                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`;
-                }
-            }
-        }
-
-        function refreshModalGradingProgress() {
-            const selects = document.querySelectorAll('#m2GradingTableBody select');
-            let graded = 0;
-            selects.forEach(s => {
-                if (s.value && s.value.trim() !== '') graded++;
+        function toggleSelectAllMkTahap2(checked) {
+            const cbs = document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled)');
+            cbs.forEach(cb => {
+                cb.checked = checked;
             });
-            const textEl = document.getElementById('m2GradingProgressText');
-            if (textEl) {
-                textEl.innerText = `${graded} / ${selects.length} Mata Kuliah Dinilai`;
+            onMkCheckboxChange();
+        }
+
+        function onMkCheckboxChange() {
+            const enabledCbs = Array.from(document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled)'));
+            const checkedCbs = enabledCbs.filter(cb => cb.checked);
+            const count = checkedCbs.length;
+
+            const checkAllEl = document.getElementById('checkAllMkTahap2');
+            if (checkAllEl) {
+                checkAllEl.disabled = (enabledCbs.length === 0);
+                checkAllEl.checked = (enabledCbs.length > 0 && count === enabledCbs.length);
+                checkAllEl.indeterminate = (count > 0 && count < enabledCbs.length);
+            }
+
+            const btnApproveAll = document.getElementById('btnApproveAllMk');
+            if (btnApproveAll) {
+                if (enabledCbs.length > 0) {
+                    btnApproveAll.removeAttribute('disabled');
+                    btnApproveAll.classList.remove('opacity-45', 'pointer-events-none');
+                } else {
+                    btnApproveAll.setAttribute('disabled', 'true');
+                    btnApproveAll.classList.add('opacity-45', 'pointer-events-none');
+                }
+            }
+
+            const badge = document.getElementById('m2SelectedCountBadge');
+            if (badge) {
+                if (count > 0) {
+                    badge.innerText = `${count} dipilih`;
+                    badge.classList.remove('hidden');
+                } else {
+                    badge.classList.add('hidden');
+                }
+            }
+
+            const btnBulk = document.getElementById('btnBulkApproveMk');
+            const btnBulkText = document.getElementById('btnBulkApproveText');
+            if (btnBulkText) {
+                btnBulkText.innerText = `Approve Terpilih (${count})`;
+            }
+            if (btnBulk) {
+                if (count > 0) {
+                    btnBulk.removeAttribute('disabled');
+                } else {
+                    btnBulk.setAttribute('disabled', 'true');
+                }
             }
         }
 
-
-
-        async function submitTahap2FinalModal() {
-            if (!currentPerwalian2) return;
+        async function approveSingleMkTahap2(idDetail, approveVal) {
+            if (!currentPerwalian2 || !currentPerwalian2.perwalian) return;
             const idPerwalian = currentPerwalian2.perwalian.id_perwalian;
+            await executeApproveMkTahap2(idPerwalian, [idDetail], approveVal);
+        }
+
+        async function submitBulkApproveMkTahap2() {
+            if (!currentPerwalian2 || !currentPerwalian2.perwalian) return;
+            const idPerwalian = currentPerwalian2.perwalian.id_perwalian;
+            const checkedIds = Array.from(document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled):checked')).map(cb => parseInt(cb.value));
+
+            if (checkedIds.length === 0) {
+                Swal.fire('Pilih Mata Kuliah', 'Silakan centang minimal satu mata kuliah yang sudah memiliki nilai untuk di-approve.', 'info');
+                return;
+            }
+
+            await executeApproveMkTahap2(idPerwalian, checkedIds, 1);
+        }
+
+        async function submitApproveAllMkTahap2() {
+            if (!currentPerwalian2 || !currentPerwalian2.perwalian) return;
+            const idPerwalian = currentPerwalian2.perwalian.id_perwalian;
+            const enabledCbs = document.querySelectorAll('#m2GradingTableBody .mk-approve-cb:not(:disabled)');
+            if (enabledCbs.length === 0) {
+                Swal.fire('Belum Ada Nilai', 'Tidak ada mata kuliah yang dapat di-approve karena mahasiswa belum menginput nilai.', 'warning');
+                return;
+            }
 
             const conf = await Swal.fire({
-                title: 'Kunci & Selesaikan Evaluasi Tahap 2?',
-                text: 'Setelah dikunci, hasil evaluasi perwalian ini akan tersimpan permanen ke riwayat akademik mahasiswa.',
-                icon: 'warning',
+                title: 'Approve Semua Mata Kuliah?',
+                text: `Setujui ${enabledCbs.length} mata kuliah yang sudah memiliki nilai sekaligus?`,
+                icon: 'question',
                 showCancelButton: true,
                 confirmButtonColor: '#059669',
-                confirmButtonText: 'Ya, Kunci Sekarang!'
+                confirmButtonText: 'Ya, Approve Semua!',
+                cancelButtonText: 'Batal'
             });
 
             if (!conf.isConfirmed) return;
+            await executeApproveMkTahap2(idPerwalian, 'all', 1);
+        }
 
-            Swal.fire({ title: 'Menyimpan & Mengunci...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
-
+        async function executeApproveMkTahap2(idPerwalian, detailIds, approveVal) {
             const fd = new FormData();
             fd.append('id_perwalian', idPerwalian);
+            fd.append('approve', approveVal);
+            fd.append('detail_ids', detailIds === 'all' ? 'all' : JSON.stringify(detailIds));
 
             try {
-                const res = await fetch(`<?= site_url('dosen/wali/perwalian_submit_tahap2'); ?>`, {
+                const res = await fetch(`<?= site_url('dosen/wali/perwalian_approve_mk_tahap2'); ?>`, {
                     method: 'POST',
                     body: fd
                 });
                 const json = await res.json();
-                Swal.close();
 
-                if (json.status) {
-                    closeGradingModal();
-                    updatePerwalianTahap2Status(idPerwalian, 'Selesai', json.stats);
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Selesai!',
-                        text: json.message,
-                        timer: 2000,
-                        showConfirmButton: false,
-                        toast: true,
-                        position: 'top-end'
-                    });
+                if (json.status && json.data) {
+                    const approvedSet = new Set((json.data.approved_ids || []).map(x => parseInt(x)));
+
+                    // Update state di currentPerwalian2 & tampilan baris modal
+                    if (currentPerwalian2 && Array.isArray(currentPerwalian2.mata_kuliah)) {
+                        currentPerwalian2.mata_kuliah.forEach(mk => {
+                            const id = parseInt(mk.id);
+                            const isApp = approvedSet.has(id);
+                            const hasGrade = String(mk.nilai_huruf || '').trim() !== '';
+                            mk.is_approved_wali = isApp ? 1 : 0;
+
+                            const col = document.getElementById(`m2ApproveCol_${id}`);
+                            if (col) col.innerHTML = renderMkApproveActionHtml(id, isApp, hasGrade);
+
+                            const row = document.getElementById(`m2Row_${id}`);
+                            if (row) {
+                                if (isApp) row.classList.add('bg-emerald-50/20');
+                                else row.classList.remove('bg-emerald-50/20');
+                            }
+
+                            const cb = row ? row.querySelector('.mk-approve-cb') : null;
+                            if (cb) {
+                                cb.setAttribute('data-approved', isApp ? '1' : '0');
+                                if (approveVal === 1 && (detailIds === 'all' || (Array.isArray(detailIds) && detailIds.includes(id)))) {
+                                    cb.checked = false;
+                                }
+                            }
+                        });
+                    }
+
+                    const progEl = document.getElementById('m2GradingProgressText');
+                    if (progEl) {
+                        progEl.innerText = `${json.data.total_approved_mk} / ${json.data.total_mk} MK Disetujui`;
+                    }
+                    const stEl = document.getElementById('m2StatusBadge');
+                    if (stEl && json.data.status_tahap2) {
+                        const st2 = json.data.status_tahap2;
+                        stEl.innerText = st2;
+                        stEl.className = 'px-2 py-0.5 text-[9px] sm:text-[11px] font-bold rounded-full border shrink-0 ' +
+                            (st2 === 'Selesai' ? 'bg-emerald-500/20 text-emerald-100 border-emerald-300/40' :
+                            (st2 === 'Proses Penilaian' ? 'bg-amber-500/20 text-amber-100 border-amber-300/40' :
+                            'bg-white/20 text-white border-white/30'));
+                    }
+                    onMkCheckboxChange();
+
+                    // Update tabel utama & statistik di belakang modal secara real-time
+                    updatePerwalianTahap2Counters(
+                        idPerwalian,
+                        json.data.total_lulus,
+                        json.data.total_tidak_lulus,
+                        json.data.status_tahap2,
+                        json.stats,
+                        json.data.total_approved_mk
+                    );
+
+                    showToast(json.message || 'Status approval diperbarui', 'success');
                 } else {
-                    Swal.fire('Gagal', json.message, 'error');
+                    Swal.fire('Gagal', json.message || 'Gagal memperbarui approval mata kuliah.', 'error');
                 }
             } catch (err) {
-                Swal.close();
-                Swal.fire('Error', 'Terjadi kesalahan sistem saat submit.', 'error');
+                showToast('Gagal koneksi server', 'error');
             }
         }
 
@@ -1878,6 +2168,125 @@
             if (menu) menu.classList.add('hidden');
         }
 
+        let currentPageT2 = 1;
+        let pageSizeT2 = 10;
+
+        function changePageSizeT2(size) {
+            pageSizeT2 = parseInt(size) || 10;
+            currentPageT2 = 1;
+            renderPaginationT2();
+        }
+
+        function goToPageT2(page) {
+            currentPageT2 = page;
+            renderPaginationT2();
+        }
+
+        function renderPaginationT2() {
+            const allRows = Array.from(document.querySelectorAll('.t2-table-row'));
+            const allCards = Array.from(document.querySelectorAll('.t2-card-row'));
+
+            const matchedRows = allRows.filter(r => r.dataset.filtered !== '0');
+            const matchedCards = allCards.filter(c => c.dataset.filtered !== '0');
+            const totalMatched = matchedRows.length;
+
+            const totalPages = Math.max(1, Math.ceil(totalMatched / pageSizeT2));
+            if (currentPageT2 > totalPages) currentPageT2 = totalPages;
+            if (currentPageT2 < 1) currentPageT2 = 1;
+
+            const startIdx = (currentPageT2 - 1) * pageSizeT2;
+            const endIdx = startIdx + pageSizeT2;
+
+            // Hide all first
+            allRows.forEach(r => r.style.display = 'none');
+            allCards.forEach(c => c.style.display = 'none');
+
+            // Show current page slice & update row number
+            matchedRows.slice(startIdx, endIdx).forEach((row, idx) => {
+                row.style.display = '';
+                const firstTd = row.querySelector('td');
+                if (firstTd) firstTd.innerText = startIdx + idx + 1;
+            });
+            matchedCards.slice(startIdx, endIdx).forEach(card => {
+                card.style.display = '';
+            });
+
+            // Update info counters
+            const startNum = totalMatched > 0 ? startIdx + 1 : 0;
+            const endNum = Math.min(endIdx, totalMatched);
+
+            const elStart = document.getElementById('pageStartT2');
+            const elEnd = document.getElementById('pageEndT2');
+            const elTotalBottom = document.getElementById('totalRecordsBottomT2');
+            if (elStart) elStart.innerText = startNum;
+            if (elEnd) elEnd.innerText = endNum;
+            if (elTotalBottom) elTotalBottom.innerText = totalMatched;
+
+            const counterEl = document.getElementById('visibleRowCountT2');
+            if (counterEl) counterEl.innerText = totalMatched;
+
+            const emptyRow = document.getElementById('noSearchResultRowT2');
+            if (emptyRow) emptyRow.style.display = (totalMatched === 0 && allRows.length > 0) ? '' : 'none';
+            const emptyCard = document.getElementById('noSearchResultCardT2');
+            if (emptyCard) emptyCard.style.display = (totalMatched === 0 && allCards.length > 0) ? '' : 'none';
+
+            // Render windowed pagination buttons
+            const container = document.getElementById('paginationContainerT2');
+            if (!container) return;
+            container.innerHTML = '';
+
+            const btnBase = 'min-w-[30px] h-7 px-2 rounded-lg text-xs font-bold flex items-center justify-center transition border select-none ';
+            const btnActive = 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white border-purple-600 shadow-xs cursor-default';
+            const btnInactive = 'bg-white hover:bg-purple-50 text-slate-700 hover:text-purple-700 border-slate-200 cursor-pointer';
+            const btnDisabled = 'bg-slate-100 text-slate-300 border-slate-200 cursor-not-allowed pointer-events-none';
+
+            // Prev button
+            const prevBtn = document.createElement('button');
+            prevBtn.type = 'button';
+            prevBtn.className = btnBase + (currentPageT2 <= 1 ? btnDisabled : btnInactive);
+            prevBtn.innerHTML = '<i class="fa-solid fa-chevron-left text-[10px]"></i>';
+            if (currentPageT2 > 1) prevBtn.onclick = () => goToPageT2(currentPageT2 - 1);
+            container.appendChild(prevBtn);
+
+            // Calculate page numbers with ellipsis for large datasets
+            const pages = [];
+            if (totalPages <= 7) {
+                for (let i = 1; i <= totalPages; i++) pages.push(i);
+            } else {
+                pages.push(1);
+                if (currentPageT2 > 3) pages.push('...');
+                const startP = Math.max(2, currentPageT2 - 1);
+                const endP = Math.min(totalPages - 1, currentPageT2 + 1);
+                for (let i = startP; i <= endP; i++) pages.push(i);
+                if (currentPageT2 < totalPages - 2) pages.push('...');
+                pages.push(totalPages);
+            }
+
+            pages.forEach(p => {
+                if (p === '...') {
+                    const span = document.createElement('span');
+                    span.className = 'px-1.5 text-slate-400 font-bold text-xs';
+                    span.innerText = '...';
+                    container.appendChild(span);
+                } else {
+                    const btn = document.createElement('button');
+                    btn.type = 'button';
+                    btn.className = btnBase + (p === currentPageT2 ? btnActive : btnInactive);
+                    btn.innerText = p;
+                    if (p !== currentPageT2) btn.onclick = () => goToPageT2(p);
+                    container.appendChild(btn);
+                }
+            });
+
+            // Next button
+            const nextBtn = document.createElement('button');
+            nextBtn.type = 'button';
+            nextBtn.className = btnBase + (currentPageT2 >= totalPages ? btnDisabled : btnInactive);
+            nextBtn.innerHTML = '<i class="fa-solid fa-chevron-right text-[10px]"></i>';
+            if (currentPageT2 < totalPages) nextBtn.onclick = () => goToPageT2(currentPageT2 + 1);
+            container.appendChild(nextBtn);
+        }
+
         // EKSEKUSI PENCARIAN (HANYA KETIKA ENTER / CARI DIKLIK)
         function executeMultiSearchT2() {
             const filters = [];
@@ -1927,34 +2336,19 @@
                 return true;
             }
 
-            // Saring Baris Tabel Desktop
+            // Tandai hasil saringan pada Baris Tabel Desktop & Kartu Mobile
             const rows = document.querySelectorAll('.t2-table-row');
-            let visibleCount = 0;
             rows.forEach(row => {
-                const match = checkMatchT2(row);
-                row.style.display = match ? '' : 'none';
-                if (match) visibleCount++;
+                row.dataset.filtered = checkMatchT2(row) ? '1' : '0';
             });
 
-            // Saring Kartu Mobile
             const cards = document.querySelectorAll('.t2-card-row');
             cards.forEach(card => {
-                const match = checkMatchT2(card);
-                card.style.display = match ? '' : 'none';
+                card.dataset.filtered = checkMatchT2(card) ? '1' : '0';
             });
 
-            // Update Counter
-            const counterEl = document.getElementById('visibleRowCountT2');
-            if (counterEl) counterEl.innerText = visibleCount;
-
-            const emptyRow = document.getElementById('noSearchResultRowT2');
-            if (emptyRow) {
-                emptyRow.style.display = (visibleCount === 0 && rows.length > 0) ? '' : 'none';
-            }
-            const emptyCard = document.getElementById('noSearchResultCardT2');
-            if (emptyCard) {
-                emptyCard.style.display = (visibleCount === 0 && cards.length > 0) ? '' : 'none';
-            }
+            currentPageT2 = 1;
+            renderPaginationT2();
 
             // Update Active Filter Tags
             renderActiveFilterTagsT2(filters);
@@ -2039,6 +2433,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             initStatsSliderListenerT2();
             initExcelDropzone();
+            renderPaginationT2();
         });
 
         // Cegah browser membuka file secara default saat di-drop di luar dropzone
@@ -2048,10 +2443,13 @@
 // =========================================================================
         // AJAX DYNAMIC UI UPDATE HELPERS (Tahap 2)
         // =========================================================================
-        function updatePerwalianTahap2Counters(idPerwalian, totalLulus, totalTidakLulus, statusTahap2, stats) {
+        function updatePerwalianTahap2Counters(idPerwalian, totalLulus, totalTidakLulus, statusTahap2, stats, totalApproved) {
             totalLulus = parseInt(totalLulus || 0);
             totalTidakLulus = parseInt(totalTidakLulus || 0);
             const totalDinilai = totalLulus + totalTidakLulus;
+            const approvedCount = (typeof totalApproved !== 'undefined' && totalApproved !== null)
+                ? parseInt(totalApproved || 0)
+                : totalDinilai;
 
             // Dapatkan total MK dari data-attribute baris atau card
             const row = document.getElementById(`t2Row_${idPerwalian}`);
@@ -2061,7 +2459,7 @@
             // 1. Update di tabel desktop
             const dinilaiText = document.getElementById(`t2DinilaiText_${idPerwalian}`);
             if (dinilaiText) {
-                dinilaiText.innerText = `${totalDinilai} / ${totalMk} Dinilai`;
+                dinilaiText.innerText = `${approvedCount} / ${totalMk} Disetujui`;
             }
             const countRow = document.getElementById(`t2GradingCountRow_${idPerwalian}`);
             if (countRow) {
@@ -2075,7 +2473,7 @@
             // 2. Update di mobile card
             const cardDinilaiText = document.getElementById(`t2CardDinilaiText_${idPerwalian}`);
             if (cardDinilaiText) {
-                cardDinilaiText.innerText = `${totalDinilai} / ${totalMk} Dinilai`;
+                cardDinilaiText.innerText = `${approvedCount} / ${totalMk} Disetujui`;
             }
             const cardCount = document.getElementById(`t2CardGradingCount_${idPerwalian}`);
             if (cardCount) {
@@ -2098,10 +2496,10 @@
 
             if (newStatus === 'Selesai') {
                 badgeClass = 'bg-emerald-100 text-emerald-800 border-emerald-300';
-                badgeIcon = 'fa-lock';
+                badgeIcon = 'fa-circle-check';
             } else if (newStatus === 'Proses Penilaian') {
                 badgeClass = 'bg-purple-100 text-purple-800 border-purple-300';
-                badgeIcon = 'fa-pen-clip';
+                badgeIcon = 'fa-clock';
             }
 
             // 1. Update row desktop
@@ -2112,7 +2510,7 @@
             const stCol = document.getElementById(`t2StatusCol_${idPerwalian}`);
             if (stCol) {
                 stCol.innerHTML = `
-                    <span class="inline-flex items-center px-2.5 py-1 text-[11px] font-semibold rounded-full border ${badgeClass}">
+                    <span class="inline-flex items-center px-2.5 py-0.5 text-[11px] font-semibold rounded-full border whitespace-nowrap ${badgeClass}">
                         <i class="fa-solid ${badgeIcon} mr-1 text-[10px]"></i>
                         ${escapeHtml(newStatus)}
                     </span>
@@ -2126,7 +2524,7 @@
             }
             const cardBadge = document.getElementById(`t2CardStatusBadge_${idPerwalian}`);
             if (cardBadge) {
-                cardBadge.className = `inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 ${badgeClass}`;
+                cardBadge.className = `inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full border shrink-0 whitespace-nowrap ${badgeClass}`;
                 cardBadge.innerHTML = `<i class="fa-solid ${badgeIcon} mr-1 text-[9px]"></i> ${escapeHtml(newStatus)}`;
             }
 
@@ -2135,14 +2533,14 @@
             if (btnCol) {
                 if (newStatus === 'Selesai') {
                     btnCol.innerHTML = `
-                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition">
-                            <i class="fa-solid fa-eye mr-1.5 text-emerald-600"></i> Lihat / Edit Nilai
+                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs transition cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-eye mr-1 text-emerald-600"></i> Lihat / Edit
                         </button>
                     `;
                 } else {
                     btnCol.innerHTML = `
-                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-3.5 py-1.5 text-xs font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition">
-                            <i class="fa-solid fa-pen-to-square mr-1.5"></i> Input Nilai
+                        <button type="button" onclick="openGradingModal(${idPerwalian})" class="inline-flex items-center justify-center px-2.5 py-1.5 text-[11px] font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-sm transition cursor-pointer whitespace-nowrap">
+                            <i class="fa-solid fa-list-check mr-1"></i> Review & Approve
                         </button>
                     `;
                 }
@@ -2152,16 +2550,16 @@
             if (cardBtn) {
                 if (newStatus === 'Selesai') {
                     cardBtn.className = "w-full py-2 px-3 text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-300 rounded-xl shadow-2xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer";
-                    cardBtn.innerHTML = `<i class="fa-solid fa-eye text-emerald-600 text-[11px]"></i> Lihat / Edit Nilai`;
+                    cardBtn.innerHTML = `<i class="fa-solid fa-eye text-emerald-600 text-[11px]"></i> Lihat / Edit Approval`;
                 } else {
                     cardBtn.className = "w-full py-2 px-3 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 rounded-xl shadow-xs flex items-center justify-center gap-1.5 transition active:scale-98 cursor-pointer";
-                    cardBtn.innerHTML = `<i class="fa-solid fa-pen-to-square text-[11px]"></i> Input Nilai`;
+                    cardBtn.innerHTML = `<i class="fa-solid fa-check-double text-[11px]"></i> Review & Approve`;
                 }
             }
 
-            // 3. Update top summary statistics
+            // 4. Update top summary statistics
             if (stats) {
-                const tot = parseInt(stats.tahap1_disetujui || 0);
+                const tot = parseInt(stats.tahap2_total ?? stats.tahap1_disetujui ?? 0);
                 const belum = parseInt(stats.tahap2_belum_dinilai || 0);
                 const proses = parseInt(stats.tahap2_proses || 0);
                 const selesai = parseInt(stats.tahap2_selesai || 0);
@@ -2190,7 +2588,8 @@
                             item.total_lulus || 0,
                             item.total_tidak_lulus || 0,
                             item.status_tahap2 || 'Belum Dinilai',
-                            null
+                            null,
+                            item.total_approved_mk || 0
                         );
                     }
                 });

@@ -18,10 +18,10 @@ class DosenTicketing extends CI_Controller {
     }
 
     /**
-     * Default index: Redirect to input
+     * Default index: Redirect to riwayat
      */
     public function index() {
-        redirect('dosen/ticketing/input');
+        redirect('dosen/ticketing/riwayat');
     }
 
     /**

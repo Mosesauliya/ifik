@@ -941,7 +941,7 @@ class DosenWali extends CI_Controller {
 
         $filters = [
             'search'        => trim($this->input->get('search', true) ?? ''),
-            'status_tahap1' => 'Disetujui', // Hanya mahasiswa yang KRS Tahap 1-nya sudah Disetujui (ACC) yang masuk ke Tahap 2
+            'status_tahap1' => 'Disetujui', // Selalu tampilkan mahasiswa yang KRS Tahap 1-nya sudah Disetujui (ACC)
             'status_tahap2' => trim($this->input->get('status_tahap2', true) ?? 'all'),
             'tahun_ajaran'  => trim($this->input->get('tahun_ajaran', true) ?? 'all'),
             'semester'      => trim($this->input->get('semester', true) ?? 'all'),
@@ -1100,6 +1100,49 @@ class DosenWali extends CI_Controller {
         $result = $this->Perwalian_model->import_nilai_bulk_dosen($dosen_ids, $rows, $id_perwalian);
 
         $this->output->set_output(json_encode($result));
+    }
+
+    /**
+     * AJAX: Approve / Unapprove Mata Kuliah pada Tahap 2 (Satu-satu per MK atau Multiple Sekaligus)
+     */
+    public function perwalian_approve_mk_tahap2() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        $approve      = (int)($this->input->post('approve', true) ?? 1);
+        $raw_ids      = $this->input->post('detail_ids', true);
+
+        if (!$id_perwalian) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID Perwalian tidak valid.']));
+            return;
+        }
+
+        if ($raw_ids === 'all') {
+            $detail_ids = 'all';
+        } elseif (is_array($raw_ids)) {
+            $detail_ids = $raw_ids;
+        } elseif (is_string($raw_ids) && strlen(trim($raw_ids)) > 0) {
+            $decoded = json_decode($raw_ids, true);
+            $detail_ids = is_array($decoded) ? $decoded : explode(',', $raw_ids);
+        } else {
+            $single_id = (int)$this->input->post('id_detail', true);
+            $detail_ids = $single_id > 0 ? [$single_id] : [];
+        }
+
+        $res = $this->Perwalian_model->approve_mk_tahap2($id_perwalian, $detail_ids, $approve);
+        if (!empty($res['status'])) {
+            $dosen_ids = $this->_get_current_dosen_identifiers();
+            $stats = $this->Perwalian_model->get_dosen_perwalian_stats($dosen_ids);
+            $this->output->set_output(json_encode([
+                'status'  => true,
+                'message' => $approve ? 'Mata kuliah berhasil disetujui (Approved).' : 'Persetujuan mata kuliah dibatalkan.',
+                'data'    => $res,
+                'stats'   => $stats,
+            ]));
+        } else {
+            $this->output->set_output(json_encode($res));
+        }
     }
 
     /**

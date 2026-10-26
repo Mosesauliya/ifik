@@ -270,7 +270,7 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-5 mb-8">
             <!-- 1. Total Mahasiswa -->
             <a href="<?= site_url('adminlayanan/rekomendasi?filter=all'); ?>" class="group block text-left">
-                <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-orange-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
+                <div class="rounded-2xl border <?= $filter_type === 'all' ? 'border-brand-500 ring-2 ring-brand-500/20' : 'border-slate-200/90' ?> bg-gradient-to-br from-white via-orange-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-brand-600 transition-colors">Total Mahasiswa TA</p>
@@ -286,7 +286,7 @@
 
             <!-- 2. Jalur Sidang Reguler -->
             <a href="<?= site_url('adminlayanan/rekomendasi?filter=sidang'); ?>" class="group block text-left">
-                <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-emerald-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
+                <div class="rounded-2xl border <?= $filter_type === 'sidang' ? 'border-emerald-500 ring-2 ring-emerald-500/20' : 'border-slate-200/90' ?> bg-gradient-to-br from-white via-emerald-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-emerald-600 transition-colors">Rekomendasi Sidang</p>
@@ -302,7 +302,7 @@
 
             <!-- 3. Jalur Non-Sidang (Ekuivalensi) -->
             <a href="<?= site_url('adminlayanan/rekomendasi?filter=non_sidang'); ?>" class="group block text-left">
-                <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-purple-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
+                <div class="rounded-2xl border <?= $filter_type === 'non_sidang' ? 'border-purple-500 ring-2 ring-purple-500/20' : 'border-slate-200/90' ?> bg-gradient-to-br from-white via-purple-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-purple-600 transition-colors">Rekomendasi Non-Sidang</p>
@@ -318,7 +318,7 @@
 
             <!-- 4. Menunggu Rekomendasi P1 -->
             <a href="<?= site_url('adminlayanan/rekomendasi?filter=pending'); ?>" class="group block text-left">
-                <div class="rounded-2xl border border-slate-200/90 bg-gradient-to-br from-white via-amber-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
+                <div class="rounded-2xl border <?= $filter_type === 'pending' ? 'border-amber-500 ring-2 ring-amber-500/20' : 'border-slate-200/90' ?> bg-gradient-to-br from-white via-amber-50/20 to-white shadow-md hover:shadow-xl relative overflow-hidden p-5 transition-all duration-300 hover:scale-[1.02]">
                     <div class="flex items-start justify-between gap-3">
                         <div>
                             <p class="text-[11px] font-bold uppercase tracking-wider text-slate-400 group-hover:text-amber-600 transition-colors">Belum Rekomendasi</p>
@@ -333,28 +333,8 @@
             </a>
         </div>
 
-        <!-- Filter Tabs & Multi-Criteria Search Panel -->
-        <div class="card-custom p-4 sm:p-5 mb-6 space-y-4">
-            <!-- Filter Tabs -->
-            <div class="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
-                <a href="<?= site_url('adminlayanan/rekomendasi?filter=all'); ?>" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'all' ? 'bg-slate-900 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                    Semua
-                </a>
-                <a href="<?= site_url('adminlayanan/rekomendasi?filter=non_sidang'); ?>" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'non_sidang' ? 'bg-purple-600 text-white shadow-md shadow-purple-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                    <i class="bi bi-award-fill mr-1"></i> Non-Sidang (<?= $stats['non_sidang']; ?>)
-                </a>
-                <a href="<?= site_url('adminlayanan/rekomendasi?filter=sidang'); ?>" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'sidang' ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                    <i class="bi bi-mortarboard-fill mr-1"></i> Sidang Reguler (<?= $stats['sidang']; ?>)
-                </a>
-                <a href="<?= site_url('adminlayanan/rekomendasi?filter=pending'); ?>" 
-                   class="px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap <?= $filter_type === 'pending' ? 'bg-amber-500 text-white shadow-md shadow-amber-500/25' : 'bg-slate-100 text-slate-600 hover:bg-slate-200' ?>">
-                    <i class="fa-solid fa-clock mr-1"></i> Belum Rekomendasi (<?= $stats['pending']; ?>)
-                </a>
-            </div>
-
+        <!-- Multi-Criteria Search Panel -->
+        <div class="card-custom p-4 sm:p-5 mb-6">
             <!-- Multi-Criteria Filter Panel (Identik dosen_bimbingan.php) -->
             <div id="multiFilterPanelDW" class="bg-slate-50/70 rounded-2xl border border-slate-200 p-4 shadow-2xs">
                 <div class="flex flex-wrap items-center justify-between gap-3 mb-3">
@@ -479,6 +459,7 @@
                                             if ($tKey === 'preview1') $badgeClass = 'bg-blue-50 text-blue-700 border-blue-200';
                                             elseif ($tKey === 'preview2') $badgeClass = 'bg-indigo-50 text-indigo-700 border-indigo-200';
                                             elseif ($tKey === 'preview3') $badgeClass = 'bg-purple-50 text-purple-700 border-purple-200';
+                                            elseif ($tKey === 'persyaratan_sidang') $badgeClass = 'bg-amber-50 text-amber-700 border-amber-200';
                                             elseif ($tKey === 'sidang')   $badgeClass = 'bg-emerald-50 text-emerald-700 border-emerald-300 font-extrabold';
                                         ?>
                                         <span class="inline-flex items-center gap-1 px-3 py-1 rounded-full text-[11px] font-bold border <?= $badgeClass; ?>">
@@ -519,29 +500,11 @@
                                                         "<?= htmlspecialchars($r['catatan_dosen']); ?>"
                                                     </div>
                                                 <?php endif; ?>
-
-                                                <!-- File Berkas Submission -->
-                                                <?php if(!empty($r['files_uploaded'])): ?>
-                                                    <div class="flex flex-wrap gap-1.5 pt-1">
-                                                        <?php foreach($r['files_uploaded'] as $fkey => $fitem): ?>
-                                                            <?php if(is_array($fitem) && !empty($fitem['file'])): ?>
-                                                                <button type="button" 
-                                                                        onclick="previewBerkasDynamic('<?= htmlspecialchars($fitem['file']); ?>', '<?= htmlspecialchars(addslashes($fitem['label'] ?? $fkey)); ?>', '<?= htmlspecialchars(addslashes($r['nama_mahasiswa'])); ?>', '<?= htmlspecialchars($r['nim']); ?>')"
-                                                                        class="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-orange-50 hover:bg-orange-100 text-brand-700 border border-orange-200 text-[10px] font-bold transition cursor-pointer"
-                                                                        title="Buka Pratinjau Dokumen (Bisa Buka Banyak)">
-                                                                    <i class="bi bi-file-earmark-pdf-fill"></i>
-                                                                    <span><?= htmlspecialchars($fitem['label'] ?? $fkey); ?></span>
-                                                                    <i class="bi bi-eye-fill text-[8px] opacity-70"></i>
-                                                                </button>
-                                                            <?php endif; ?>
-                                                        <?php endforeach; ?>
-                                                    </div>
-                                                <?php endif; ?>
                                             </div>
                                         <?php endif; ?>
                                     </td>
 
-                                    <!-- 6. Aksi LAA (Downgrade Button) -->
+                                    <!-- 6. Aksi LAA (Downgrade & Lihat Eviden Button) -->
                                     <td class="py-4 px-4 text-center">
                                         <div class="flex items-center justify-center gap-1.5">
                                             <!-- Tombol Downgrade -->
@@ -556,9 +519,10 @@
                                             <?php if(!empty($r['files_uploaded'])): ?>
                                                 <button type="button"
                                                         onclick="openModalDetailBerkas('<?= htmlspecialchars($r['nim']); ?>', '<?= htmlspecialchars(addslashes($r['nama_mahasiswa'])); ?>', '<?= htmlspecialchars($r['jalur_title'] ?? ''); ?>', '<?= htmlspecialchars(addslashes($r['catatan_dosen'] ?? '')); ?>', <?= htmlspecialchars(json_encode($r['files_uploaded'])); ?>)"
-                                                        class="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center transition cursor-pointer"
-                                                        title="Lihat Detail Rekomendasi">
+                                                        class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 hover:border-slate-300 font-bold text-[11px] shadow-xs hover:shadow transition cursor-pointer"
+                                                        title="Lihat Detail Eviden Rekomendasi">
                                                     <i class="bi bi-eye-fill text-xs"></i>
+                                                    <span>Lihat Eviden</span>
                                                 </button>
                                             <?php endif; ?>
                                         </div>
@@ -1019,29 +983,42 @@
 
             // Jika dari Sidang
             if (from === 'sidang') {
-                impacts.push('Seluruh nilai sidang dari 4 dosen (Pembimbing 1, Pembimbing 2, Penguji 1, Penguji 2) dihapus.');
-                impacts.push('Form penilaian sidang, evaluasi dosen, dan skor akhir kelulusan sidang di-reset.');
-                impacts.push('Status pendaftaran TA dan kelulusan sidang dicabut (lulus_sidang = 0).');
+                impacts.push('Seluruh berkas naskah Sidang, nilai sidang dari 4 dosen (Pembimbing 1, Pembimbing 2, Penguji 1, Penguji 2), dan skor akhir dihapus.');
+                impacts.push('Jadwal dan tempat sidang (tanggal, waktu, ruangan, dan tautan sidang) dihapus.');
+                impacts.push('Akses upload BAP serta berkas BAP dari mahasiswa dicabut dan dihapus.');
             }
 
-            // Jika target Preview 2 atau Preview 1 (dari Sidang atau Preview 3)
-            if ((from === 'sidang' || from === 'preview3') && (to === 'preview2' || to === 'preview1')) {
-                impacts.push('Seluruh berkas naskah draft tesis Preview 3 dihapus dari sistem.');
-                impacts.push('Form rekomendasi Pembimbing 1 (Sidang/Non-Sidang) dan berkas pendukung dibatalkan.');
-                impacts.push('Status kelulusan Preview 3 dicabut (lulus_preview3 = 0).');
+            // Jika dari Sidang atau Persyaratan Sidang turun ke Persyaratan Sidang atau di bawahnya
+            if (from === 'sidang' || from === 'persyaratan_sidang') {
+                impacts.push('Seluruh file berkas Persyaratan Sidang yang telah diunggah mahasiswa beserta status verifikasi Admin LAA dihapus.');
             }
 
-            // Jika target Preview 1 (dari Sidang, Preview 3, atau Preview 2)
+            // Jika target Preview 3 atau di bawahnya (dari Sidang, Persyaratan Sidang, atau Preview 3)
+            if (to === 'preview3' || to === 'preview2' || to === 'preview1') {
+                impacts.push('Seluruh file berkas naskah dan riwayat upload di Preview 3 dihapus dari sistem.');
+                impacts.push('Form rekomendasi Pembimbing 1 (Sidang/Non-Sidang), berkas pendukung, dan status lulus Preview 3 dicabut.');
+            }
+
+            // Jika target Preview 2 atau Preview 1
+            if (to === 'preview2' || to === 'preview1') {
+                impacts.push('Seluruh file berkas naskah dan riwayat upload di Preview 2 dihapus dari sistem.');
+                impacts.push('Nilai Desk Evaluation (DE) dari 4 dosen, jadwal DE, dan status lulus Preview 2 di-reset.');
+            }
+
+            // Jika target Preview 1
             if (to === 'preview1') {
-                impacts.push('Seluruh berkas naskah draft tesis Preview 2 dihapus dari sistem.');
-                impacts.push('Nilai Desk Evaluation (DE) dari 4 dosen dan jadwal DE Preview 2 di-reset.');
-                impacts.push('Status kelulusan Preview 2 dicabut (lulus_preview2 = 0).');
+                impacts.push('Seluruh file berkas naskah dan riwayat upload di Preview 1 dihapus dari sistem serta status lulus Preview 1 dicabut.');
             }
 
-            // Target stage itu sendiri
-            const stageLabels = { 'preview1': 'Preview 1', 'preview2': 'Preview 2', 'preview3': 'Preview 3' };
+            // Penegasan untuk tahap tujuan
+            const stageLabels = {
+                'preview1': 'Preview 1',
+                'preview2': 'Preview 2',
+                'preview3': 'Preview 3',
+                'persyaratan_sidang': 'Persyaratan Sidang'
+            };
             const targetLabel = stageLabels[to] || to;
-            impacts.push(`Status kelulusan ${targetLabel} dicabut dan berkas di-reset ke "Pending" untuk bimbingan ulang.`);
+            impacts.push(`Semua file pada tahap tujuan (${targetLabel}) ikut terhapus sehingga mahasiswa wajib mengunggah ulang berkas dari awal pada tahap ${targetLabel}.`);
 
             return impacts;
         }
@@ -1072,14 +1049,15 @@
             const sel = document.getElementById('dgKeTahap');
             sel.innerHTML = '';
 
-            // Hierarchy: preview1=1, preview2=2, preview3=3, sidang=4
+            // Hierarchy: preview1=1, preview2=2, preview3=3, persyaratan_sidang=4, sidang=5
             const stages = [
                 { key: 'preview1', label: 'Preview 1' },
                 { key: 'preview2', label: 'Preview 2' },
-                { key: 'preview3', label: 'Preview 3' }
+                { key: 'preview3', label: 'Preview 3' },
+                { key: 'persyaratan_sidang', label: 'Persyaratan Sidang' }
             ];
 
-            const rankMap = { 'preview1': 1, 'preview2': 2, 'preview3': 3, 'sidang': 4 };
+            const rankMap = { 'preview1': 1, 'preview2': 2, 'preview3': 3, 'persyaratan_sidang': 4, 'sidang': 5 };
             const currRank = rankMap[tahapKey] || 1;
 
             const allowed = stages.filter(s => rankMap[s.key] < currRank);
@@ -1164,6 +1142,7 @@
 
                     const formData = new FormData();
                     formData.append('nim', nim);
+                    formData.append('dari_tahap', currentTahapKey);
                     formData.append('ke_tahap', keTahap);
                     formData.append('alasan', alasan);
 

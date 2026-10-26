@@ -31,6 +31,12 @@ class Mahasiswa extends CI_Controller {
         // Pengecualian: method-method rekomendasi TA (bisa diakses oleh Dosen & Koordinator TA / Admin)
         $role_id = (int)$this->session->userdata('role_id');
         $current_method = $this->router->fetch_method();
+        $isReviewerMethod = in_array($current_method, ['get_detail_nilai_sidang_ajax', 'simpan_nilai_sidang_ajax'], true);
+        if ($isReviewerMethod && in_array($role_id, [1, 2, 3, 4, 5, 6, 9, 22], true)) {
+            // Izinkan reviewer mengakses endpoint penilaian sidang
+            return;
+        }
+
         $isRekomenMethod = (stripos($current_method, 'rekomen') !== false);
         $shared_rekomen_methods = array(
             'ajax_get_rekomen_options',

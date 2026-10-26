@@ -1490,12 +1490,14 @@ class AdminLayanan extends CI_Controller {
             return;
         }
 
-        $this->AdminLayanan_model->save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan);
+        $eval = $this->AdminLayanan_model->save_status_berkas_sidang($nim, $kode_berkas, $status, $catatan);
 
         $this->output->set_content_type('application/json')
                      ->set_output(json_encode([
-                         'success' => true,
-                         'message' => 'Status berkas berhasil diupdate menjadi: ' . $status
+                         'success'        => true,
+                         'message'        => 'Status berkas berhasil diupdate menjadi: ' . $status,
+                         'overall_status' => $eval['overall_status'] ?? 'Pending Verifikasi',
+                         'is_approved'    => !empty($eval['is_approved'])
                      ]));
     }
 
@@ -1572,11 +1574,8 @@ class AdminLayanan extends CI_Controller {
         $status  = trim($this->input->post('status') ?? 'Disetujui Admin LAA');
         $catatan = trim($this->input->post('catatan') ?? '');
 
-        if (!empty($nim) && $this->db->table_exists('guidance')) {
-            $this->db->where('id_mhs', $nim)->or_where('id', $nim)->update('guidance', [
-                'status_filesidang'           => $status,
-                'komentar_pendaftaran_sidang' => $catatan
-            ]);
+        if (!empty($nim)) {
+            $this->AdminLayanan_model->approve_all_berkas_sidang($nim, $status, $catatan);
             $this->session->set_flashdata('success', 'Status pendaftaran sidang mahasiswa NIM ' . $nim . ' berhasil diupdate!');
         }
 
@@ -1910,6 +1909,7 @@ class AdminLayanan extends CI_Controller {
         $nim      = trim($this->input->post('nim') ?? '');
         $ke_tahap = trim($this->input->post('ke_tahap') ?? '');
         $alasan   = trim($this->input->post('alasan') ?? '');
+        $dari_post = strtolower(trim($this->input->post('dari_tahap') ?? ''));
 
         if (empty($nim) || empty($ke_tahap)) {
             echo json_encode(['status' => false, 'message' => 'Parameter NIM dan tujuan tahap tidak lengkap.']);
@@ -1924,8 +1924,24 @@ class AdminLayanan extends CI_Controller {
         }
 
         $curr_stage = strtolower(trim($g['status_preview'] ?? 'preview1'));
-        if (empty($curr_stage)) $curr_stage = 'preview1';
+        $st_fs = strtolower(trim($g['status_filesidang'] ?? ''));
+        $is_fs_acc = (strpos($st_fs, 'disetujui') !== false || strpos($st_fs, 'approved') !== false || $st_fs === 'lulus');
+        if ($curr_stage === 'sidang' || !empty($g['lulus_sidang']) || (!empty($g['lulus_preview3']) && $is_fs_acc && $curr_stage !== 'persyaratan_sidang')) {
+            $curr_stage = 'sidang';
+        } elseif ($curr_stage === 'persyaratan_sidang' || $curr_stage === 'persyaratansidang' || (!empty($g['lulus_preview3']) && $curr_stage === 'preview3')) {
+            $curr_stage = 'persyaratan_sidang';
+        } elseif ($curr_stage === 'preview3' || (!empty($g['lulus_preview2']) && $curr_stage === 'preview2')) {
+            $curr_stage = 'preview3';
+        } elseif ($curr_stage === 'preview2' || (!empty($g['lulus_preview1']) && $curr_stage === 'preview1')) {
+            $curr_stage = 'preview2';
+        } elseif (empty($curr_stage)) {
+            $curr_stage = 'preview1';
+        }
 
+        $valid_stages = ['preview1' => 1, 'preview2' => 2, 'preview3' => 3, 'persyaratan_sidang' => 4, 'sidang' => 5];
+        if (isset($valid_stages[$dari_post]) && (!isset($valid_stages[$curr_stage]) || $valid_stages[$dari_post] > $valid_stages[$curr_stage])) {
+            $curr_stage = $dari_post;
+        }
         $role_actor = 'Admin LAA';
         $res = $this->Mahasiswa_model->downgrade_stage($nim, $curr_stage, $ke_tahap, $role_actor, $alasan);
 
