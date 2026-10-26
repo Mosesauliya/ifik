@@ -1498,6 +1498,7 @@
                                 <div id="menu-filter-modal-acc-jabatan" class="custom-dropdown-menu hidden absolute top-full left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
                             </div>
                         </div>
+                        <!-- [COMMENTED OUT] Program Studi diisi mandiri oleh user saat proses Onboarding
                         <div id="wrapper-prodi">
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fa-solid fa-graduation-cap text-brand-600 mr-1"></i> Program Studi
@@ -1518,6 +1519,7 @@
                                 <div id="menu-filter-modal-acc-prodi" class="custom-dropdown-menu hidden absolute top-full right-0 left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
                             </div>
                         </div>
+                        -->
                     </div>
 
                     <!-- Khusus Role Dosen: Pemilihan Kelompok Keahlian (KK) -->
@@ -4479,11 +4481,11 @@
                 if (wrapKk) wrapKk.classList.remove('hidden');
                 if (rowFields) rowFields.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
             } else if (isMhs) {
-                container.classList.remove('hidden');
+                // Program studi diisi saat Onboarding, sembunyikan container field tambahan untuk Mahasiswa
+                container.classList.add('hidden');
                 if (wrapJabatan) wrapJabatan.classList.add('hidden');
-                if (wrapProdi) wrapProdi.classList.remove('hidden');
+                if (wrapProdi) wrapProdi.classList.add('hidden');
                 if (wrapKk) wrapKk.classList.add('hidden');
-                if (rowFields) rowFields.className = 'grid grid-cols-1 gap-3';
             } else {
                 container.classList.add('hidden');
                 if (wrapKk) wrapKk.classList.add('hidden');
