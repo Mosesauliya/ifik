@@ -679,7 +679,7 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                                 $isCurrent = true;
                             } elseif ($cleanHrefUri === 'peminjaman-ruangan' && in_array($curr_uri, ['peminjaman-ruangan', 'peminjaman_ruangan', 'riwayat-booking', 'ajukan-booking', 'kalender', 'dashboard/riwayat', 'dashboard/ajukan', 'dashboard/kalender'])) {
                                 $isCurrent = true;
-                            } elseif ($cleanHrefUri === 'peminjaman-barang' && in_array($curr_uri, ['peminjaman-barang', 'peminjaman_barang', 'peminjaman_barang/riwayat', 'peminjaman-barang/riwayat', 'peminjaman_barang/kalender', 'peminjaman-barang/kalender', 'peminjaman_barang/katalog', 'peminjaman-barang/katalog'])) {
+                            } elseif ($cleanHrefUri === 'peminjaman-barang' && (strpos($curr_uri, 'peminjaman-barang') === 0 || strpos($curr_uri, 'peminjaman_barang') === 0)) {
                                 $isCurrent = true;
                             } elseif ($cleanHrefUri === 'dosen/ticketing/riwayat' && strpos($curr_uri, 'dosen/ticketing') === 0) {
                                 $isCurrent = true;
