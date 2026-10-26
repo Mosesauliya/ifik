@@ -179,6 +179,32 @@ class AdminProdi extends CI_Controller {
     }
 
     /**
+     * AJAX: Hapus Banyak Mata Kuliah Sekaligus (Multiple Delete)
+     */
+    public function hapus_mata_kuliah_multiple() {
+        $this->output->set_content_type('application/json');
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true);
+        $ids = $json['ids'] ?? $this->input->post('ids');
+
+        if (is_string($ids)) {
+            $decoded = json_decode($ids, true);
+            $ids = is_array($decoded) ? $decoded : explode(',', $ids);
+        }
+
+        if (empty($ids) || !is_array($ids)) {
+            $this->output->set_output(json_encode(['status' => 'error', 'message' => 'Tidak ada mata kuliah yang dipilih.']));
+            return;
+        }
+
+        $affected = $this->Perwalian_model->delete_mata_kuliah_multiple($ids);
+        $this->output->set_output(json_encode([
+            'status'  => 'success',
+            'message' => count($ids) . ' mata kuliah berhasil dihapus.'
+        ]));
+    }
+
+    /**
      * AJAX: Import Bulk Mata Kuliah dari Excel JSON
      */
     public function import_mata_kuliah() {

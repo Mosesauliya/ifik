@@ -8,6 +8,10 @@
     <!-- Tailwind CSS & Fonts -->
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- SheetJS (XLSX parsing & export) -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- SweetAlert2 -->
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
@@ -78,6 +82,18 @@
             border-color: #ea580c;
             background: #fff7ed;
         }
+
+        .dropzone-box {
+            border: 2px dashed #cbd5e1;
+            border-radius: 1rem;
+            background-color: #f8fafc;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .dropzone-box:hover, .dropzone-box.drag-active {
+            border-color: #10b981;
+            background-color: #ecfdf5;
+        }
     </style>
 </head>
 <body class="min-h-screen bg-slate-50">
@@ -112,6 +128,7 @@
                 <!-- Status Perwalian Pill -->
                 <?php 
                     $st1 = $perwalian['status_tahap1'] ?? 'Draft';
+                    $st2 = $perwalian['status_tahap2'] ?? 'Belum Dinilai';
                     $badgeBg = 'bg-slate-100 text-slate-700 border-slate-200';
                     $icon = '📝';
                     $labelDesc = 'Silakan pilih mata kuliah dan upload bukti KRS';
@@ -123,20 +140,38 @@
                     } elseif ($st1 === 'Disetujui') {
                         $badgeBg = 'bg-emerald-50 text-emerald-800 border-emerald-300';
                         $icon = '✅';
-                        $labelDesc = 'Kontrak KRS Tahap 1 telah disetujui Dosen Wali';
+                        $labelDesc = 'Kontrak KRS Tahap 1 disetujui Dosen Wali';
                     } elseif ($st1 === 'Revisi') {
                         $badgeBg = 'bg-rose-50 text-rose-800 border-rose-300';
                         $icon = '⚠️';
                         $labelDesc = 'Ada catatan revisi dari Dosen Wali';
                     }
                 ?>
-                <div class="flex flex-col items-start md:items-end gap-1">
-                    <span class="text-[11px] text-slate-400 font-semibold uppercase tracking-wider">Status Tahap 1 (KRS)</span>
-                    <div class="px-4 py-2 border rounded-xl font-bold text-xs flex items-center gap-2 shadow-sm <?= $badgeBg ?>">
-                        <span class="text-base"><?= $icon ?></span>
-                        <span><?= htmlspecialchars($st1) ?></span>
+                <div class="flex flex-col items-start md:items-end gap-2">
+                    <div class="flex items-center gap-2 flex-wrap justify-end">
+                        <div class="flex flex-col items-start md:items-end">
+                            <span class="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Tahap 1 (KRS)</span>
+                            <div class="px-3 py-1.5 border rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs <?= $badgeBg ?>">
+                                <span><?= $icon ?></span>
+                                <span><?= htmlspecialchars($st1) ?></span>
+                            </div>
+                        </div>
+                        <?php if ($st1 === 'Disetujui'): ?>
+                            <div class="flex flex-col items-start md:items-end">
+                                <span class="text-[10px] text-purple-600 font-semibold uppercase tracking-wider">Tahap 2 (Nilai)</span>
+                                <?php 
+                                    $st2Bg = 'bg-slate-100 text-slate-700 border-slate-200';
+                                    if ($st2 === 'Selesai') $st2Bg = 'bg-emerald-100 text-emerald-800 border-emerald-300';
+                                    elseif ($st2 === 'Dinilai' || $st2 === 'Proses Penilaian') $st2Bg = 'bg-purple-100 text-purple-800 border-purple-300';
+                                ?>
+                                <div class="px-3 py-1.5 border rounded-xl font-bold text-xs flex items-center gap-1.5 shadow-2xs <?= $st2Bg ?>">
+                                    <span><?= ($st2 === 'Selesai') ? '🏆' : '📊' ?></span>
+                                    <span><?= htmlspecialchars($st2) ?></span>
+                                </div>
+                            </div>
+                        <?php endif; ?>
                     </div>
-                    <span class="text-[11px] text-slate-500 mt-0.5"><?= $labelDesc ?></span>
+                    <span class="text-[11px] text-slate-500"><?= $labelDesc ?></span>
                 </div>
             </div>
 
@@ -173,6 +208,177 @@
                 </div>
             </div>
 
+            <?php if ($st1 === 'Disetujui'): ?>
+            <!-- =============================================================== -->
+            <!-- BAGIAN TAHAP 2: EVALUASI & INPUT NILAI MAHASISWA (FITUR ALIF)   -->
+            <!-- =============================================================== -->
+            <div class="clay-card overflow-hidden shadow-xl border border-purple-200">
+                <!-- Header Ungu/Indigo khas Alif -->
+                <div class="px-5 py-4 sm:px-6 sm:py-5 bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 text-white flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                    <div class="flex items-center space-x-3 min-w-0">
+                        <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white shrink-0 shadow-inner">
+                            <i class="fa-solid fa-award text-lg"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <h3 class="font-extrabold text-base sm:text-lg leading-tight truncate">
+                                Evaluasi & Rekap Nilai Tahap 2
+                            </h3>
+                            <p class="text-xs text-purple-200 truncate mt-0.5">
+                                NIM: <span class="font-mono font-bold text-white"><?= htmlspecialchars($nim) ?></span> | 
+                                Nama: <span class="font-semibold text-white"><?= htmlspecialchars($nama_mhs) ?></span> | 
+                                Periode: <span class="font-semibold text-white"><?= htmlspecialchars($tahun_ajaran . ' ' . $semester) ?></span>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <span class="px-3 py-1 bg-white/20 backdrop-blur-xs text-white rounded-full text-xs font-bold border border-white/30 flex items-center gap-1.5">
+                            <i class="fa-solid fa-circle-check text-emerald-300"></i> Tahap 1 Disetujui
+                        </span>
+                        <span class="px-3 py-1 bg-purple-900/60 text-purple-200 rounded-full text-xs font-bold border border-purple-400/40">
+                            Tahap 2: <?= htmlspecialchars($perwalian['status_tahap2'] ?? 'Belum Dinilai') ?>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="p-5 sm:p-7 space-y-5">
+                    <!-- Info Banner & Quick Action Buttons -->
+                    <div class="p-4 rounded-xl bg-purple-50/80 border border-purple-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-xs font-bold text-purple-900 flex items-center">
+                                <i class="fa-solid fa-circle-info text-purple-600 mr-1.5"></i> Panduan Evaluasi & Nilai Mutu
+                            </h4>
+                            <p class="text-[11px] text-purple-800 mt-0.5">
+                                Nilai <strong class="text-emerald-700">A, AB, B, BC, C = LULUS 🟢</strong> | Nilai <strong class="text-rose-700">D, E = TIDAK LULUS 🔴</strong>.
+                            </p>
+                        </div>
+                        <div class="flex items-center space-x-2 shrink-0 flex-wrap gap-y-2">
+                            <!-- Download Template -->
+                            <button type="button" onclick="downloadTemplateExcelSingle()" class="px-3.5 py-2 text-xs font-bold text-purple-700 bg-white border border-purple-200 hover:bg-purple-100/60 rounded-xl shadow-2xs transition flex items-center cursor-pointer">
+                                <i class="fa-solid fa-download mr-1.5 text-purple-600"></i> Unduh Format Excel
+                            </button>
+                            <!-- Single Student Import Excel -->
+                            <button type="button" onclick="openImportModalSingle()" class="px-3.5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 rounded-xl shadow-sm transition flex items-center cursor-pointer" title="Import Nilai dari Excel">
+                                <i class="fa-solid fa-file-excel mr-1.5"></i> Import Excel Nilai
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Grading Table -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs">
+                        <div class="px-4 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between">
+                            <span class="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                                <i class="fa-solid fa-list-check text-purple-600"></i> Form Nilai Mata Kuliah Kontrak
+                            </span>
+                            <span class="text-xs font-mono font-bold text-purple-700" id="m2GradingProgressText">0 / <?= count($mk_kontrak) ?> Dinilai</span>
+                        </div>
+                        <div class="overflow-x-auto">
+                            <table class="w-full min-w-[620px] text-left text-xs">
+                                <thead class="bg-slate-100/70 text-slate-600 font-bold uppercase text-[10px] tracking-wider">
+                                    <tr>
+                                        <th class="py-3 px-3.5 w-12 text-center">No</th>
+                                        <th class="py-3 px-3.5">Kode MK</th>
+                                        <th class="py-3 px-3.5">Nama Mata Kuliah</th>
+                                        <th class="py-3 px-3.5 text-center w-20">SKS</th>
+                                        <th class="py-3 px-3.5 text-center w-44">Nilai Huruf</th>
+                                        <th class="py-3 px-3.5 text-center w-44">Status Kelulusan</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="m2GradingTableBody" class="divide-y divide-slate-100 text-slate-700">
+                                    <?php if (empty($mk_kontrak)): ?>
+                                        <tr>
+                                            <td colspan="6" class="py-8 text-center text-slate-400">
+                                                <i class="fa-solid fa-book-open text-2xl text-slate-300 mb-2 block"></i>
+                                                <p class="font-medium text-slate-600">Belum ada mata kuliah yang dikontrak untuk semester ini.</p>
+                                            </td>
+                                        </tr>
+                                    <?php else: ?>
+                                        <?php $no = 1; foreach ($mk_kontrak as $c): 
+                                            $idDet = (int)($c['id'] ?? $c['id_detail'] ?? 0);
+                                            $grade = strtoupper(trim($c['nilai_huruf'] ?? ''));
+                                            $status = trim($c['status_kelulusan'] ?? '');
+                                            if (empty($status) && !empty($grade)) {
+                                                $status = in_array($grade, ['A', 'AB', 'B', 'BC', 'C']) ? 'Lulus' : 'Tidak Lulus';
+                                            }
+                                            $isLulus = ($status === 'Lulus');
+                                            $isTidakLulus = ($status === 'Tidak Lulus');
+                                            $isLocked = (($perwalian['status_tahap2'] ?? '') === 'Selesai');
+                                        ?>
+                                            <tr class="hover:bg-purple-50/30 transition" id="m2Row_<?= $idDet ?>">
+                                                <td class="py-3 px-3.5 text-center font-mono text-slate-400"><?= $no++ ?></td>
+                                                <td class="py-3 px-3.5 font-mono font-bold text-purple-900"><?= htmlspecialchars($c['kode_mk']) ?></td>
+                                                <td class="py-3 px-3.5 font-semibold text-slate-800"><?= htmlspecialchars($c['nama_mk']) ?></td>
+                                                <td class="py-3 px-3.5 text-center font-bold text-slate-700"><?= (int)$c['sks'] ?> SKS</td>
+                                                <td class="py-3 px-3.5 text-center">
+                                                    <select onchange="onGradeChange(<?= $idDet ?>, this.value)" <?= $isLocked ? 'disabled' : '' ?> class="w-28 px-3 py-1.5 text-xs font-bold text-center bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500/40 font-mono shadow-2xs cursor-pointer disabled:bg-slate-100 disabled:cursor-not-allowed">
+                                                        <option value="" <?= empty($grade) ? 'selected' : '' ?>>- Nilai -</option>
+                                                        <option value="A" <?= $grade === 'A' ? 'selected' : '' ?> class="text-emerald-700 font-bold">A</option>
+                                                        <option value="AB" <?= $grade === 'AB' ? 'selected' : '' ?> class="text-emerald-700 font-bold">AB</option>
+                                                        <option value="B" <?= $grade === 'B' ? 'selected' : '' ?> class="text-emerald-700 font-bold">B</option>
+                                                        <option value="BC" <?= $grade === 'BC' ? 'selected' : '' ?> class="text-emerald-700 font-bold">BC</option>
+                                                        <option value="C" <?= $grade === 'C' ? 'selected' : '' ?> class="text-emerald-700 font-bold">C</option>
+                                                        <option value="D" <?= $grade === 'D' ? 'selected' : '' ?> class="text-rose-700 font-bold">D</option>
+                                                        <option value="E" <?= $grade === 'E' ? 'selected' : '' ?> class="text-rose-700 font-bold">E</option>
+                                                    </select>
+                                                </td>
+                                                <td class="py-3 px-3.5 text-center" id="m2StatusCol_<?= $idDet ?>">
+                                                    <?php if ($isLulus): ?>
+                                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                                            <i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus
+                                                        </span>
+                                                    <?php elseif ($isTidakLulus): ?>
+                                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300">
+                                                            <i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus
+                                                        </span>
+                                                    <?php else: ?>
+                                                        <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200">
+                                                            <i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai
+                                                        </span>
+                                                    <?php endif; ?>
+                                                </td>
+                                            </tr>
+                                        <?php endforeach; ?>
+                                    <?php endif; ?>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Kunci & Selesaikan Evaluasi Tahap 2 Box -->
+                    <div class="p-4 sm:p-5 rounded-xl border-2 border-emerald-200 bg-emerald-50/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div>
+                            <h4 class="text-xs font-bold text-emerald-950 flex items-center">
+                                <i class="fa-solid fa-lock text-emerald-700 mr-2"></i> Kunci & Selesaikan Evaluasi Tahap 2
+                            </h4>
+                            <p class="text-[11px] text-emerald-800 mt-0.5">
+                                Setelah semua nilai terisi, kunci evaluasi agar nilai tersimpan secara permanen ke riwayat akademik.
+                            </p>
+                        </div>
+                        <?php if (($perwalian['status_tahap2'] ?? '') === 'Selesai'): ?>
+                            <div class="px-5 py-2.5 bg-emerald-100 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold flex items-center justify-center">
+                                <i class="fa-solid fa-check-double mr-1.5"></i> Evaluasi Tahap 2 Selesai & Terkunci
+                            </div>
+                        <?php else: ?>
+                            <button type="button" onclick="submitTahap2FinalModal()" class="w-full sm:w-auto px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl shadow-md transition shrink-0 flex items-center justify-center cursor-pointer">
+                                <i class="fa-solid fa-lock mr-1.5"></i> Submit & Kunci Perwalian
+                            </button>
+                        <?php endif; ?>
+                    </div>
+
+                    <!-- Ringkasan Arsip Berkas KRS Tahap 1 -->
+                    <div class="pt-3 border-t border-slate-200 flex items-center justify-between text-xs text-slate-500">
+                        <span class="flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-check text-emerald-600"></i> Bukti KRS Tahap 1: 
+                            <strong class="text-slate-700 font-mono"><?= htmlspecialchars($perwalian['file_krs'] ?? '-') ?></strong>
+                        </span>
+                        <?php if (!empty($perwalian['file_krs'])): ?>
+                            <button type="button" onclick="previewKRSModal('<?= base_url('uploads/krs/' . $perwalian['file_krs']) ?>', '<?= htmlspecialchars($perwalian['file_krs']) ?>')" class="px-3 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg font-semibold transition cursor-pointer">
+                                Lihat Berkas KRS
+                            </button>
+                        <?php endif; ?>
+                    </div>
+                </div>
+            </div>
+            <?php else: ?>
             <!-- =============================================================== -->
             <!-- BAGIAN 1: KONTRAK MATA KULIAH YANG AKAN DIAMBIL (TAHAP 1) -->
             <!-- =============================================================== -->
@@ -365,6 +571,7 @@
                     </div>
                 </div>
             </div>
+            <?php endif; ?>
 
             <!-- =============================================================== -->
             <!-- BAGIAN 4: RIWAYAT MATA KULIAH YANG SUDAH DIAMBIL -->
@@ -543,6 +750,124 @@
         </div>
     </div>
 
+    <!-- ========================================================================= -->
+    <!-- MODAL: IMPORT NILAI EXCEL (FITUR ALIF)                                    -->
+    <!-- ========================================================================= -->
+    <div id="modalImportNilai" class="fixed inset-0 bg-slate-900/70 backdrop-blur-sm z-[100010] hidden flex items-center justify-center p-2.5 pb-6 sm:p-4 overflow-y-auto">
+        <div class="clay-card w-full max-w-3xl xl:max-w-4xl max-h-[82vh] max-h-[82dvh] sm:max-h-[92vh] flex flex-col overflow-hidden bg-white shadow-2xl rounded-2xl">
+            <!-- Modal Fixed Header -->
+            <div class="px-5 py-3.5 sm:px-6 sm:py-4 border-b border-slate-100 flex items-center justify-between gap-3 shrink-0 bg-white">
+                <div class="flex items-center space-x-2.5 min-w-0">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center shrink-0">
+                        <i class="fa-solid fa-file-excel text-base"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <h3 class="font-bold text-sm text-slate-900 truncate" id="importModalTitle">Import Rekap Nilai Mahasiswa dari Excel</h3>
+                        <p class="text-xs text-slate-500 truncate" id="importModalSubtitle">Format: .xlsx, .xls, .csv</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeImportModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-400 hover:text-slate-600 flex items-center justify-center transition shrink-0 cursor-pointer">
+                    <i class="fa-solid fa-xmark text-sm"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-4 sm:p-6 overflow-y-auto flex-grow space-y-3.5">
+                <!-- Dropzone Input File -->
+                <input type="file" id="fileExcelInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleExcelSelect(event)">
+                <div id="excelDropzone" onclick="document.getElementById('fileExcelInput').click()" class="dropzone-box p-6 text-center select-none transition-all duration-200">
+                    <span class="text-3xl text-emerald-600 block pointer-events-none"><i class="fa-solid fa-cloud-arrow-up"></i></span>
+                    <h4 class="text-xs font-bold text-slate-800 mt-2 pointer-events-none" id="dropzoneTitleText">Pilih atau Drag & Drop File Excel (.xlsx / .csv)</h4>
+                    <p class="text-[11px] text-slate-500 mt-1 pointer-events-none" id="importColumnHints">
+                        Header: <code>Kode MK</code>, <code>Nilai Huruf</code> (A, AB, B, BC, C, D, E)
+                    </p>
+                    <div class="mt-2 text-[10px] text-emerald-700 font-semibold pointer-events-none flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-arrow-pointer text-[10px]"></i> Klik untuk memilih file atau tarik & letakkan (drag & drop) file langsung di sini
+                    </div>
+                </div>
+
+                <!-- Compact File Loaded Bar (Shows when file is active) -->
+                <div id="excelSelectedFileBar" class="hidden p-3 bg-emerald-50/70 border border-emerald-200 rounded-xl flex items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center space-x-2.5 min-w-0">
+                        <div class="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-file-excel"></i>
+                        </div>
+                        <div class="min-w-0">
+                            <span class="font-bold text-slate-900 block truncate" id="excelSelectedFileName">file.xlsx</span>
+                            <span class="text-[11px] text-emerald-700 block" id="excelSelectedFileInfo">File berhasil dimuat & siap diproses</span>
+                        </div>
+                    </div>
+                    <button type="button" onclick="resetImportFile()" class="px-2.5 py-1 text-slate-500 hover:text-rose-600 text-xs font-semibold hover:bg-rose-50 rounded-lg transition shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-arrow-rotate-left mr-1"></i> Ganti File
+                    </button>
+                </div>
+
+                <!-- Template Download Card -->
+                <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                    <div class="flex items-center space-x-2 min-w-0">
+                        <i class="fa-solid fa-circle-info text-emerald-600 text-sm shrink-0"></i>
+                        <span class="text-slate-600 truncate" id="importTemplateHintText">Belum punya format Excel yang sesuai?</span>
+                    </div>
+                    <button type="button" onclick="downloadTemplateExcelSingle()" class="inline-flex items-center justify-center px-3 py-1.5 font-bold text-emerald-700 bg-white hover:bg-emerald-100/80 border border-emerald-300 rounded-lg shadow-2xs transition shrink-0 cursor-pointer">
+                        <i class="fa-solid fa-download mr-1.5 text-emerald-600"></i>
+                        <span id="btnTemplateDownloadText">Download Template</span>
+                    </button>
+                </div>
+
+                <!-- Preview Container with Robust Validation Info -->
+                <div id="importPreviewContainer" class="hidden space-y-3">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <span class="font-bold text-slate-800">Pratinjau Validasi Nilai:</span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-slate-100 text-slate-700 border border-slate-200" id="importBadgeTotal">Total: <span id="importRowCount">0</span></span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-emerald-100 text-emerald-800 border border-emerald-300" id="importBadgeValid">Cocok: <span id="importValidCount">0</span></span>
+                            <span class="px-2.5 py-0.5 text-[11px] font-bold rounded-md bg-rose-100 text-rose-800 border border-rose-300" id="importBadgeInvalid">Tidak Cocok: <span id="importInvalidCount">0</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Alert banner for validation status -->
+                    <div id="importWarningBanner" class="hidden p-3 rounded-xl text-xs space-y-1">
+                        <div class="font-bold flex items-center gap-1.5" id="importWarningTitle">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                            <span id="importWarningTitleText">Peringatan Validasi File</span>
+                        </div>
+                        <p class="text-[11px] leading-relaxed" id="importWarningText">
+                            Beberapa kode mata kuliah atau format nilai tidak sesuai dengan rencana studi mahasiswa. Baris berwarna merah tidak akan disimpan ke sistem.
+                        </p>
+                    </div>
+
+                    <!-- Table Preview with clean overflow -->
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-2xs bg-white">
+                        <div class="max-h-60 overflow-y-auto overflow-x-auto">
+                            <table class="w-full text-left text-xs min-w-[550px]">
+                                <thead class="bg-slate-50 text-[10px] uppercase font-bold text-slate-600 sticky top-0 border-b border-slate-200 z-10">
+                                    <tr>
+                                        <th class="py-2.5 px-3 w-28 whitespace-nowrap">NIM</th>
+                                        <th class="py-2.5 px-3 w-28 whitespace-nowrap">Kode MK di File</th>
+                                        <th class="py-2.5 px-3 min-w-[140px]">Mata Kuliah di Sistem</th>
+                                        <th class="py-2.5 px-3 w-16 text-center whitespace-nowrap">Nilai</th>
+                                        <th class="py-2.5 px-3 w-40 text-center whitespace-nowrap">Hasil Validasi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="importPreviewTableBody" class="divide-y divide-slate-100"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Fixed Footer -->
+            <div class="px-5 py-3 sm:px-6 sm:py-3.5 bg-slate-50 border-t border-slate-100 flex items-center justify-end space-x-2 shrink-0">
+                <button type="button" onclick="closeImportModal()" class="px-4 py-2 text-xs font-semibold text-slate-600 hover:text-slate-800 hover:bg-slate-200/60 rounded-xl transition cursor-pointer">
+                    Batal
+                </button>
+                <button type="button" id="btnProcessImport" onclick="processImportNilai()" disabled class="px-5 py-2 text-xs font-bold text-white bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed rounded-xl shadow-md transition flex items-center cursor-pointer">
+                    <i class="fa-solid fa-check mr-1.5"></i> Simpan Nilai ke Sistem
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         const idPerwalian = <?= (int)$perwalian['id_perwalian'] ?>;
@@ -702,7 +1027,12 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            setupDropzone(document.getElementById('krsDropzone'), processKRSFile);
+            const krsDz = document.getElementById('krsDropzone');
+            if (krsDz && typeof setupDropzone === 'function') {
+                setupDropzone(krsDz, processKRSFile);
+            }
+            initExcelDropzone();
+            refreshModalGradingProgress();
         });
 
         async function submitPerwalian() {
@@ -779,6 +1109,459 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape') closePreviewKRSModal();
         });
+
+        // --- DATA & HELPER FITUR TAHAP 2 (ALIF) ---
+        const currentPerwalian2 = {
+            perwalian: <?= json_encode($perwalian) ?>,
+            details: <?= json_encode($mk_kontrak) ?>,
+            mata_kuliah: <?= json_encode($mk_kontrak) ?>
+        };
+        let parsedImportRows = [];
+
+        function escapeHtml(text) {
+            if (!text) return "";
+            return String(text)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function openImportModalSingle() {
+            const mhsNama = <?= json_encode($nama_mhs ?: 'Mahasiswa') ?>;
+            const mhsNim = <?= json_encode($nim) ?>;
+            document.getElementById('importModalTitle').innerText = `Import Nilai Khusus: ${mhsNama}`;
+            document.getElementById('importModalSubtitle').innerText = `NIM: ${mhsNim} (Hanya untuk mata kuliah yang dikontrak)`;
+            document.getElementById('importColumnHints').innerHTML = 'Header kolom: <code>Kode MK</code>, <code>Nilai Huruf</code> (A, AB, B, BC, C, D, E)';
+            document.getElementById('importTemplateHintText').innerText = 'Format Excel khusus mahasiswa ini:';
+            document.getElementById('btnTemplateDownloadText').innerText = 'Unduh Template Mahasiswa Ini';
+            resetImportFile();
+            document.getElementById('modalImportNilai').classList.remove('hidden');
+        }
+
+        function closeImportModal() {
+            document.getElementById('modalImportNilai').classList.add('hidden');
+            resetImportFile();
+        }
+
+        function downloadTemplateExcelSingle() {
+            if (!currentPerwalian2 || !currentPerwalian2.details || currentPerwalian2.details.length === 0) {
+                Swal.fire('Perhatian', 'Tidak ada daftar mata kuliah yang dikontrak untuk dibuatkan template.', 'info');
+                return;
+            }
+            const sampleData = currentPerwalian2.details.map(d => ({
+                'Kode MK': d.kode_mk,
+                'Mata Kuliah': d.nama_mk,
+                'Nilai Huruf': d.nilai_huruf || ''
+            }));
+            const ws = XLSX.utils.json_to_sheet(sampleData);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Nilai Mahasiswa');
+            const safeNim = <?= json_encode($nim ?: 'mahasiswa') ?>;
+            XLSX.writeFile(wb, `template_nilai_${safeNim}.xlsx`);
+        }
+
+        function resetImportFile() {
+            const input = document.getElementById('fileExcelInput');
+            if (input) input.value = '';
+
+            const preview = document.getElementById('importPreviewContainer');
+            if (preview) preview.classList.add('hidden');
+
+            const dropzone = document.getElementById('excelDropzone');
+            if (dropzone) dropzone.classList.remove('hidden');
+
+            const fileBar = document.getElementById('excelSelectedFileBar');
+            if (fileBar) fileBar.classList.add('hidden');
+
+            const btn = document.getElementById('btnProcessImport');
+            if (btn) {
+                btn.setAttribute('disabled', 'true');
+                btn.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Simpan Nilai ke Sistem`;
+            }
+
+            parsedImportRows = [];
+        }
+
+        function handleExcelSelect(e) {
+            const file = (e.target.files && e.target.files.length > 0) ? e.target.files[0] : null;
+            if (file) {
+                processExcelFile(file);
+            }
+        }
+
+        function processExcelFile(file) {
+            if (!file) return;
+
+            const fileName = file.name.toLowerCase();
+            const validExts = ['.xlsx', '.xls', '.csv'];
+            const isValid = validExts.some(ext => fileName.endsWith(ext));
+            if (!isValid) {
+                Swal.fire('Format File Tidak Sesuai', 'Silakan unggah file dengan format .xlsx, .xls, atau .csv.', 'warning');
+                resetImportFile();
+                return;
+            }
+
+            const selNameEl = document.getElementById('excelSelectedFileName');
+            if (selNameEl) selNameEl.innerText = file.name;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                try {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const json = XLSX.utils.sheet_to_json(firstSheet);
+
+                    parsedImportRows = json.map(r => ({
+                        nim: String(r['NIM'] || r['nim'] || r['Nim'] || '').trim(),
+                        kode_mk: String(r['Kode MK'] || r['kode_mk'] || r['Kode'] || r['KODE MK'] || '').trim().toUpperCase(),
+                        nilai_huruf: String(r['Nilai Huruf'] || r['nilai_huruf'] || r['Nilai'] || r['NILAI'] || '').trim().toUpperCase(),
+                    })).filter(r => r.kode_mk !== '' && r.nilai_huruf !== '');
+
+                    if (parsedImportRows.length === 0) {
+                        Swal.fire('File Kosong', 'Tidak ditemukan baris nilai yang valid pada file.', 'warning');
+                        resetImportFile();
+                        return;
+                    }
+
+                    renderImportPreview(parsedImportRows);
+                } catch (err) {
+                    Swal.fire('Gagal Baca File', 'Pastikan format file adalah Excel atau CSV valid.', 'error');
+                    resetImportFile();
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function initExcelDropzone() {
+            const dropzone = document.getElementById('excelDropzone');
+            if (!dropzone) return;
+
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, (e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.add('drag-active');
+                }, false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                dropzone.addEventListener(eventName, () => {
+                    dropzone.classList.remove('drag-active');
+                }, false);
+            });
+
+            dropzone.addEventListener('drop', (e) => {
+                const dt = e.dataTransfer;
+                const files = dt ? dt.files : null;
+                if (files && files.length > 0) {
+                    processExcelFile(files[0]);
+                }
+            }, false);
+        }
+
+        function renderImportPreview(rows) {
+            const rowCountEl = document.getElementById('importRowCount');
+            if (rowCountEl) rowCountEl.innerText = rows.length;
+
+            const dropzone = document.getElementById('excelDropzone');
+            if (dropzone) dropzone.classList.add('hidden');
+
+            const fileBar = document.getElementById('excelSelectedFileBar');
+            if (fileBar) fileBar.classList.remove('hidden');
+            const tbody = document.getElementById('importPreviewTableBody');
+            tbody.innerHTML = '';
+
+            const VALID_GRADES = ['A', 'AB', 'B', 'BC', 'C', 'D', 'E'];
+            let validCount = 0;
+            let invalidCount = 0;
+
+            const mkMap = {};
+            const list = currentPerwalian2.mata_kuliah || currentPerwalian2.details || [];
+            list.forEach(m => {
+                const code = String(m.kode_mk || '').trim().toUpperCase();
+                if (code) {
+                    mkMap[code] = m.nama_mk || 'Mata Kuliah Terdaftar';
+                }
+            });
+            const targetNim = String((currentPerwalian2.perwalian ? currentPerwalian2.perwalian.nim : '') || '').trim();
+
+            rows.slice(0, 100).forEach(r => {
+                const mkCode = String(r.kode_mk || '').trim().toUpperCase();
+                const grade = String(r.nilai_huruf || '').trim().toUpperCase();
+                const rowNim = String(r.nim || '').trim();
+
+                let isRowValid = true;
+                let errorReason = '';
+                let namaMkDisplay = '-';
+
+                // Validasi Nilai Huruf
+                if (!VALID_GRADES.includes(grade)) {
+                    isRowValid = false;
+                    errorReason = 'Nilai tidak sah (harus A, AB, B, BC, C, D, E)';
+                }
+
+                // Validasi Kode MK & NIM
+                if (targetNim && rowNim && rowNim !== targetNim) {
+                    isRowValid = false;
+                    errorReason = `NIM tidak sesuai (Harus: ${targetNim})`;
+                } else if (!mkMap[mkCode]) {
+                    isRowValid = false;
+                    errorReason = 'Kode MK TIDAK COCOK dengan rencana studi mahasiswa';
+                    namaMkDisplay = '<span class="text-rose-600 font-bold text-[11px] flex items-center gap-1"><i class="fa-solid fa-triangle-exclamation"></i> Tidak terdaftar di KRS</span>';
+                } else {
+                    namaMkDisplay = `<span class="text-slate-900 font-medium">${escapeHtml(mkMap[mkCode])}</span>`;
+                }
+
+                r._isValid = isRowValid;
+
+                let rowClass = 'hover:bg-slate-50/60';
+                let statusBadge = '';
+
+                if (isRowValid) {
+                    validCount++;
+                    const isLulus = ['A', 'AB', 'B', 'BC', 'C'].includes(grade);
+                    statusBadge = isLulus 
+                        ? `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300 whitespace-nowrap"><i class="fa-solid fa-check mr-1 text-[9px]"></i> Valid (Lulus)</span>`
+                        : `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300 whitespace-nowrap"><i class="fa-solid fa-xmark mr-1 text-[9px]"></i> Valid (Tidak Lulus)</span>`;
+                } else {
+                    invalidCount++;
+                    rowClass = 'bg-rose-50/80 hover:bg-rose-100/60 border-l-4 border-l-rose-500';
+                    let shortMsg = 'Tidak Cocok';
+                    if (errorReason.includes('NIM')) shortMsg = 'NIM Tidak Cocok';
+                    else if (errorReason.includes('Kode MK')) shortMsg = 'Kode MK Tidak Cocok';
+                    else if (errorReason.includes('Nilai')) shortMsg = 'Format Nilai Salah';
+
+                    statusBadge = `<span class="inline-flex items-center px-2 py-0.5 text-[10px] font-bold rounded-full bg-rose-200 text-rose-900 border border-rose-300 gap-1 whitespace-nowrap" title="${escapeHtml(errorReason)}"><i class="fa-solid fa-circle-xmark text-rose-600"></i> ${escapeHtml(shortMsg)}</span>`;
+                }
+
+                tbody.innerHTML += `
+                    <tr class="${rowClass}">
+                        <td class="py-2 px-3 font-mono font-bold ${rowNim && targetNim && rowNim !== targetNim ? 'text-rose-700 bg-rose-100/50' : 'text-slate-600'}">${escapeHtml(rowNim || '')}</td>
+                        <td class="py-2 px-3 font-mono font-black ${!isRowValid && errorReason.includes('Kode MK') ? 'text-rose-700 bg-rose-100/70 font-mono underline decoration-rose-400' : 'text-slate-900'}">${escapeHtml(mkCode || '-')}</td>
+                        <td class="py-2 px-3 text-xs">${namaMkDisplay}</td>
+                        <td class="py-2 px-3 text-center font-black font-mono ${!VALID_GRADES.includes(grade) ? 'text-rose-600 bg-rose-100' : 'text-slate-900'}">${escapeHtml(grade || '-')}</td>
+                        <td class="py-2 px-3 text-center whitespace-nowrap">${statusBadge}</td>
+                    </tr>
+                `;
+            });
+
+            document.getElementById('importValidCount').innerText = validCount;
+            document.getElementById('importInvalidCount').innerText = invalidCount;
+
+            const banner = document.getElementById('importWarningBanner');
+            const bannerTitle = document.getElementById('importWarningTitle');
+            const bannerTitleText = document.getElementById('importWarningTitleText');
+            const bannerText = document.getElementById('importWarningText');
+            const btnProcess = document.getElementById('btnProcessImport');
+
+            if (invalidCount > 0 && validCount === 0) {
+                banner.className = 'p-3 rounded-xl text-xs space-y-1 bg-rose-100 border border-rose-300 text-rose-900';
+                bannerTitle.className = 'font-bold flex items-center gap-1.5 text-rose-800';
+                bannerTitleText.innerText = 'Semua Data Tidak Cocok!';
+                bannerText.innerHTML = 'Seluruh kode mata kuliah pada file Excel Anda <strong>tidak terdaftar pada rencana studi mahasiswa ini</strong>. Silakan periksa kembali atau gunakan tombol <strong>"Unduh Template Mahasiswa Ini"</strong> di atas.';
+                banner.classList.remove('hidden');
+
+                btnProcess.setAttribute('disabled', 'true');
+                btnProcess.innerHTML = `<i class="fa-solid fa-ban mr-1.5"></i> Tidak Ada Data Cocok`;
+            } else if (invalidCount > 0 && validCount > 0) {
+                banner.className = 'p-3 rounded-xl text-xs space-y-1 bg-amber-50 border border-amber-300 text-amber-900';
+                bannerTitle.className = 'font-bold flex items-center gap-1.5 text-amber-800';
+                bannerTitleText.innerText = 'Sebagian Kode MK Tidak Cocok';
+                bannerText.innerHTML = `Ditemukan <strong>${invalidCount} baris</strong> dengan Kode MK / Nilai tidak cocok. Hanya <strong>${validCount} mata kuliah yang valid</strong> yang akan disimpan ke sistem. Baris yang tidak cocok akan otomatis dilewati.`;
+                banner.classList.remove('hidden');
+
+                btnProcess.removeAttribute('disabled');
+                btnProcess.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Simpan ${validCount} Nilai Valid`;
+            } else {
+                banner.classList.add('hidden');
+                btnProcess.removeAttribute('disabled');
+                btnProcess.innerHTML = `<i class="fa-solid fa-check mr-1.5"></i> Simpan Nilai ke Sistem (${validCount} MK)`;
+            }
+
+            document.getElementById('importPreviewContainer').classList.remove('hidden');
+        }
+
+        async function processImportNilai() {
+            if (parsedImportRows.length === 0) return;
+
+            const validRowsToSubmit = parsedImportRows.filter(r => r._isValid !== false);
+            const invalidRowsCount = parsedImportRows.length - validRowsToSubmit.length;
+
+            if (validRowsToSubmit.length === 0) {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tidak Ada Data Valid',
+                    text: 'Tidak ada kode mata kuliah yang cocok dengan rencana studi Anda. Silakan unduh format template yang sesuai.'
+                });
+                return;
+            }
+
+            if (invalidRowsCount > 0) {
+                const conf = await Swal.fire({
+                    icon: 'warning',
+                    title: 'Konfirmasi Penyimpanan Nilai',
+                    html: `Terdapat <b>${invalidRowsCount} baris mata kuliah tidak cocok</b> yang akan dilewati.<br><br>Hanya <b>${validRowsToSubmit.length} mata kuliah valid</b> yang akan disimpan ke sistem. Lanjutkan?`,
+                    showCancelButton: true,
+                    confirmButtonText: 'Ya, Simpan yang Valid',
+                    confirmButtonColor: '#059669',
+                    cancelButtonText: 'Batal & Perbaiki File'
+                });
+                if (!conf.isConfirmed) return;
+            }
+
+            Swal.fire({ title: 'Menyimpan Nilai...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+            try {
+                const res = await fetch(`<?= site_url('mahasiswa/perwalian_import_nilai'); ?>`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        rows: validRowsToSubmit,
+                        id_perwalian: idPerwalian
+                    })
+                });
+                const json = await res.json();
+                Swal.close();
+
+                if (json.status) {
+                    closeImportModal();
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Sukses Import Nilai!',
+                        text: json.message || 'Nilai berhasil disimpan ke sistem.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Gagal Import', json.message || 'Gagal memproses import nilai.', 'error');
+                }
+            } catch (err) {
+                Swal.close();
+                Swal.fire('Error', 'Terjadi kesalahan server saat memproses import.', 'error');
+            }
+        }
+
+        async function onGradeChange(idDetail, grade) {
+            grade = grade.trim().toUpperCase();
+            let autoStatus = 'Belum Ditentukan';
+            if (['A', 'AB', 'B', 'BC', 'C'].includes(grade)) {
+                autoStatus = 'Lulus';
+            } else if (['D', 'E'].includes(grade)) {
+                autoStatus = 'Tidak Lulus';
+            }
+
+            updateStatusBadgeUI(idDetail, autoStatus);
+            refreshModalGradingProgress();
+
+            const fd = new FormData();
+            fd.append('id_detail', idDetail);
+            fd.append('nilai_huruf', grade);
+            fd.append('status_kelulusan', autoStatus);
+
+            try {
+                const res = await fetch(`<?= site_url('mahasiswa/perwalian_update_nilai'); ?>`, {
+                    method: 'POST',
+                    body: fd
+                });
+                const json = await res.json();
+                if (json.status) {
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true
+                    });
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Nilai & status otomatis disimpan'
+                    });
+                } else {
+                    Swal.fire('Gagal', json.message || 'Gagal memperbarui nilai', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+            }
+        }
+
+        function updateStatusBadgeUI(idDetail, status) {
+            const col = document.getElementById(`m2StatusCol_${idDetail}`);
+            if (col) {
+                if (status === 'Lulus') {
+                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800 border border-emerald-300"><i class="fa-solid fa-circle-check mr-1.5 text-emerald-600"></i> Lulus</span>`;
+                } else if (status === 'Tidak Lulus') {
+                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-bold rounded-full bg-rose-100 text-rose-800 border border-rose-300"><i class="fa-solid fa-circle-xmark mr-1.5 text-rose-600"></i> Tidak Lulus</span>`;
+                } else {
+                    col.innerHTML = `<span class="inline-flex items-center px-2.5 py-1 text-xs font-medium rounded-full bg-slate-100 text-slate-500 border border-slate-200"><i class="fa-solid fa-minus mr-1 text-slate-400"></i> Belum Dinilai</span>`;
+                }
+            }
+        }
+
+        function refreshModalGradingProgress() {
+            const selects = document.querySelectorAll('#m2GradingTableBody select');
+            let graded = 0;
+            selects.forEach(s => {
+                if (s.value && s.value.trim() !== '') graded++;
+            });
+            const textEl = document.getElementById('m2GradingProgressText');
+            if (textEl) {
+                textEl.innerText = `${graded} / ${selects.length} Dinilai`;
+            }
+        }
+
+        async function submitTahap2FinalModal() {
+            const conf = await Swal.fire({
+                title: 'Kunci & Selesaikan Evaluasi Tahap 2?',
+                text: 'Setelah dikunci, hasil evaluasi perwalian ini akan tersimpan permanen ke riwayat akademik.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#059669',
+                confirmButtonText: 'Ya, Kunci Sekarang!'
+            });
+
+            if (!conf.isConfirmed) return;
+
+            Swal.fire({ title: 'Menyimpan & Mengunci...', didOpen: () => Swal.showLoading(), allowOutsideClick: false });
+
+            try {
+                const fd = new FormData();
+                fd.append('id_perwalian', idPerwalian);
+
+                const res = await fetch(`<?= site_url('mahasiswa/perwalian_submit_tahap2'); ?>`, {
+                    method: 'POST',
+                    body: fd
+                });
+                const json = await res.json();
+                Swal.close();
+
+                if (json.status) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Evaluasi Tahap 2 Selesai!',
+                        text: json.message || 'Evaluasi perwalian berhasil dikunci.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => location.reload());
+                } else {
+                    Swal.fire('Gagal', json.message || 'Gagal mengunci perwalian.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.close();
+                Swal.fire('Error', 'Terjadi kesalahan saat mengunci perwalian.', 'error');
+            }
+        }
+
     </script>
 </body>
 </html>

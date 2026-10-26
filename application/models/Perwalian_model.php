@@ -190,6 +190,15 @@ class Perwalian_model extends CI_Model {
         return $this->db->where('id', (int)$id)->delete('master_mata_kuliah');
     }
 
+    public function delete_mata_kuliah_multiple($ids) {
+        if (empty($ids) || !is_array($ids)) return false;
+        $ids = array_map('intval', $ids);
+        $ids = array_filter($ids, function($v) { return $v > 0; });
+        if (empty($ids)) return false;
+        $this->db->where_in('id', $ids)->delete('master_mata_kuliah');
+        return $this->db->affected_rows();
+    }
+
     /**
      * Validasi baris mata kuliah sebelum import
      * Memeriksa kesalahan mengisi field, swap kolom, dan format data.
@@ -1352,12 +1361,41 @@ class Perwalian_model extends CI_Model {
         $now = date('Y-m-d H:i:s');
         $status = in_array($status, ['Disetujui', 'Revisi', 'Diajukan', 'Draft'], true) ? $status : 'Disetujui';
 
-        return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
+        $updateData = [
             'status_tahap1'       => $status,
             'catatan_wali'        => trim($catatan),
             'tgl_approval_tahap1' => ($status === 'Disetujui') ? $now : null,
             'updated_at'          => $now,
-        ]);
+        ];
+
+        // Jika disetujui, periksa apakah sudah ada nilai riil pada mata kuliah yang dikontrak
+        if ($status === 'Disetujui') {
+            $mkList = $this->db->get_where('perwalian_detail', [
+                'id_perwalian' => (int)$id_perwalian,
+                'status_tahap' => 'akan_diambil'
+            ])->result_array();
+
+            $totalMK = count($mkList);
+            $graded = 0;
+            foreach ($mkList as $m) {
+                if (!empty(trim((string)($m['nilai_huruf'] ?? '')))) {
+                    $graded++;
+                }
+            }
+
+            if ($graded === 0) {
+                $updateData['status_tahap2'] = 'Belum Dinilai';
+            } elseif ($graded < $totalMK) {
+                $updateData['status_tahap2'] = 'Dinilai';
+            } else {
+                $updateData['status_tahap2'] = 'Selesai';
+            }
+        } else {
+            // Jika dikembalikan ke Revisi/Draft, reset status Tahap 2
+            $updateData['status_tahap2'] = 'Belum Dinilai';
+        }
+
+        return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', $updateData);
     }
 
     /**
@@ -1387,6 +1425,7 @@ class Perwalian_model extends CI_Model {
 
             return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
                 'status_tahap1'       => 'Draft',
+                'status_tahap2'       => 'Belum Dinilai',
                 'file_krs'            => null,
                 'catatan_wali'        => !empty($catatan) ? trim($catatan) : 'Berkas KRS telah direset total oleh Admin Prodi.',
                 'tgl_pengajuan'       => null,
@@ -1396,8 +1435,18 @@ class Perwalian_model extends CI_Model {
         } else {
             // Mode unlock: kembalikan ke Draft atau Revisi agar form mahasiswa terbuka kembali
             $newStatus = !empty($catatan) ? 'Revisi' : 'Draft';
+
+            // Bersihkan juga nilai yang menggantung di perwalian_detail
+            $this->db->where('id_perwalian', (int)$id_perwalian)
+                     ->where('status_tahap', 'akan_diambil')
+                     ->update('perwalian_detail', [
+                         'nilai_huruf'      => null,
+                         'status_kelulusan' => null
+                     ]);
+
             return $this->db->where('id_perwalian', (int)$id_perwalian)->update('perwalian', [
                 'status_tahap1'       => $newStatus,
+                'status_tahap2'       => 'Belum Dinilai',
                 'catatan_wali'        => !empty($catatan) ? trim($catatan) : $perwalian['catatan_wali'],
                 'tgl_approval_tahap1' => null,
                 'updated_at'          => $now,
@@ -1629,7 +1678,86 @@ class Perwalian_model extends CI_Model {
      * Dapatkan opsi filter dinamis dari database (Tahun Ajaran, Semester, Prodi)
      * Tidak ada yang di-hardcode!
      */
-    public function get_filter_options() {
+    /**
+     * Import Nilai Khusus 1 Mahasiswa (Tahap 2)
+     */
+    public function import_nilai_single($id_perwalian, $rows) {
+        $id_perwalian = (int)$id_perwalian;
+        if (empty($rows)) {
+            return ['status' => false, 'message' => 'Data baris nilai kosong.'];
+        }
+
+        $now = date('Y-m-d H:i:s');
+        $updated = 0;
+        $skipped = 0;
+
+        foreach ($rows as $r) {
+            $kode_mk = strtoupper(trim((string)($r['kode_mk'] ?? ($r['kode'] ?? ($r['Kode MK'] ?? '')))));
+            $nilai   = strtoupper(trim((string)($r['nilai_huruf'] ?? ($r['nilai'] ?? ($r['Nilai'] ?? ($r['Nilai Huruf'] ?? ''))))));
+
+            if (empty($kode_mk) || empty($nilai)) {
+                $skipped++;
+                continue;
+            }
+
+            if (!in_array($nilai, ['A', 'AB', 'B', 'BC', 'C', 'D', 'E'], true)) {
+                $skipped++;
+                continue;
+            }
+
+            $status_lulus = in_array($nilai, ['A', 'AB', 'B', 'BC', 'C'], true) ? 'Lulus' : 'Tidak Lulus';
+
+            $det = $this->db->get_where('perwalian_detail', [
+                'id_perwalian' => $id_perwalian,
+                'kode_mk'      => $kode_mk,
+                'status_tahap' => 'akan_diambil',
+            ])->row_array();
+
+            if ($det) {
+                $this->db->where('id', $det['id'])->update('perwalian_detail', [
+                    'nilai_huruf'      => $nilai,
+                    'status_kelulusan' => $status_lulus,
+                    'updated_at'       => $now,
+                ]);
+                $updated++;
+            } else {
+                $skipped++;
+            }
+        }
+
+        if ($updated > 0) {
+            $p = $this->db->get_where('perwalian', ['id_perwalian' => $id_perwalian])->row_array();
+            if ($p && $p['status_tahap2'] === 'Belum Dinilai') {
+                $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', [
+                    'status_tahap2' => 'Proses Penilaian',
+                    'updated_at'    => $now,
+                ]);
+            }
+        }
+
+        if ($updated === 0) {
+            return [
+                'status'  => false,
+                'updated' => 0,
+                'skipped' => $skipped,
+                'message' => 'Tidak ada mata kuliah yang cocok untuk diimpor. Pastikan Kode MK sesuai dengan rencana studi mahasiswa.'
+            ];
+        }
+
+        $msg = "Berhasil memperbarui {$updated} nilai mata kuliah.";
+        if ($skipped > 0) {
+            $msg .= " ({$skipped} baris dilewati karena Kode MK tidak sesuai).";
+        }
+
+        return [
+            'status'  => true,
+            'updated' => $updated,
+            'skipped' => $skipped,
+            'message' => $msg
+        ];
+    }
+
+        public function get_filter_options() {
         // 1. Tahun Ajaran
         $thnList = $this->db->distinct()->select('tahun_ajaran')->from('perwalian')->order_by('tahun_ajaran', 'DESC')->get()->result_array();
         $tahun_ajaran = array_filter(array_column($thnList, 'tahun_ajaran'));

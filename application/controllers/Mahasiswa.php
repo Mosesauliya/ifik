@@ -2049,6 +2049,31 @@ public function upload_berkas_sidang_ajax() {
         $mk_kontrak = $this->Perwalian_model->get_perwalian_detail($id_perwalian, 'akan_diambil');
         $mk_sudah   = $this->Perwalian_model->get_riwayat_mk_sudah_diambil($nim);
 
+        // Auto-heal status_tahap2 sinkron dengan kondisi riil nilai mata kuliah
+        $totalMK = count($mk_kontrak);
+        $totalDinilai = 0;
+        foreach ($mk_kontrak as $m) {
+            if (!empty(trim((string)($m['nilai_huruf'] ?? '')))) {
+                $totalDinilai++;
+            }
+        }
+
+        if ($totalMK > 0) {
+            $expectedSt2 = 'Belum Dinilai';
+            if ($totalDinilai === $totalMK && ($perwalian['status_tahap2'] ?? '') === 'Selesai') {
+                $expectedSt2 = 'Selesai';
+            } elseif ($totalDinilai > 0) {
+                $expectedSt2 = 'Dinilai';
+            } else {
+                $expectedSt2 = 'Belum Dinilai';
+            }
+
+            if (($perwalian['status_tahap2'] ?? '') !== $expectedSt2) {
+                $this->db->where('id_perwalian', $id_perwalian)->update('perwalian', ['status_tahap2' => $expectedSt2]);
+                $perwalian['status_tahap2'] = $expectedSt2;
+            }
+        }
+
         $data['title']              = 'Perwalian & Kontrak KRS - IFIK';
         $data['nim']                = $nim;
         $data['nama_mhs']           = $perwalian['nama_mahasiswa'];
@@ -2207,6 +2232,84 @@ public function upload_berkas_sidang_ajax() {
         ]));
     }
 
+    /**
+     * AJAX: Update Nilai Per Mata Kuliah oleh Mahasiswa (Tahap 2)
+     */
+    public function perwalian_update_nilai() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_detail = (int)$this->input->post('id_detail', true);
+        $nilai = strtoupper(trim((string)$this->input->post('nilai_huruf', true)));
+        $status_kelulusan = trim((string)$this->input->post('status_kelulusan', true)) ?: null;
+
+        if (!$id_detail) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID detail tidak valid.']));
+            return;
+        }
+
+        $res = $this->Perwalian_model->update_nilai_detail($id_detail, $nilai, $status_kelulusan);
+        $this->output->set_output(json_encode([
+            'status'  => true,
+            'message' => 'Nilai & status otomatis diperbarui.',
+            'data'    => $res
+        ]));
+    }
+
+    /**
+     * AJAX: Import Nilai Mahasiswa dari Excel (Tahap 2)
+     */
+    public function perwalian_import_nilai() {
+        @set_time_limit(300);
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $nim = $this->_get_current_nim();
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true);
+
+        $rows = $json['rows'] ?? [];
+        $id_perwalian = !empty($json['id_perwalian']) ? (int)$json['id_perwalian'] : null;
+
+        if (empty($id_perwalian)) {
+            $active = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)($active['id_perwalian'] ?? 0);
+        }
+
+        if (empty($rows) || !is_array($rows)) {
+            $this->output->set_output(json_encode([
+                'status'  => false,
+                'message' => 'Data baris nilai kosong atau format tidak sesuai.'
+            ]));
+            return;
+        }
+
+        $res = $this->Perwalian_model->import_nilai_single($id_perwalian, $rows);
+        $this->output->set_output(json_encode($res));
+    }
+
+    /**
+     * AJAX: Selesaikan & Kunci Perwalian Tahap 2 oleh Mahasiswa
+     */
+    public function perwalian_submit_tahap2() {
+        $this->output->set_content_type('application/json');
+        $this->load->model('Perwalian_model');
+
+        $id_perwalian = (int)$this->input->post('id_perwalian', true);
+        if (!$id_perwalian) {
+            $nim = $this->_get_current_nim();
+            $active = $this->Perwalian_model->get_active_perwalian_by_nim($nim);
+            $id_perwalian = (int)($active['id_perwalian'] ?? 0);
+        }
+
+        if (!$id_perwalian) {
+            $this->output->set_output(json_encode(['status' => false, 'message' => 'ID Perwalian tidak valid.']));
+            return;
+        }
+
+        $res = $this->Perwalian_model->submit_perwalian_tahap2($id_perwalian);
+        $this->output->set_output(json_encode($res));
+    }
     // =========================================================
     // KERJA PRAKTIK (KP) - PENGAJUAN, PERSYARATAN DINAMIS & LAPORAN
     // =========================================================

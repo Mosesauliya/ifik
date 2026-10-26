@@ -199,6 +199,9 @@
                             <p class="text-xs text-slate-500">Master mata kuliah yang dapat dikontrak oleh mahasiswa atau dinilai dosen.</p>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
+                            <button id="btnBulkDeleteMK" onclick="hapusMKMultiple()" class="hidden px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition cursor-pointer">
+                                <span>🗑️</span> Hapus Terpilih (<span id="countSelectedMK">0</span>)
+                            </button>
                             <button onclick="openModalTambahMK()" class="btn-brand-primary px-3.5 py-2 text-xs flex items-center gap-1.5">
                                 <span>+</span> Tambah MK
                             </button>
@@ -225,11 +228,30 @@
                         </select>
                     </div>
 
+                    <!-- Bulk Action Bar -->
+                    <div id="bulkActionMKBar" class="hidden mt-3 p-3 bg-rose-50 border border-rose-200 rounded-xl flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-rose-600 animate-pulse"></span>
+                            <span class="font-bold text-rose-900"><span id="countSelectedMKText">0</span> mata kuliah dipilih</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button type="button" onclick="deselectAllMK()" class="px-3 py-1.5 text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg font-semibold transition cursor-pointer">
+                                Batal Pilih
+                            </button>
+                            <button type="button" onclick="hapusMKMultiple()" class="px-3.5 py-1.5 bg-rose-600 hover:bg-rose-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1 cursor-pointer">
+                                <span>🗑️</span> Hapus <span id="countSelectedMKBtn">0</span> MK Terpilih
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- Table MK -->
                     <div class="overflow-x-auto mt-4 rounded-xl border border-slate-200">
                         <table class="w-full text-left text-xs" id="tableMK">
                             <thead class="bg-slate-100/80 text-slate-700 uppercase font-bold text-[11px] tracking-wider border-b border-slate-200">
                                 <tr>
+                                    <th class="p-3 text-center w-10">
+                                        <input type="checkbox" id="checkAllMK" onchange="toggleCheckAllMK(this)" class="w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer" title="Pilih Semua">
+                                    </th>
                                     <th class="p-3 text-center w-12">No</th>
                                     <th class="p-3">Kode MK</th>
                                     <th class="p-3">Nama Mata Kuliah</th>
@@ -243,7 +265,7 @@
                             <tbody class="divide-y divide-slate-100">
                                 <?php if(empty($mata_kuliah)): ?>
                                     <tr>
-                                        <td colspan="8" class="p-8 text-center text-slate-400">
+                                        <td colspan="9" class="p-8 text-center text-slate-400">
                                             <div class="flex flex-col items-center justify-center">
                                                 <span class="text-3xl mb-2">📂</span>
                                                 <p class="font-semibold text-slate-600">Belum ada data mata kuliah</p>
@@ -253,7 +275,10 @@
                                     </tr>
                                 <?php else: ?>
                                     <?php $no = 1; foreach($mata_kuliah as $mk): ?>
-                                        <tr class="hover:bg-orange-50/40 transition mk-row" data-search="<?= strtolower(htmlspecialchars($mk['kode_mk'] . ' ' . $mk['nama_mk'])) ?>" data-semester="<?= (int)$mk['semester'] ?>">
+                                        <tr class="hover:bg-orange-50/40 transition mk-row" data-id="<?= $mk['id'] ?>" data-kode="<?= htmlspecialchars($mk['kode_mk']) ?>" data-search="<?= strtolower(htmlspecialchars($mk['kode_mk'] . ' ' . $mk['nama_mk'])) ?>" data-semester="<?= (int)$mk['semester'] ?>">
+                                            <td class="p-3 text-center">
+                                                <input type="checkbox" class="check-item-mk w-4 h-4 rounded text-rose-600 focus:ring-rose-500 border-slate-300 cursor-pointer" value="<?= $mk['id'] ?>" data-kode="<?= htmlspecialchars($mk['kode_mk']) ?>" onchange="updateBulkDeleteMKUI()">
+                                            </td>
                                             <td class="p-3 text-center text-slate-400 font-mono"><?= $no++ ?></td>
                                             <td class="p-3 font-mono font-bold text-brand-700"><?= htmlspecialchars($mk['kode_mk']) ?></td>
                                             <td class="p-3 font-semibold text-slate-800"><?= htmlspecialchars($mk['nama_mk']) ?></td>
@@ -800,6 +825,7 @@
                 const matchSmt = semester === 'all' || rowSmt === semester;
                 r.style.display = (matchQ && matchSmt) ? '' : 'none';
             });
+            updateBulkDeleteMKUI();
         }
 
         // --- FILTER TABLE MHS ---
@@ -856,6 +882,121 @@
             } catch (err) {
                 Swal.fire({ icon: 'error', title: 'Error', text: 'Terjadi kesalahan sistem.' });
             }
+        }
+
+        // --- MULTIPLE DELETE MATA KULIAH ---
+        function toggleCheckAllMK(master) {
+            const isChecked = master.checked;
+            const rows = document.querySelectorAll('.mk-row');
+            rows.forEach(r => {
+                if (r.style.display !== 'none') {
+                    const cb = r.querySelector('.check-item-mk');
+                    if (cb) cb.checked = isChecked;
+                }
+            });
+            updateBulkDeleteMKUI();
+        }
+
+        function updateBulkDeleteMKUI() {
+            const checkedBoxes = document.querySelectorAll('.check-item-mk:checked');
+            const totalVisibleBoxes = Array.from(document.querySelectorAll('.mk-row'))
+                .filter(r => r.style.display !== 'none')
+                .map(r => r.querySelector('.check-item-mk'))
+                .filter(Boolean);
+
+            const count = checkedBoxes.length;
+
+            const btnTop = document.getElementById('btnBulkDeleteMK');
+            const bar = document.getElementById('bulkActionMKBar');
+            const cntTop = document.getElementById('countSelectedMK');
+            const cntText = document.getElementById('countSelectedMKText');
+            const cntBtn = document.getElementById('countSelectedMKBtn');
+            const masterCb = document.getElementById('checkAllMK');
+
+            if (cntTop) cntTop.innerText = count;
+            if (cntText) cntText.innerText = count;
+            if (cntBtn) cntBtn.innerText = count;
+
+            if (count > 0) {
+                if (btnTop) btnTop.classList.remove('hidden');
+                if (bar) bar.classList.remove('hidden');
+            } else {
+                if (btnTop) btnTop.classList.add('hidden');
+                if (bar) bar.classList.add('hidden');
+            }
+
+            if (masterCb && totalVisibleBoxes.length > 0) {
+                const visibleChecked = totalVisibleBoxes.filter(cb => cb.checked).length;
+                masterCb.checked = (visibleChecked === totalVisibleBoxes.length);
+                masterCb.indeterminate = (visibleChecked > 0 && visibleChecked < totalVisibleBoxes.length);
+            }
+        }
+
+        function deselectAllMK() {
+            document.querySelectorAll('.check-item-mk').forEach(cb => cb.checked = false);
+            const masterCb = document.getElementById('checkAllMK');
+            if (masterCb) {
+                masterCb.checked = false;
+                masterCb.indeterminate = false;
+            }
+            updateBulkDeleteMKUI();
+        }
+
+        function hapusMKMultiple() {
+            const checkedBoxes = Array.from(document.querySelectorAll('.check-item-mk:checked'));
+            if (checkedBoxes.length === 0) {
+                Swal.fire('Perhatian', 'Pilih minimal satu mata kuliah untuk dihapus.', 'info');
+                return;
+            }
+
+            const ids = checkedBoxes.map(cb => parseInt(cb.value, 10));
+            const kodes = checkedBoxes.map(cb => cb.getAttribute('data-kode') || '').filter(Boolean);
+            const sampleKodes = kodes.slice(0, 5).join(', ') + (kodes.length > 5 ? ` dan ${kodes.length - 5} lainnya` : '');
+
+            Swal.fire({
+                title: `Hapus ${ids.length} Mata Kuliah?`,
+                html: `Anda akan menghapus mata kuliah:<br><strong class="text-rose-600 font-mono">${sampleKodes}</strong><br><br><span class="text-xs text-slate-500">Mata kuliah yang dihapus tidak akan dapat dikontrak lagi. Tindakan ini tidak dapat dibatalkan.</span>`,
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: `Ya, Hapus ${ids.length} MK!`,
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    Swal.fire({
+                        title: 'Menghapus...',
+                        text: 'Sedang memproses penghapusan data mata kuliah terpilih.',
+                        didOpen: () => Swal.showLoading(),
+                        allowOutsideClick: false
+                    });
+
+                    try {
+                        const res = await fetch('<?= site_url("prodi/perwalian/hapus_mata_kuliah_multiple") ?>', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ ids: ids })
+                        });
+                        const json = await res.json();
+                        Swal.close();
+
+                        if (json.status === 'success') {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil Dihapus!',
+                                text: json.message || `${ids.length} mata kuliah berhasil dihapus.`,
+                                timer: 1800,
+                                showConfirmButton: false
+                            }).then(() => location.reload());
+                        } else {
+                            Swal.fire('Gagal', json.message || 'Gagal menghapus mata kuliah.', 'error');
+                        }
+                    } catch (err) {
+                        Swal.close();
+                        Swal.fire('Error', 'Terjadi kesalahan server saat menghapus.', 'error');
+                    }
+                }
+            });
         }
 
         function hapusMK(id, kode) {
