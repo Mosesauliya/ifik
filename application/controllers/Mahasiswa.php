@@ -2635,6 +2635,12 @@ public function upload_berkas_sidang_ajax() {
                 return;
             }
 
+            if (!$wf['can_upload_laporan']) {
+                $this->session->set_flashdata('error', 'Anda belum dapat mengunggah Laporan KP. Pastikan berkas persyaratan telah disetujui Admin LAA dan Pembimbing 1 telah ditetapkan oleh Koordinator KP.');
+                redirect('mahasiswa/laporan_kp');
+                return;
+            }
+
             $id_kp = $wf['kp']['id_kp'] ?? ('kp_' . $nim);
             $poin_nilai = (int)($this->input->post('poin') ?: ($wf['laporan_item']['poin'] ?? 0));
 

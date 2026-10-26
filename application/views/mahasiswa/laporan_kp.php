@@ -102,7 +102,22 @@
                             </p>
                         </div>
 
-                        <?php if ($is_app_laporan): ?>
+                        <?php if (!$wf['syarat_all_approved']): ?>
+                            <div class="p-6 text-center bg-amber-50 border border-amber-200 rounded-2xl space-y-2">
+                                <i class="bi bi-clock-history text-4xl text-amber-600 block"></i>
+                                <h4 class="font-bold text-base text-amber-900">Persyaratan Belum Disetujui Admin Layanan (LAA)</h4>
+                                <p class="text-amber-700 text-xs">Anda baru dapat mengunggah Laporan KP setelah seluruh berkas persyaratan diverifikasi &amp; disetujui oleh Admin LAA pada Tab 1.</p>
+                                <a href="<?= site_url('mahasiswa/pengajuan_kp'); ?>" class="inline-flex items-center gap-2 mt-2 px-4 py-2 rounded-xl bg-orange-600 text-white font-bold text-xs hover:bg-orange-700 transition">
+                                    <i class="bi bi-arrow-left"></i> Ke Menu Pengajuan KP
+                                </a>
+                            </div>
+                        <?php elseif (!$wf['has_pembimbing1']): ?>
+                            <div class="p-6 text-center bg-indigo-50 border border-indigo-200 rounded-2xl space-y-2">
+                                <i class="bi bi-person-fill-gear text-4xl text-indigo-600 block"></i>
+                                <h4 class="font-bold text-base text-indigo-900">Menunggu Plotting Dosen Pembimbing 1</h4>
+                                <p class="text-indigo-700 text-xs">Seluruh berkas persyaratan Anda telah disetujui oleh Admin LAA! Saat ini menunggu Koordinator KP menetapkan Dosen Pembimbing 1 sebelum Anda dapat mengunggah Laporan KP.</p>
+                            </div>
+                        <?php elseif ($is_app_laporan): ?>
                             <div class="p-6 text-center bg-emerald-50 border border-emerald-200 rounded-2xl space-y-2">
                                 <i class="bi bi-patch-check-fill text-4xl text-emerald-600 block"></i>
                                 <h4 class="font-bold text-base text-emerald-900">Laporan KP Telah Disetujui LAA (Selesai)</h4>
