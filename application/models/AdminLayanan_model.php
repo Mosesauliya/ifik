@@ -1957,29 +1957,22 @@ class AdminLayanan_model extends CI_Model {
 
     public function revert_to_preview3($nim) {
         $this->clear_cache();
-        $this->load->model('Mahasiswa_model');
-        // Downgrade tahap bimbingan mahasiswa di tabel guidance ke Preview 3
-        if (method_exists($this->Mahasiswa_model, 'downgrade_stage')) {
-            $res = $this->Mahasiswa_model->downgrade_stage($nim, 'persyaratan_sidang', 'preview3', 'Admin LAA', 'Dikembalikan ke Preview 3 oleh Admin Layanan');
-            return !empty($res['status']);
+        if (!$this->db->table_exists('pendaftaran_ta')) return false;
+
+        $this->db->where('nim', $nim);
+        $res = $this->db->update('pendaftaran_ta', [
+            'current_stage' => 'Pra-Sidang (Preview 3)',
+            'updated_at'    => date('Y-m-d H:i:s')
+        ]);
+
+        if ($this->db->table_exists('bimbingan_preview')) {
+            $this->db->where(['nim' => $nim, 'tahap_preview' => 'Preview 3']);
+            $this->db->update('bimbingan_preview', [
+                'status_pembimbing' => 'Pending'
+            ]);
         }
 
-        if ($this->db->table_exists('guidance')) {
-            $target_ids = $this->get_student_target_ids($nim);
-            $clean_nim  = preg_replace('/^usr_mhs_|^mhs_|^usr_/', '', (string)$nim);
-            $this->db->group_start()
-                     ->where_in('id_mhs', $target_ids)
-                     ->or_where('id', 'gdn_' . $clean_nim)
-                     ->or_like('id_mhs', $clean_nim)
-                     ->group_end()
-                     ->update('guidance', [
-                         'status_preview' => 'preview3',
-                         'date_edit'      => date('Y-m-d H:i:s')
-                     ]);
-            return true;
-        }
-
-        return false;
+        return $res;
     }
 
     // =========================================================================
