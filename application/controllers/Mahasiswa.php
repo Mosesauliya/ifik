@@ -2030,6 +2030,9 @@ public function upload_berkas_sidang_ajax() {
     /**
      * Halaman Utama Perwalian Mahasiswa (Tahap 1 Kontrak KRS & Riwayat Nilai)
      */
+    /**
+     * Halaman perwalian mahasiswa (Tahap 1 rencana studi & Tahap 2 nilai)
+     */
     public function perwalian() {
         $this->load->model('Perwalian_model');
         $nim = $this->_get_current_nim();
@@ -2091,6 +2094,9 @@ public function upload_berkas_sidang_ajax() {
     /**
      * AJAX: Upload Bukti Fisik/Resmi KRS dari SIAKAD/i-Gracias
      */
+    /**
+     * Upload berkas bukti dokumen KRS resmi (Tahap 1)
+     */
     public function perwalian_upload_krs() {
         $this->output->set_content_type('application/json');
         $this->load->model('Perwalian_model');
@@ -2139,6 +2145,9 @@ public function upload_berkas_sidang_ajax() {
     /**
      * AJAX: Tambah Mata Kuliah ke Kontrak Mahasiswa
      */
+    /**
+     * Tambah mata kuliah ke kontrak rencana studi
+     */
     public function perwalian_tambah_mk() {
         $this->output->set_content_type('application/json');
         $this->load->model('Perwalian_model');
@@ -2167,6 +2176,9 @@ public function upload_berkas_sidang_ajax() {
     /**
      * AJAX: Hapus Mata Kuliah dari Kontrak Mahasiswa
      */
+    /**
+     * Hapus mata kuliah dari kontrak rencana studi
+     */
     public function perwalian_hapus_mk() {
         $this->output->set_content_type('application/json');
         $this->load->model('Perwalian_model');
@@ -2189,6 +2201,9 @@ public function upload_berkas_sidang_ajax() {
 
     /**
      * AJAX: Submit Pengajuan Perwalian Tahap 1 ke Dosen Wali
+     */
+    /**
+     * Ajukan kontrak rencana studi Tahap 1 ke Dosen Wali
      */
     public function perwalian_submit() {
         $this->output->set_content_type('application/json');
@@ -2235,6 +2250,9 @@ public function upload_berkas_sidang_ajax() {
     /**
      * AJAX: Update Nilai Per Mata Kuliah oleh Mahasiswa (Tahap 2)
      */
+    /**
+     * Input nilai mandiri per mata kuliah (Tahap 2)
+     */
     public function perwalian_update_nilai() {
         $this->output->set_content_type('application/json');
         $this->load->model('Perwalian_model');
@@ -2258,6 +2276,9 @@ public function upload_berkas_sidang_ajax() {
 
     /**
      * AJAX: Import Nilai Mahasiswa dari Excel (Tahap 2)
+     */
+    /**
+     * Impor nilai otomatis dari Excel dengan proteksi anti-duplikasi (Tahap 2)
      */
     public function perwalian_import_nilai() {
         @set_time_limit(300);
@@ -2290,6 +2311,9 @@ public function upload_berkas_sidang_ajax() {
 
     /**
      * AJAX: Selesaikan & Kunci Perwalian Tahap 2 oleh Mahasiswa
+     */
+    /**
+     * Finalisasi & ajukan rekap nilai Tahap 2 ke Dosen Wali
      */
     public function perwalian_submit_tahap2() {
         $this->output->set_content_type('application/json');
