@@ -603,7 +603,7 @@ class AdminLayanan_model extends CI_Model {
                     'date_edit'       => date('Y-m-d H:i:s'),
                     'view_adminlaa'   => $view_val,
                     'view_doswal'     => $view_val,
-                    'status_doswal'   => ($status === 'Valid' || $status === 'Approved') ? 'Approved' : 'Pending'
+                    'status_doswal'   => 'Pending'
                 );
                 $this->db->insert('file_pendaftaran', $ins_fp);
             }
@@ -1204,10 +1204,10 @@ class AdminLayanan_model extends CI_Model {
                 'is_submitted'          => 1,
                 'created_at'            => $created_at,
                 'updated_at'            => $created_at,
-                'status_ksm'            => $p_berkas_map['ksm']['status_verifikasi'] ?? ($fp_doswal_map['ksm'] ?? 'Pending'),
-                'status_transkrip'      => $p_berkas_map['transkrip']['status_verifikasi'] ?? ($fp_doswal_map['transkrip'] ?? 'Pending'),
-                'status_pernyataan'     => $p_berkas_map['pernyataan']['status_verifikasi'] ?? ($fp_doswal_map['pernyataan'] ?? 'Pending'),
-                'status_bebas_lab'      => $p_berkas_map['bebas_lab']['status_verifikasi'] ?? ($fp_doswal_map['bebas_lab'] ?? 'Pending'),
+                'status_ksm'            => $p_berkas_map['ksm']['status_verifikasi'] ?? 'Pending',
+                'status_transkrip'      => $p_berkas_map['transkrip']['status_verifikasi'] ?? 'Pending',
+                'status_pernyataan'     => $p_berkas_map['pernyataan']['status_verifikasi'] ?? 'Pending',
+                'status_bebas_lab'      => $p_berkas_map['bebas_lab']['status_verifikasi'] ?? 'Pending',
                 'file_ksm'              => $p_berkas_map['ksm']['file_name'] ?? ($fp_files_map['ksm'] ?? ($info['files'][0] ?? '')),
                 'file_transkrip'        => $p_berkas_map['transkrip']['file_name'] ?? ($fp_files_map['transkrip'] ?? ($info['files'][1] ?? '')),
                 'file_pernyataan'       => $p_berkas_map['pernyataan']['file_name'] ?? ($fp_files_map['pernyataan'] ?? ($info['files'][2] ?? '')),
@@ -2606,7 +2606,7 @@ class AdminLayanan_model extends CI_Model {
                     'file'          => $kode_berkas . '_' . $nim_clean . '.pdf',
                     'date'          => date('Y-m-d H:i:s'),
                     'view_doswal'   => 1,
-                    'status_doswal' => 'Approved'
+                    'status_doswal' => 'Pending'
                 ], $fp_upd);
                 $this->db->insert('file_pendaftaran', $ins_fp);
             }
