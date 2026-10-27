@@ -1285,20 +1285,7 @@ class AdminLayanan extends CI_Controller {
                                  ->update('guidance', $g_up);
                     }
                 }
-                if ($this->db->table_exists('pendaftaran_ta')) {
-                    $pt_up = [
-                        'is_submitted'          => 0,
-                        'status_approval_wali'  => 'Draft',
-                        'current_stage'         => 'Draft',
-                    ];
-                    if ($this->db->field_exists('file_' . $kode_berkas, 'pendaftaran_ta')) {
-                        $pt_up['file_' . $kode_berkas] = NULL;
-                    }
-                    if ($this->db->field_exists('status_' . $kode_berkas, 'pendaftaran_ta')) {
-                        $pt_up['status_' . $kode_berkas] = 'Pending';
-                    }
-                    $this->db->where('nim', $clean_nim)->update('pendaftaran_ta', $pt_up);
-                }
+
 
                 // Sync status keseluruhan
                 $this->AdminLayanan_model->sync_overall_status($clean_nim);
@@ -1404,10 +1391,7 @@ class AdminLayanan extends CI_Controller {
                     }
                 }
 
-                // E. Hapus / Reset data pendaftaran jika ada
-                if ($this->db->table_exists('pendaftaran_ta')) {
-                    $this->db->where('nim', $clean_nim)->or_where_in('nim', $target_ids)->delete('pendaftaran_ta');
-                }
+
 
                 // Sync status keseluruhan
                 $this->AdminLayanan_model->sync_overall_status($clean_nim);
