@@ -40,6 +40,8 @@ if ($isLoggedIn && $activeRoleId === 0) {
         $activeRoleId = 2; // Kaur / Ka Lab
     } elseif (strpos($currentUri, 'dosen') === 0 || strpos($currentUri, 'dosenwali') === 0) {
         $activeRoleId = 3; // Dosen
+    } elseif (strpos($currentUri, 'koordinatorkp') === 0 || strpos($currentUri, 'koordinator_kp') === 0 || strpos($currentUri, 'koordinator-kp') === 0) {
+        $activeRoleId = 23; // Koordinator KP
     } elseif (strpos($currentUri, 'koordinatorta') === 0 || strpos($currentUri, 'koordinator') === 0) {
         $activeRoleId = 6; // Koordinator TA
     } elseif (strpos($currentUri, 'adminlayanan') === 0) {
@@ -87,7 +89,8 @@ $roleBadgeMap = [
     16 => 'Program Studi',
     17 => 'Kemahasiswaan',
     21 => 'Laboran',
-    22 => 'Panel Super Admin'
+    22 => 'Panel Super Admin',
+    23 => 'Koordinator KP'
 ];
 $activeRoleBadge = $roleBadgeMap[$activeRoleId] ?? 'Portal IFIK';
 $userJabatanSession = strtolower((string)($this->session->userdata('jabatan') ?? ''));
@@ -293,8 +296,9 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
             break;
         case 5: // Admin LAA
             $defaultNavItems = [
-                ['category' => 'Pengelolaan Tugas Akhir'],
+                ['category' => 'Pengelolaan Tugas Akhir & Kerja Praktik'],
                 ['heading' => 'Pendaftaran TA', 'href' => site_url('adminlayanan'), 'icon_3d' => 'assets/images/icons_3d/daftar.png'],
+                ['heading' => 'Verifikasi Berkas KP', 'href' => site_url('adminlayanan/verifikasi_kp'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Persyaratan & Laporan KP'],
                 ['heading' => 'Rekomendasi & Downgrade', 'href' => site_url('adminlayanan/rekomendasi'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Review Rekomendasi P1 & Downgrade'],
                 ['heading' => 'Pendaftaran Sidang', 'href' => site_url('adminlayanan/pendaftaran_sidang'), 'icon_3d' => 'assets/images/icons_3d/sidang.png'],
                 ['heading' => 'Sudah Lulus Sidang', 'href' => site_url('adminlayanan/lulus_sidang'), 'icon_3d' => 'assets/images/icons_3d/preview2.png'],
@@ -416,6 +420,16 @@ if (isset($navItems) && is_array($navItems) && !empty($navItems)) {
                 ['category' => 'Fasilitas & Peminjaman', 'has_divider' => true],
                 ['heading' => 'Peminjaman Ruangan', 'href' => site_url('peminjaman-ruangan'), 'icon_3d' => 'assets/images/icons_3d/ruangan.png'],
                 ['heading' => 'Peminjaman Barang', 'href' => site_url('peminjaman-barang'), 'icon_3d' => 'assets/images/icons_3d/kelola_barang.png'],
+
+                ['category' => 'Akun', 'has_divider' => true],
+                ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],
+            ];
+            break;
+
+        case 23: // Koordinator KP
+            $defaultNavItems = [
+                ['category' => 'Menu Koordinator Kerja Praktik'],
+                ['heading' => 'Plotting Pembimbing KP', 'href' => site_url('koordinatorkp/plotting'), 'icon_3d' => 'assets/images/icons_3d/approval.png', 'subheading' => 'Plotting Pembimbing 1 KP'],
 
                 ['category' => 'Akun', 'has_divider' => true],
                 ['heading' => 'Keluar', 'href' => site_url('login/logout'), 'icon_3d' => 'assets/images/icons_3d/logout.png'],

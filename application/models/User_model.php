@@ -423,6 +423,14 @@ class User_model extends CI_Model {
      * @param array $accounts
      * @return array ['imported' => int, 'updated' => int]
      */
+    public function get_default_jabatan_by_role($roleId, $roleName = '') {
+        $rId = (int)$roleId;
+        if ($rId === 3 || stripos($roleName, 'dosen') !== false) {
+            return 'dosen';
+        }
+        return null;
+    }
+
     public function upsert_users_bulk($accounts)
     {
         if (empty($accounts)) {
@@ -525,7 +533,13 @@ class User_model extends CI_Model {
             $name = isset($acc['name']) && !empty($acc['name']) ? trim($acc['name']) : 'User';
             $nimNip = isset($acc['nim_nip']) ? trim($acc['nim_nip']) : '';
             $emailStatus = isset($acc['email_status']) ? $acc['email_status'] : 'belum';
-            $jabatan = isset($acc['jabatan']) ? strtolower(trim((string)$acc['jabatan'])) : '';
+            $isDosenRole = ((int)$roleId === 3) || (strpos($roleLower, 'dosen') !== false);
+            $rawJab = isset($acc['jabatan']) && trim((string)$acc['jabatan']) !== '' ? strtolower(trim((string)$acc['jabatan'])) : '';
+            if ($isDosenRole) {
+                $jabatan = !empty($rawJab) ? $rawJab : 'dosen';
+            } else {
+                $jabatan = null;
+            }
             $prodi = isset($acc['prodi']) ? trim((string)$acc['prodi']) : '';
 
             if (isset($existingMap[$email])) {
@@ -544,7 +558,7 @@ class User_model extends CI_Model {
                         $updateData['nip'] = $nimNip;
                     }
                 }
-                if ($jabatan && $this->db->field_exists('jabatan', $this->tbl_user)) {
+                if ($this->db->field_exists('jabatan', $this->tbl_user)) {
                     $updateData['jabatan'] = $jabatan;
                 }
                 if ($prodi && $this->db->field_exists('prodi', $this->tbl_user)) {
@@ -557,15 +571,13 @@ class User_model extends CI_Model {
                 // DO NOT overwrite password if the user has already changed password or is an active account!
                 if ($token && !$isUserProtected) {
                     if ($this->db->field_exists('token', $this->tbl_user)) $updateData['token'] = $token;
-                    $updateData['password'] = password_hash($token, PASSWORD_DEFAULT, ['cost' => 10]);
                 }
                 $this->db->where('id', $existing['id']);
                 $this->db->update($this->tbl_user, $updateData);
                 $updatedCount++;
             } else {
                 // Queue for bulk insert
-                $rawPwd = $token ? $token : 'Telkom#123';
-                $salt = bin2hex(random_bytes(16));
+                // Password & salt strictly NULL upon import until user activates via email
                 $username = explode('@', $email)[0];
                 $insertRow = [
                     'id' => uniqid(),
@@ -573,10 +585,11 @@ class User_model extends CI_Model {
                     'role_id' => $roleId,
                     'name' => $name,
                     'email' => $email,
-                    'password' => password_hash($rawPwd . $salt, PASSWORD_DEFAULT, ['cost' => 10]),
+                    'password' => null,
+                    'salt' => null,
                     'status' => 'active'
                 ];
-                if ($this->db->field_exists('salt', $this->tbl_user)) $insertRow['salt'] = $salt;
+                if ($this->db->field_exists('salt', $this->tbl_user)) $insertRow['salt'] = null;
                 if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $insertRow['nidn_nim'] = $nimNip;
                 if ($this->db->field_exists('nim', $this->tbl_user)) $insertRow['nim'] = $nimNip;
                 if ($this->db->field_exists('nip', $this->tbl_user)) {
@@ -585,7 +598,7 @@ class User_model extends CI_Model {
                     }
                 }
                 if ($this->db->field_exists('jabatan', $this->tbl_user)) {
-                    $insertRow['jabatan'] = $jabatan ? $jabatan : 'dosen';
+                    $insertRow['jabatan'] = $jabatan;
                 }
                 if ($this->db->field_exists('prodi', $this->tbl_user)) {
                     $insertRow['prodi'] = $prodi ? $prodi : null;
@@ -673,13 +686,10 @@ class User_model extends CI_Model {
             $isUserProtected = (!empty($existing->password_changed) && (int)$existing->password_changed === 1) || (!empty($existing->is_active) && (int)$existing->is_active === 1);
 
             if (!empty($data['token']) && !$isUserProtected) {
-                $salt = bin2hex(random_bytes(16));
-                if ($this->db->field_exists('salt', $this->tbl_user)) $updateData['salt'] = $salt;
                 if ($this->db->table_exists('user_token')) {
                     $this->sync_user_token($email, $data['token']);
                 } else if ($this->db->field_exists('token', $this->tbl_user)) {
                     $updateData['token'] = $data['token'];
-                    $updateData['password'] = password_hash($data['token'], PASSWORD_DEFAULT, ['cost' => 10]);
                 }
             }
             $this->db->where('id', $existing->id);
@@ -694,14 +704,17 @@ class User_model extends CI_Model {
                 'role_id' => isset($data['role_id']) ? $data['role_id'] : (($this->tbl_role === 'user_role') ? 4 : 5),
                 'name' => $data['name'],
                 'email' => $email,
-                'password' => password_hash('Telkom#123' . $salt, PASSWORD_DEFAULT, ['cost' => 10]),
-                'salt' => $salt,
+                'password' => null,
+                'salt' => null,
                 'status' => 'active'
             ];
-            if ($this->db->field_exists('salt', $this->tbl_user)) $insertData['salt'] = $salt;
+            if ($this->db->field_exists('salt', $this->tbl_user)) $insertData['salt'] = null;
             if ($this->db->field_exists('nidn_nim', $this->tbl_user)) $insertData['nidn_nim'] = isset($data['nidn_nim']) ? $data['nidn_nim'] : '';
-            if (isset($data['jabatan']) && $this->db->field_exists('jabatan', $this->tbl_user)) {
-                $insertData['jabatan'] = strtolower(trim((string)$data['jabatan']));
+            if ($this->db->field_exists('jabatan', $this->tbl_user)) {
+                $isDosenRole = ((int)$roleCheck === 3) || (isset($data['role']) && stripos($data['role'], 'dosen') !== false);
+                $insertData['jabatan'] = $isDosenRole
+                    ? (!empty($data['jabatan']) ? strtolower(trim((string)$data['jabatan'])) : 'dosen')
+                    : null;
             }
             if (isset($data['prodi']) && $this->db->field_exists('prodi', $this->tbl_user)) {
                 $insertData['prodi'] = trim((string)$data['prodi']);
@@ -731,7 +744,6 @@ class User_model extends CI_Model {
             if ($this->tbl_user === 'users' && $this->db->field_exists('token', 'users')) {
                 $insertData['token'] = $rawToken;
                 if ($rawToken) {
-                    $insertData['password'] = password_hash($rawToken . $salt, PASSWORD_DEFAULT, ['cost' => 10]);
                 }
             }
 

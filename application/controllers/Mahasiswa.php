@@ -897,6 +897,27 @@ class Mahasiswa extends CI_Controller {
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
 
             $kode_berkas = str_replace('file_', '', $field_name);
+            $clean_nim = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
+            $user_id_real = $this->_get_current_user_id();
+            if (empty($user_id_real) || $user_id_real === $nim || is_numeric($user_id_real)) {
+                $u_row = $this->db->get_where('user', ['nim' => $clean_nim])->row_array();
+                if (!$u_row) {
+                    $u_row = $this->db->get_where('user', ['id' => $clean_nim])->row_array();
+                }
+                if ($u_row && !empty($u_row['id'])) {
+                    $user_id_real = $u_row['id'];
+                }
+            }
+            $u_id_default = !empty($user_id_real) ? $user_id_real : ('usr_mhs_' . $clean_nim);
+            $target_user_ids = array_values(array_unique(array_filter([
+                (string)$user_id_real,
+                (string)$nim,
+                $clean_nim,
+                $u_id_default,
+                'usr_mhs_' . $clean_nim,
+                'mhs_' . $clean_nim,
+                'usr_' . $clean_nim
+            ])));
 
             if ($this->db->table_exists('pendaftaran_ta')) {
                 $existing_ta = $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array();
@@ -943,7 +964,6 @@ class Mahasiswa extends CI_Controller {
                 $this->AdminLayanan_model->save_student_berkas($nim, $kode_berkas, $file_name, 'Pending', $req_nama_berkas);
             }
 
-            $kode_berkas = str_replace('file_', '', $field_name);
             if ($this->db->table_exists('pendaftaran_berkas')) {
                 $existing_berkas = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $kode_berkas])->row_array();
                 if ($existing_berkas) {
@@ -969,11 +989,10 @@ class Mahasiswa extends CI_Controller {
             if ($this->db->table_exists('file_pendaftaran')) {
                 try {
                     $fp_fields = $this->db->list_fields('file_pendaftaran');
-                    $user_id_real = $this->_get_current_user_id();
-                    $id_fp = 'fp_' . $nim . '_' . $kode_berkas;
-                    $target_user_ids = array_values(array_unique(array_filter([$user_id_real, $nim])));
+                    $id_fp = 'fp_' . $clean_nim . '_' . $kode_berkas;
                     $ex_fp = $this->db->group_start()
                         ->where('id', $id_fp)
+                        ->or_where('id', 'fp_' . $nim . '_' . $kode_berkas)
                         ->or_group_start()
                             ->where_in('id_mhs', $target_user_ids)
                             ->where('nama', $kode_berkas)
@@ -996,7 +1015,7 @@ class Mahasiswa extends CI_Controller {
                         }
                     } else {
                         if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
-                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $user_id_real;
+                        if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $u_id_default;
                         if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $kode_berkas;
                         if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
                         if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
@@ -1007,6 +1026,36 @@ class Mahasiswa extends CI_Controller {
                 } catch (Exception $e) {
                     log_message('error', 'Error syncing file_pendaftaran in ajax_upload: ' . $e->getMessage());
                 }
+            }
+
+            // Pastikan entri guidance berstatus Draft ada jika belum terdaftar
+            if ($this->db->table_exists('guidance')) {
+                try {
+                    $ex_g = $this->db->where_in('id_mhs', $target_user_ids)
+                        ->order_by('date', 'DESC')
+                        ->limit(1)
+                        ->get('guidance')->row_array();
+                    if (!$ex_g) {
+                        $ex_g = $this->db->get_where('guidance', ['id' => 'gdn_' . $nim])->row_array();
+                    }
+                    if (!$ex_g) {
+                        $g_fields = $this->db->list_fields('guidance');
+                        $new_g = array();
+                        if (in_array('id', $g_fields)) $new_g['id'] = 'gdn_' . $nim;
+                        if (in_array('id_mhs', $g_fields)) $new_g['id_mhs'] = $u_id_default;
+                        if (in_array('date', $g_fields)) $new_g['date'] = date('Y-m-d H:i:s');
+                        if (in_array('tahun', $g_fields)) $new_g['tahun'] = date('Y');
+                        if (in_array('keterangan', $g_fields)) $new_g['keterangan'] = 'Draft';
+                        if (in_array('peminatan', $g_fields)) $new_g['peminatan'] = $mhs_konsentrasi;
+                        $this->db->insert('guidance', $new_g);
+                    }
+                } catch (Exception $e) {
+                    log_message('error', 'Error creating guidance draft in ajax_upload: ' . $e->getMessage());
+                }
+            }
+
+            if (method_exists($this->AdminLayanan_model, 'clear_cache')) {
+                $this->AdminLayanan_model->clear_cache();
             }
 
             $this->output
@@ -1043,6 +1092,16 @@ class Mahasiswa extends CI_Controller {
         }
 
         $kode_berkas = str_replace('file_', '', $field_name);
+        $clean_nim = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
+        $user_id_real = $this->_get_current_user_id();
+        $target_ids = array_values(array_unique(array_filter([
+            (string)$user_id_real,
+            (string)$nim,
+            $clean_nim,
+            'usr_mhs_' . $clean_nim,
+            'mhs_' . $clean_nim,
+            'usr_' . $clean_nim
+        ])));
 
         $pendaftaran = $this->db->table_exists('pendaftaran_ta')
             ? $this->db->get_where('pendaftaran_ta', ['nim' => $nim])->row_array()
@@ -1062,15 +1121,67 @@ class Mahasiswa extends CI_Controller {
             }
         }
 
+        // 1. Hapus dari pendaftaran_berkas jika tabel ada
         if ($this->db->table_exists('pendaftaran_berkas')) {
             $this->db->where('nim', $nim)->where('kode_berkas', $kode_berkas)->delete('pendaftaran_berkas');
         }
 
+        // 2. Kosongkan kolom di pendaftaran_ta jika tabel dan kolom ada
         if ($this->db->table_exists('pendaftaran_ta') && $this->db->field_exists($field_name, 'pendaftaran_ta')) {
             $this->db->where('nim', $nim)->update('pendaftaran_ta', [
                 $field_name => '',
                 'updated_at' => date('Y-m-d H:i:s')
             ]);
+        }
+
+        // 3. PENTING: Hapus dari tabel file_pendaftaran dan unlink file fisiknya
+        if ($this->db->table_exists('file_pendaftaran')) {
+            $this->db->where_in('id_mhs', $target_ids);
+            $this->db->group_start();
+                $this->db->where('nama', $kode_berkas);
+                $this->db->or_like('nama', $kode_berkas);
+                $this->db->or_like('id', 'fp_' . $clean_nim . '_' . $kode_berkas);
+                $this->db->or_like('id', 'fp_' . $nim . '_' . $kode_berkas);
+                $this->db->or_like('id', '_' . $kode_berkas);
+                $this->db->or_like('file', $kode_berkas);
+                if ($kode_berkas === 'bebas_lab') {
+                    $this->db->or_like('nama', 'bebas')->or_like('nama', 'lab');
+                }
+            $this->db->group_end();
+
+            $fp_records = $this->db->get('file_pendaftaran')->result_array();
+
+            if (!empty($fp_records)) {
+                foreach ($fp_records as $rec) {
+                    if (!empty($rec['file'])) {
+                        $f_base = basename($rec['file']);
+                        $paths_to_check = [
+                            FCPATH . $rec['file'],
+                            FCPATH . 'uploads/persyaratan_ta/' . $f_base,
+                            FCPATH . 'uploads/pendaftaran_berkas/' . $f_base
+                        ];
+                        foreach ($paths_to_check as $p_chk) {
+                            if (file_exists($p_chk) && is_file($p_chk)) {
+                                @unlink($p_chk);
+                            }
+                        }
+                    }
+                    $this->db->where('id', $rec['id'])->delete('file_pendaftaran');
+                }
+            }
+
+            // Hapus juga jika ada id persis
+            $exact_ids = [
+                'fp_' . $clean_nim . '_' . $kode_berkas,
+                'fp_' . $nim . '_' . $kode_berkas
+            ];
+            $this->db->where_in('id', $exact_ids)->delete('file_pendaftaran');
+        }
+
+        // 4. Bersihkan cache di AdminLayanan_model agar pembacaan berikutnya bersih
+        $this->load->model('AdminLayanan_model');
+        if (method_exists($this->AdminLayanan_model, 'clear_cache')) {
+            $this->AdminLayanan_model->clear_cache();
         }
 
         $this->output
@@ -1088,6 +1199,28 @@ class Mahasiswa extends CI_Controller {
         $this->db->db_debug = FALSE;
         try {
             $nim = $this->input->post('nim') ?: $this->_get_current_nim();
+            $clean_nim = preg_replace('/^(usr_mhs_|mhs_|usr_)/i', '', trim((string)$nim));
+            $user_id_real = $this->_get_current_user_id();
+            if (empty($user_id_real) || $user_id_real === $nim || is_numeric($user_id_real)) {
+                $u_row = $this->db->get_where('user', ['nim' => $clean_nim])->row_array();
+                if (!$u_row) {
+                    $u_row = $this->db->get_where('user', ['id' => $clean_nim])->row_array();
+                }
+                if ($u_row && !empty($u_row['id'])) {
+                    $user_id_real = $u_row['id'];
+                }
+            }
+            $u_id_default = !empty($user_id_real) ? $user_id_real : ('usr_mhs_' . $clean_nim);
+            $target_ids = array_values(array_unique(array_filter([
+                (string)$user_id_real,
+                (string)$nim,
+                $clean_nim,
+                $u_id_default,
+                'usr_mhs_' . $clean_nim,
+                'mhs_' . $clean_nim,
+                'usr_' . $clean_nim
+            ])));
+
             $mhs = $this->Mahasiswa_model->get_mahasiswa($nim);
             $mhs_konsentrasi = !empty($mhs['konsentrasi_dkv']) ? $mhs['konsentrasi_dkv'] : (!empty($mhs['prodi']) ? $mhs['prodi'] : '-');
             $mhs_id_kk = !empty($mhs['id_kk']) ? $mhs['id_kk'] : 1;
@@ -1130,6 +1263,7 @@ class Mahasiswa extends CI_Controller {
             $this->load->model('AdminLayanan_model');
             $post_data = $this->input->post(null, true);
             $has_any_file = false;
+            $db_saved = false;
 
             if (is_array($post_data)) {
                 foreach ($post_data as $key => $val) {
@@ -1142,11 +1276,74 @@ class Mahasiswa extends CI_Controller {
 
                         if (!empty($val) && strtolower(substr($val, -4)) === '.pdf') {
                             $has_any_file = true;
+
+                            // 1. Simpan ke pendaftaran_ta jika tabel & kolom ada
                             if ($this->db->table_exists('pendaftaran_ta') && $this->db->field_exists($col_name, 'pendaftaran_ta')) {
                                 $data_update[$col_name] = $val;
                             }
-                            if ($this->db->table_exists('pendaftaran_berkas') && method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
+
+                            // 2. Simpan ke model AdminLayanan (akan sinkron ke file_pendaftaran / pendaftaran_berkas)
+                            if (method_exists($this->AdminLayanan_model, 'save_student_berkas')) {
                                 $this->AdminLayanan_model->save_student_berkas($nim, $raw_kode, $val, 'Pending');
+                                $db_saved = true;
+                            }
+
+                            // 3. Simpan ke tabel pendaftaran_berkas jika ada
+                            if ($this->db->table_exists('pendaftaran_berkas')) {
+                                $ex_b = $this->db->get_where('pendaftaran_berkas', ['nim' => $nim, 'kode_berkas' => $raw_kode])->row_array();
+                                if ($ex_b) {
+                                    $this->db->where('id', $ex_b['id'])->update('pendaftaran_berkas', [
+                                        'file_name'         => $val,
+                                        'status_verifikasi' => 'Pending',
+                                        'updated_at'        => date('Y-m-d H:i:s')
+                                    ]);
+                                } else {
+                                    $this->db->insert('pendaftaran_berkas', [
+                                        'nim'               => $nim,
+                                        'kode_berkas'       => $raw_kode,
+                                        'file_name'         => $val,
+                                        'status_verifikasi' => 'Pending',
+                                        'created_at'        => date('Y-m-d H:i:s')
+                                    ]);
+                                }
+                                $db_saved = true;
+                            }
+
+                            // 4. Pastikan file juga tersimpan langsung di tabel file_pendaftaran
+                            if ($this->db->table_exists('file_pendaftaran')) {
+                                $fp_fields = $this->db->list_fields('file_pendaftaran');
+                                $id_fp = 'fp_' . $clean_nim . '_' . $raw_kode;
+                                $rel_file_path = (strpos($val, 'uploads/') === 0) ? $val : ('uploads/persyaratan_ta/' . $val);
+
+                                $ex_fp = $this->db->group_start()
+                                    ->where('id', $id_fp)
+                                    ->or_where('id', 'fp_' . $nim . '_' . $raw_kode)
+                                    ->or_group_start()
+                                        ->where_in('id_mhs', $target_ids)
+                                        ->where('nama', $raw_kode)
+                                    ->group_end()
+                                ->group_end()
+                                ->get('file_pendaftaran')->row_array();
+
+                                $fp_payload = array();
+                                if (in_array('file', $fp_fields)) $fp_payload['file'] = $rel_file_path;
+                                if (in_array('status_doswal', $fp_fields)) $fp_payload['status_doswal'] = 'Pending';
+                                if (in_array('status_adminlaa', $fp_fields)) $fp_payload['status_adminlaa'] = 'Pending';
+                                if (in_array('view_adminlaa', $fp_fields)) $fp_payload['view_adminlaa'] = 0;
+                                if (in_array('view_doswal', $fp_fields)) $fp_payload['view_doswal'] = 0;
+                                if (in_array('date_edit', $fp_fields)) $fp_payload['date_edit'] = date('Y-m-d H:i:s');
+
+                                if ($ex_fp) {
+                                    $this->db->where('id', $ex_fp['id'])->update('file_pendaftaran', $fp_payload);
+                                } else {
+                                    if (in_array('id', $fp_fields)) $fp_payload['id'] = $id_fp;
+                                    if (in_array('id_mhs', $fp_fields)) $fp_payload['id_mhs'] = $u_id_default;
+                                    if (in_array('nama', $fp_fields)) $fp_payload['nama'] = $raw_kode;
+                                    if (in_array('komentar', $fp_fields)) $fp_payload['komentar'] = '';
+                                    if (in_array('date', $fp_fields)) $fp_payload['date'] = date('Y-m-d H:i:s');
+                                    $this->db->insert('file_pendaftaran', $fp_payload);
+                                }
+                                $db_saved = true;
                             }
                         }
                     }
@@ -1154,7 +1351,6 @@ class Mahasiswa extends CI_Controller {
             }
 
             $data_update['updated_at'] = date('Y-m-d H:i:s');
-            $db_saved = false;
 
             if ($this->db->table_exists('pendaftaran_ta')) {
                 $p_fields = $this->db->list_fields('pendaftaran_ta');
@@ -1186,8 +1382,6 @@ class Mahasiswa extends CI_Controller {
 
             // Sinkronkan juga ke tabel guidance (legacy / active db)
             if ($this->db->table_exists('guidance')) {
-                $user_id = $this->_get_current_user_id();
-                $target_ids = array_values(array_unique(array_filter([$user_id, $nim])));
                 $existing_g = $this->db->where_in('id_mhs', $target_ids)
                     ->order_by('date', 'DESC')
                     ->limit(1)
@@ -1211,16 +1405,31 @@ class Mahasiswa extends CI_Controller {
                     if ($existing_g) {
                         $this->db->where('id', $existing_g['id'])->update('guidance', $g_data);
                         $db_saved = true;
-                    } else if (!empty($jenis_ta) || !empty($judul_1)) {
+                    } else {
                         if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
-                        if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $user_id;
+                        if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $u_id_default;
                         if (in_array('date', $g_fields)) $g_data['date'] = date('Y-m-d H:i:s');
                         if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
                         if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = 'Draft';
                         $this->db->insert('guidance', $g_data);
                         $db_saved = true;
                     }
+                } elseif ($has_any_file && !$existing_g) {
+                    // Buat guidance draft jika ada berkas yang diunggah
+                    $g_data = array();
+                    if (in_array('id', $g_fields)) $g_data['id'] = 'gdn_' . $nim;
+                    if (in_array('id_mhs', $g_fields)) $g_data['id_mhs'] = $u_id_default;
+                    if (in_array('date', $g_fields)) $g_data['date'] = date('Y-m-d H:i:s');
+                    if (in_array('tahun', $g_fields)) $g_data['tahun'] = date('Y');
+                    if (in_array('keterangan', $g_fields)) $g_data['keterangan'] = 'Draft';
+                    if (in_array('peminatan', $g_fields)) $g_data['peminatan'] = $konsentrasi_dkv;
+                    $this->db->insert('guidance', $g_data);
+                    $db_saved = true;
                 }
+            }
+
+            if (method_exists($this->AdminLayanan_model, 'clear_cache')) {
+                $this->AdminLayanan_model->clear_cache();
             }
 
             $this->db->db_debug = $prev_debug;
@@ -2758,6 +2967,12 @@ public function upload_berkas_sidang_ajax() {
         if ($this->input->post()) {
             if ($wf['laporan_is_approved']) {
                 $this->session->set_flashdata('error', 'Laporan KP Anda sudah disetujui oleh LAA dan berstatus Selesai.');
+                redirect('mahasiswa/laporan_kp');
+                return;
+            }
+
+            if (!$wf['can_upload_laporan']) {
+                $this->session->set_flashdata('error', 'Anda belum dapat mengunggah Laporan KP. Pastikan berkas persyaratan telah disetujui Admin LAA dan Pembimbing 1 telah ditetapkan oleh Koordinator KP.');
                 redirect('mahasiswa/laporan_kp');
                 return;
             }

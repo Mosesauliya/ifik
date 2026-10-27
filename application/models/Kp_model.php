@@ -111,6 +111,29 @@ class Kp_model extends CI_Model {
                     `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP
                 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;");
             }
+
+            // 5. Pastikan role 23 (Koordinator KP) terdaftar di tabel role jika tabel ada
+            if ($this->db->table_exists('user_role')) {
+                $r23 = $this->db->get_where('user_role', ['id' => 23])->row_array();
+                if (!$r23) {
+                    $fields = $this->db->list_fields('user_role');
+                    $data23 = ['id' => 23];
+                    if (in_array('role', $fields)) $data23['role'] = 'koordinator_kp';
+                    if (in_array('name', $fields)) $data23['name'] = 'koordinator_kp';
+                    if (in_array('display_name', $fields)) $data23['display_name'] = 'Koordinator KP';
+                    $this->db->insert('user_role', $data23);
+                }
+            } elseif ($this->db->table_exists('roles')) {
+                $r23 = $this->db->get_where('roles', ['id' => 23])->row_array();
+                if (!$r23) {
+                    $fields = $this->db->list_fields('roles');
+                    $data23 = ['id' => 23];
+                    if (in_array('role', $fields)) $data23['role'] = 'koordinator_kp';
+                    if (in_array('name', $fields)) $data23['name'] = 'koordinator_kp';
+                    if (in_array('display_name', $fields)) $data23['display_name'] = 'Koordinator KP';
+                    $this->db->insert('roles', $data23);
+                }
+            }
         } catch (Throwable $e) {
             // Silent fallback
         }
@@ -708,5 +731,575 @@ class Kp_model extends CI_Model {
             'is_selesai'           => $is_selesai,
             'current_step_num'     => $current_step_num,
         ];
+    }
+
+    // =========================================================================
+    // ADMIN LAYANAN (LAA) - VERIFIKASI BERKAS KP
+    // =========================================================================
+
+    /**
+     * Ambil seluruh pengajuan berkas persyaratan KP untuk Admin LAA.
+     * Mengelompokkan tabel ke dalam:
+     * - 'belum_acc': Mahasiswa yang belum seluruh berkasnya disetujui (Pending / Revisi / Belum Lengkap)
+     * - 'sudah_acc': Mahasiswa yang seluruh berkas persyaratannya sudah di-ACC
+     */
+    public function get_all_pengajuan_kp_admin() {
+        if (!$this->db->table_exists('tb_kp')) {
+            return ['belum_acc' => [], 'sudah_acc' => [], 'total' => 0];
+        }
+
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $kps = [];
+        try {
+            $kps = $this->db->order_by('date', 'DESC')->get('tb_kp')->result_array();
+        } catch (Throwable $e) {
+            $kps = [];
+        }
+        $this->db->db_debug = $prev_debug;
+
+        $syarat_list = $this->get_active_syarat_kp();
+        $belum_acc = [];
+        $sudah_acc = [];
+
+        foreach ($kps as $kp) {
+            $nim = '';
+            if (!empty($kp['id_kp']) && strpos($kp['id_kp'], 'kp_') === 0) {
+                $nim = substr($kp['id_kp'], 3);
+            }
+            if (empty($nim) && !empty($kp['id_mhs'])) {
+                $nim = preg_replace('/^(usr_mhs_|mhs_)/', '', $kp['id_mhs']);
+            }
+
+            $user_id = !empty($kp['id_mhs']) && is_numeric($kp['id_mhs']) ? $kp['id_mhs'] : null;
+            $mhs_info = $this->get_mahasiswa_db($nim, $user_id);
+            if (empty($nim) && !empty($mhs_info['nim'])) {
+                $nim = $mhs_info['nim'];
+            }
+
+            $files = $this->get_files_pendaftaran_kp($nim, $kp['id_kp'], $user_id);
+
+            $total_wajib = 0;
+            $uploaded_wajib = 0;
+            $approved_wajib = 0;
+            $rejected_count = 0;
+            $pending_count = 0;
+            $files_detail = [];
+
+            foreach ($syarat_list as $sb) {
+                $k = $sb['kode_berkas'];
+                $is_req = ((int)($sb['is_required'] ?? 1) === 1);
+                if ($is_req) $total_wajib++;
+
+                $f = $files[$k] ?? null;
+                $file_status = 'Belum Upload';
+                $file_path = '';
+                $file_id = '';
+                $komentar = '';
+                $date_uploaded = '';
+
+                if ($f && !empty($f['file'])) {
+                    if ($is_req) $uploaded_wajib++;
+                    $file_path = $f['file'];
+                    $file_id = $f['id'] ?? ('fpkp_' . $nim . '_' . $k);
+                    $komentar = $f['komentar'] ?? '';
+                    $date_uploaded = $f['date_edit'] ?: ($f['date'] ?? '');
+
+                    $st = strtolower(trim((string)($f['status_adminlaa'] ?? '')));
+                    if ($this->is_status_approved($st)) {
+                        $file_status = 'Approved';
+                        if ($is_req) $approved_wajib++;
+                    } elseif ($this->is_status_rejected($st)) {
+                        $file_status = 'Rejected';
+                        $rejected_count++;
+                    } else {
+                        $file_status = 'Pending';
+                        $pending_count++;
+                    }
+                }
+
+                $files_detail[] = [
+                    'id_file'       => $file_id,
+                    'kode_berkas'   => $k,
+                    'nama_berkas'   => $sb['nama_berkas'],
+                    'deskripsi'     => $sb['deskripsi'] ?? '',
+                    'file'          => $file_path,
+                    'file_url'      => !empty($file_path) ? base_url($file_path) : '',
+                    'file_basename' => !empty($file_path) ? basename($file_path) : '',
+                    'status'        => $file_status,
+                    'komentar'      => $komentar,
+                    'date_uploaded' => $date_uploaded,
+                    'is_required'   => $is_req
+                ];
+            }
+
+            $status_file_kp = $kp['status_file'] ?? '';
+            $is_all_approved = (
+                ($total_wajib > 0 && $approved_wajib >= $total_wajib && $rejected_count === 0 && $pending_count === 0 && $uploaded_wajib >= $total_wajib) ||
+                (count($syarat_list) === 0 && !empty($files) && $rejected_count === 0) ||
+                in_array($status_file_kp, ['Disetujui LAA', 'Sudah Plot Pembimbing', 'Sudah Upload Laporan', 'Revisi Laporan', 'Selesai'])
+            );
+
+            $pembimbing1_nama = $this->resolve_dosen_name($kp['dosen_pembimbing1'] ?? '');
+
+            $item = [
+                'id_kp'               => $kp['id_kp'],
+                'nim'                 => $nim,
+                'nama'                => $mhs_info['nama'] ?: ($kp['nama_tujuan'] ?? 'Mahasiswa'),
+                'prodi'               => $kp['peminatan'] ?: ($mhs_info['prodi'] ?: 'Informatika'),
+                'email'               => $mhs_info['email'] ?? '',
+                'no_hp'               => $mhs_info['no_hp'] ?? ($kp['cp'] ?? ''),
+                'nama_perusahaan'     => $kp['nama_perusahaan'],
+                'alamat_perusahaan'   => $kp['alamat_perusahaan'],
+                'kota'                => $kp['kota'],
+                'kode_pos'            => $kp['kode_pos'],
+                'nama_tujuan'         => $kp['nama_tujuan'],
+                'jabatan'             => $kp['jabatan'],
+                'posisi_pekerjaan'    => $kp['posisi_pekerjaan'],
+                'telp_fax'            => $kp['telp_fax'],
+                'email_perusahaan'    => $kp['email_perusahaan'],
+                'cp'                  => $kp['cp'],
+                'status_file'         => $status_file_kp,
+                'date_pengajuan'      => $kp['date'],
+                'dosen_pembimbing1'   => $kp['dosen_pembimbing1'],
+                'pembimbing1_nama'    => $pembimbing1_nama,
+                'jenis_kp'            => $kp['jenis_kp'],
+                'total_wajib'         => $total_wajib,
+                'uploaded_wajib'      => $uploaded_wajib,
+                'approved_wajib'      => $approved_wajib,
+                'rejected_count'      => $rejected_count,
+                'pending_count'       => $pending_count,
+                'is_all_approved'     => $is_all_approved,
+                'files'               => $files_detail
+            ];
+
+            if ($is_all_approved) {
+                $sudah_acc[] = $item;
+            } else {
+                $belum_acc[] = $item;
+            }
+        }
+
+        return [
+            'belum_acc' => $belum_acc,
+            'sudah_acc' => $sudah_acc,
+            'total'     => count($belum_acc) + count($sudah_acc)
+        ];
+    }
+
+    /**
+     * Ambil seluruh data Laporan KP untuk Admin LAA (Tab 2).
+     */
+    public function get_all_laporan_kp_admin() {
+        if (!$this->db->table_exists('tb_kp')) return [];
+
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $kps = [];
+        try {
+            $kps = $this->db->order_by('date', 'DESC')->get('tb_kp')->result_array();
+        } catch (Throwable $e) {
+            $kps = [];
+        }
+        $this->db->db_debug = $prev_debug;
+
+        $results = [];
+        foreach ($kps as $kp) {
+            $nim = '';
+            if (!empty($kp['id_kp']) && strpos($kp['id_kp'], 'kp_') === 0) {
+                $nim = substr($kp['id_kp'], 3);
+            }
+            if (empty($nim) && !empty($kp['id_mhs'])) {
+                $nim = preg_replace('/^(usr_mhs_|mhs_)/', '', $kp['id_mhs']);
+            }
+            $user_id = !empty($kp['id_mhs']) && is_numeric($kp['id_mhs']) ? $kp['id_mhs'] : null;
+            $mhs_info = $this->get_mahasiswa_db($nim, $user_id);
+            if (empty($nim) && !empty($mhs_info['nim'])) {
+                $nim = $mhs_info['nim'];
+            }
+
+            $files_laporan = $this->get_files_laporan_kp($nim, $kp['id_kp'], $user_id);
+            $laporan = $files_laporan['laporan_kp'] ?? (!empty($files_laporan) ? reset($files_laporan) : null);
+
+            $has_uploaded_laporan = !empty($laporan['file']);
+            $is_laporan_stage = in_array($kp['status_file'], ['Sudah Upload Laporan', 'Revisi Laporan', 'Selesai']);
+
+            if (!$has_uploaded_laporan && !$is_laporan_stage) {
+                continue;
+            }
+
+            $st_raw = strtolower(trim((string)($laporan['status_adminlaa'] ?? '')));
+            $status_laa = 'Pending';
+            if ($this->is_status_approved($st_raw) || $kp['status_file'] === 'Selesai') {
+                $status_laa = 'Approved';
+            } elseif ($this->is_status_rejected($st_raw) || $kp['status_file'] === 'Revisi Laporan') {
+                $status_laa = 'Rejected';
+            }
+
+            $file_path = $laporan['file'] ?? '';
+            $pembimbing1_nama = $this->resolve_dosen_name($kp['dosen_pembimbing1'] ?? '');
+
+            $laporan_files_detail = [];
+            foreach ($files_laporan as $code => $fl) {
+                if (!empty($fl['file'])) {
+                    $st_item_raw = strtolower(trim((string)($fl['status_adminlaa'] ?? '')));
+                    $st_item = 'Pending';
+                    if ($this->is_status_approved($st_item_raw) || $kp['status_file'] === 'Selesai') $st_item = 'Approved';
+                    elseif ($this->is_status_rejected($st_item_raw) || $kp['status_file'] === 'Revisi Laporan') $st_item = 'Rejected';
+
+                    $laporan_files_detail[] = [
+                        'id_file'       => $fl['id'] ?? ('flkp_' . $nim . '_' . $code),
+                        'kode_berkas'   => $code,
+                        'nama_berkas'   => ($code === 'laporan_kp' ? 'Laporan KP & Form Penilaian' : ucwords(str_replace('_', ' ', $code))),
+                        'file'          => $fl['file'],
+                        'file_url'      => base_url($fl['file']),
+                        'file_basename' => basename($fl['file']),
+                        'status'        => $st_item,
+                        'poin'          => (int)($fl['poin'] ?? 0),
+                        'komentar'      => $fl['komentar'] ?? '',
+                        'date_uploaded' => $fl['date_edit'] ?: ($fl['date'] ?? '')
+                    ];
+                }
+            }
+            if (empty($laporan_files_detail) && !empty($file_path)) {
+                $laporan_files_detail[] = [
+                    'id_file'       => 'flkp_' . $nim . '_laporan_kp',
+                    'kode_berkas'   => 'laporan_kp',
+                    'nama_berkas'   => 'Laporan KP & Form Penilaian',
+                    'file'          => $file_path,
+                    'file_url'      => base_url($file_path),
+                    'file_basename' => basename($file_path),
+                    'status'        => $status_laa,
+                    'poin'          => (int)($laporan['poin'] ?? 0),
+                    'komentar'      => $laporan['komentar'] ?? '',
+                    'date_uploaded' => $laporan['date_edit'] ?: ($laporan['date'] ?? '')
+                ];
+            }
+
+            $results[] = [
+                'id_kp'               => $kp['id_kp'],
+                'nim'                 => $nim,
+                'nama'                => $mhs_info['nama'] ?: ($kp['nama_tujuan'] ?? 'Mahasiswa'),
+                'prodi'               => $kp['peminatan'] ?: ($mhs_info['prodi'] ?: 'Informatika'),
+                'email'               => $mhs_info['email'] ?? '',
+                'no_hp'               => $mhs_info['no_hp'] ?? ($kp['cp'] ?? ''),
+                'nama_perusahaan'     => $kp['nama_perusahaan'],
+                'nama_tujuan'         => $kp['nama_tujuan'],
+                'dosen_pembimbing1'   => $kp['dosen_pembimbing1'],
+                'pembimbing1_nama'    => $pembimbing1_nama,
+                'status_file_kp'      => $kp['status_file'],
+                'file_laporan'        => $file_path,
+                'file_laporan_url'    => !empty($file_path) ? base_url($file_path) : '',
+                'file_laporan_name'   => !empty($file_path) ? basename($file_path) : '',
+                'poin'                => (int)($laporan['poin'] ?? 0),
+                'status_adminlaa'     => $status_laa,
+                'komentar'            => $laporan['komentar'] ?? '',
+                'date_uploaded'       => $laporan['date_edit'] ?: ($laporan['date'] ?? ''),
+                'has_uploaded'        => $has_uploaded_laporan,
+                'files'               => $laporan_files_detail
+            ];
+        }
+
+        return $results;
+    }
+
+    /**
+     * Update status satu berkas persyaratan KP oleh Admin LAA
+     */
+    public function update_berkas_persyaratan_status($id_file, $nim, $status, $komentar = '') {
+        if (!$this->db->table_exists('file_pendaftaran_kp')) return false;
+
+        $target_ids = $this->get_target_mhs_ids($nim);
+        $now = date('Y-m-d H:i:s');
+
+        $this->db->group_start();
+        if (!empty($id_file)) {
+            $this->db->where('id', $id_file);
+        } else {
+            if (!empty($target_ids)) $this->db->where_in('id_mhs', $target_ids);
+            else $this->db->where('id_mhs', (string)$nim);
+        }
+        $this->db->group_end();
+
+        $this->db->update('file_pendaftaran_kp', [
+            'status_adminlaa' => $status,
+            'komentar'        => $komentar,
+            'view_adminlaa'   => '1',
+            'date_edit'       => $now
+        ]);
+
+        // Evaluasi ulang seluruh persyaratan mahasiswa
+        $wf = $this->get_workflow_summary($nim);
+        if ($wf['syarat_all_approved']) {
+            $this->save_kp($nim, null, ['status_file' => 'Disetujui LAA']);
+        } elseif ($wf['syarat_has_revisi']) {
+            $this->save_kp($nim, null, ['status_file' => 'Revisi Persyaratan']);
+        }
+
+        return true;
+    }
+
+    /**
+     * ACC seluruh berkas persyaratan mahasiswa secara instan (Bulk ACC)
+     */
+    public function acc_semua_persyaratan_mhs($nim) {
+        if (!$this->db->table_exists('file_pendaftaran_kp')) return false;
+
+        $target_ids = $this->get_target_mhs_ids($nim);
+        $now = date('Y-m-d H:i:s');
+
+        $this->db->group_start();
+        if (!empty($target_ids)) $this->db->where_in('id_mhs', $target_ids);
+        else $this->db->where('id_mhs', (string)$nim);
+        $this->db->or_where('id_kp', 'kp_' . $nim);
+        $this->db->group_end();
+
+        $this->db->update('file_pendaftaran_kp', [
+            'status_adminlaa' => 'Approved',
+            'view_adminlaa'   => '1',
+            'date_edit'       => $now
+        ]);
+
+        $this->save_kp($nim, null, ['status_file' => 'Disetujui LAA']);
+        return true;
+    }
+
+    /**
+     * Update status berkas Laporan KP mahasiswa oleh Admin LAA
+     */
+    public function update_laporan_kp_status($nim, $status, $komentar = '') {
+        if (!$this->db->table_exists('file_laporan_kp')) return false;
+
+        $target_ids = $this->get_target_mhs_ids($nim);
+        $now = date('Y-m-d H:i:s');
+
+        $this->db->group_start();
+        if (!empty($target_ids)) $this->db->where_in('id_mhs', $target_ids);
+        else $this->db->where('id_mhs', (string)$nim);
+        $this->db->or_where('id_kp', 'kp_' . $nim);
+        $this->db->group_end();
+
+        $this->db->update('file_laporan_kp', [
+            'status_adminlaa' => $status,
+            'komentar'        => $komentar,
+            'view_adminlaa'   => '1',
+            'date_edit'       => $now
+        ]);
+
+        if ($this->is_status_approved($status)) {
+            $this->save_kp($nim, null, ['status_file' => 'Selesai']);
+        } elseif ($this->is_status_rejected($status)) {
+            $this->save_kp($nim, null, ['status_file' => 'Revisi Laporan']);
+        }
+
+        return true;
+    }
+
+    // =========================================================================
+    // KOORDINATOR KP & ADMIN - PLOTTING PEMBIMBING 1 KP
+    // =========================================================================
+
+    /**
+     * Ambil data mahasiswa untuk Koordinator KP:
+     * HANYA mahasiswa yang persyaratan dari Tab 1 sudah di-ACC oleh Admin Layanan (LAA).
+     */
+    public function get_mahasiswa_for_plotting_kp() {
+        if (!$this->db->table_exists('tb_kp')) {
+            return ['belum_diplot' => [], 'sudah_diplot' => [], 'total' => 0];
+        }
+
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+        $kps = [];
+        try {
+            $kps = $this->db->order_by('date', 'DESC')->get('tb_kp')->result_array();
+        } catch (Throwable $e) {
+            $kps = [];
+        }
+        $this->db->db_debug = $prev_debug;
+
+        $belum_diplot = [];
+        $sudah_diplot = [];
+
+        foreach ($kps as $kp) {
+            $nim = '';
+            if (!empty($kp['id_kp']) && strpos($kp['id_kp'], 'kp_') === 0) {
+                $nim = substr($kp['id_kp'], 3);
+            }
+            if (empty($nim) && !empty($kp['id_mhs'])) {
+                $nim = preg_replace('/^(usr_mhs_|mhs_)/', '', $kp['id_mhs']);
+            }
+            $user_id = !empty($kp['id_mhs']) && is_numeric($kp['id_mhs']) ? $kp['id_mhs'] : null;
+            $mhs_info = $this->get_mahasiswa_db($nim, $user_id);
+            if (empty($nim) && !empty($mhs_info['nim'])) {
+                $nim = $mhs_info['nim'];
+            }
+
+            // Validasi: Syarat dari Tab 1 HARUS SUDAH DI-ACC oleh Admin Layanan (LAA)
+            $wf = $this->get_workflow_summary($nim, $user_id);
+            if (empty($wf['syarat_all_approved']) && !in_array($kp['status_file'], ['Disetujui LAA', 'Sudah Plot Pembimbing', 'Sudah Upload Laporan', 'Revisi Laporan', 'Selesai'])) {
+                continue; // Jangan tampilkan mahasiswa yang belum di-ACC persyaratannya
+            }
+
+            $p1 = trim((string)($kp['dosen_pembimbing1'] ?? ''));
+            $has_p1 = ($p1 !== '' && $p1 !== '-' && $p1 !== '0');
+            $p1_nama = $this->resolve_dosen_name($p1);
+
+            $files = $this->get_files_pendaftaran_kp($nim, $kp['id_kp'], $user_id);
+            $syarat_list = $this->get_active_syarat_kp();
+            $files_detail = [];
+            $uploaded_count = 0;
+
+            foreach ($syarat_list as $sb) {
+                $k = $sb['kode_berkas'];
+                $f = $files[$k] ?? null;
+                $file_path = '';
+                $file_id = '';
+                $st = 'Belum Upload';
+
+                if ($f && !empty($f['file'])) {
+                    $uploaded_count++;
+                    $file_path = $f['file'];
+                    $file_id = $f['id'] ?? ('fpkp_' . $nim . '_' . $k);
+                    $st_raw = strtolower(trim((string)($f['status_adminlaa'] ?? '')));
+                    if ($this->is_status_approved($st_raw)) $st = 'Approved';
+                    elseif ($this->is_status_rejected($st_raw)) $st = 'Rejected';
+                    else $st = 'Pending';
+                }
+
+                $files_detail[] = [
+                    'id_file'       => $file_id,
+                    'kode_berkas'   => $k,
+                    'nama_berkas'   => $sb['nama_berkas'],
+                    'deskripsi'     => $sb['deskripsi'] ?? '',
+                    'file'          => $file_path,
+                    'file_url'      => !empty($file_path) ? base_url($file_path) : '',
+                    'file_basename' => !empty($file_path) ? basename($file_path) : '',
+                    'status'        => $st,
+                    'komentar'      => $f['komentar'] ?? '',
+                    'date_uploaded' => $f['date_edit'] ?? ($f['date'] ?? '')
+                ];
+            }
+
+            $item = [
+                'id_kp'               => $kp['id_kp'],
+                'nim'                 => $nim,
+                'nama'                => $mhs_info['nama'] ?: ($kp['nama_tujuan'] ?? 'Mahasiswa'),
+                'prodi'               => $kp['peminatan'] ?: ($mhs_info['prodi'] ?: 'Informatika'),
+                'email'               => $mhs_info['email'] ?? '',
+                'no_hp'               => $mhs_info['no_hp'] ?? ($kp['cp'] ?? ''),
+                'nama_perusahaan'     => $kp['nama_perusahaan'],
+                'alamat_perusahaan'   => $kp['alamat_perusahaan'],
+                'kota'                => $kp['kota'],
+                'posisi_pekerjaan'    => $kp['posisi_pekerjaan'],
+                'nama_tujuan'         => $kp['nama_tujuan'],
+                'cp'                  => $kp['cp'],
+                'date_pengajuan'      => $kp['date'],
+                'status_file'         => $kp['status_file'],
+                'dosen_pembimbing1'   => $p1,
+                'pembimbing1_nama'    => $p1_nama,
+                'has_pembimbing1'     => $has_p1,
+                'uploaded_count'      => $uploaded_count,
+                'total_syarat'        => count($syarat_list),
+                'files'               => $files_detail
+            ];
+
+            if ($has_p1) {
+                $sudah_diplot[] = $item;
+            } else {
+                $belum_diplot[] = $item;
+            }
+        }
+
+        return [
+            'belum_diplot' => $belum_diplot,
+            'sudah_diplot' => $sudah_diplot,
+            'total'        => count($belum_diplot) + count($sudah_diplot)
+        ];
+    }
+
+    /**
+     * Plotting / Menetapkan Dosen Pembimbing 1 KP
+     */
+    public function plot_pembimbing_kp($nim, $dosen_identifier) {
+        if (!$this->db->table_exists('tb_kp')) return ['status' => false, 'message' => 'Tabel tb_kp tidak ditemukan.'];
+        $dosen_identifier = trim((string)$dosen_identifier);
+        if ($dosen_identifier === '') {
+            return ['status' => false, 'message' => 'Dosen Pembimbing tidak boleh kosong.'];
+        }
+
+        $kp = $this->get_kp_by_mhs($nim);
+        if (!$kp) {
+            return ['status' => false, 'message' => 'Data pengajuan KP mahasiswa tidak ditemukan.'];
+        }
+
+        $update_data = [
+            'dosen_pembimbing1' => $dosen_identifier
+        ];
+        if (in_array($kp['status_file'], ['Disetujui LAA', '', 'Sudah Upload Persyaratan'])) {
+            $update_data['status_file'] = 'Sudah Plot Pembimbing';
+        }
+
+        $this->save_kp($nim, null, $update_data);
+        $dosen_nama = $this->resolve_dosen_name($dosen_identifier);
+
+        return [
+            'status'     => true,
+            'dosen_nip'  => $dosen_identifier,
+            'dosen_nama' => $dosen_nama,
+            'message'    => "Dosen Pembimbing 1 [{$dosen_nama}] berhasil di-plot untuk mahasiswa NIM {$nim}!"
+        ];
+    }
+
+    /**
+     * Ambil daftar seluruh dosen aktif untuk plotting pembimbing
+     */
+    public function get_dosen_list_kp() {
+        $result = [];
+        $prev_debug = $this->db->db_debug;
+        $this->db->db_debug = FALSE;
+
+        try {
+            if ($this->db->table_exists('user')) {
+                $this->db->select('*');
+                $this->db->from('user');
+                $this->db->where_in('role_id', [2, 3, 6, 7, 9, 23]);
+                $this->db->order_by('name', 'ASC');
+                $q = $this->db->get();
+                if ($q && $q->num_rows() > 0) {
+                    foreach ($q->result_array() as $row) {
+                        $identifier = !empty($row['nip']) ? (string)$row['nip'] : (!empty($row['nidn_nim']) ? (string)$row['nidn_nim'] : (string)$row['id']);
+                        $result[$identifier] = [
+                            'id'         => $row['id'],
+                            'nip'        => $identifier,
+                            'nama_dosen' => $row['name'] ?? ($row['nama'] ?? 'Dosen'),
+                            'kode_dosen' => $row['kode_dosen'] ?? '',
+                            'email'      => $row['email'] ?? '',
+                            'prodi'      => $row['prodi'] ?? 'Informatika'
+                        ];
+                    }
+                }
+            }
+
+            if (empty($result) && $this->db->table_exists('dosen')) {
+                $q = $this->db->order_by('nama_dosen', 'ASC')->get('dosen');
+                if ($q && $q->num_rows() > 0) {
+                    foreach ($q->result_array() as $row) {
+                        $identifier = !empty($row['nip']) ? (string)$row['nip'] : (string)$row['id'];
+                        $result[$identifier] = [
+                            'id'         => $row['id'] ?? '',
+                            'nip'        => $identifier,
+                            'nama_dosen' => $row['nama_dosen'] ?? ($row['nama'] ?? ''),
+                            'kode_dosen' => $row['kode_dosen'] ?? '',
+                            'email'      => $row['email'] ?? '',
+                            'prodi'      => $row['prodi'] ?? 'Informatika'
+                        ];
+                    }
+                }
+            }
+        } catch (Throwable $e) {}
+
+        $this->db->db_debug = $prev_debug;
+        return array_values($result);
     }
 }

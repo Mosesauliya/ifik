@@ -1498,6 +1498,7 @@
                                 <div id="menu-filter-modal-acc-jabatan" class="custom-dropdown-menu hidden absolute top-full left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
                             </div>
                         </div>
+                        <!-- [COMMENTED OUT] Program Studi diisi mandiri oleh user saat proses Onboarding
                         <div id="wrapper-prodi">
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fa-solid fa-graduation-cap text-brand-600 mr-1"></i> Program Studi
@@ -1518,6 +1519,7 @@
                                 <div id="menu-filter-modal-acc-prodi" class="custom-dropdown-menu hidden absolute top-full right-0 left-0 mt-1.5 w-full max-h-52 overflow-y-auto bg-white border border-slate-200 rounded-xl shadow-xl z-[100060] p-1 space-y-0.5 text-xs"></div>
                             </div>
                         </div>
+                        -->
                     </div>
 
                     <!-- Khusus Role Dosen: Pemilihan Kelompok Keahlian (KK) -->
@@ -2469,18 +2471,6 @@
                 let nim_nip = row.NIM || row.nim || row.NIP || row.nip || row.ID || row.id || '';
                 let token = row.Token || row.token || '';
 
-                let rawJabatan = row.Jabatan !== undefined ? row.Jabatan : (row.jabatan !== undefined ? row.jabatan : (row.Position !== undefined ? row.Position : (row.position !== undefined ? row.position : '')));
-                let jabatan = rawJabatan ? rawJabatan.toString().trim().toLowerCase() : '';
-                if (jabatan === 'ka. ur' || jabatan === 'kaur' || jabatan.includes('kepala urusan') || jabatan.includes('ka lab')) {
-                    jabatan = 'kaur';
-                } else if (jabatan.includes('kaprodi') || jabatan.includes('ketua prodi')) {
-                    jabatan = 'kaprodi';
-                } else if (jabatan.includes('wadek') || jabatan.includes('wakil dekan')) {
-                    jabatan = 'wadek';
-                } else if (jabatan) {
-                    jabatan = 'dosen';
-                }
-
                 let rawProdi = row.Prodi !== undefined ? row.Prodi : (row.prodi !== undefined ? row.prodi : (row.ProgramStudi !== undefined ? row.ProgramStudi : (row['Program Studi'] !== undefined ? row['Program Studi'] : '')));
                 let prodi = rawProdi ? rawProdi.toString().trim() : '';
 
@@ -2499,6 +2489,24 @@
                         resolvedRoleId = id;
                         break;
                     }
+                }
+
+                let isDosenRow = (roleLower.includes('dosen') || resolvedRoleId === '3');
+                let rawJabatan = row.Jabatan !== undefined ? row.Jabatan : (row.jabatan !== undefined ? row.jabatan : (row.Position !== undefined ? row.Position : (row.position !== undefined ? row.position : '')));
+                let jabatan = '';
+                if (isDosenRow) {
+                    let parsedJab = rawJabatan ? rawJabatan.toString().trim().toLowerCase() : '';
+                    if (parsedJab === 'ka. ur' || parsedJab === 'kaur' || parsedJab.includes('kepala urusan') || parsedJab.includes('ka lab')) {
+                        jabatan = 'kaur';
+                    } else if (parsedJab.includes('kaprodi') || parsedJab.includes('ketua prodi')) {
+                        jabatan = 'kaprodi';
+                    } else if (parsedJab.includes('wadek') || parsedJab.includes('wakil dekan')) {
+                        jabatan = 'wadek';
+                    } else {
+                        jabatan = 'dosen';
+                    }
+                } else {
+                    jabatan = '';
                 }
 
                 let status = 'valid';
@@ -2561,7 +2569,7 @@
                     role: roleDisplay,
                     rawRole: roleStr,
                     nim_nip,
-                    jabatan: jabatan || 'dosen',
+                    jabatan: jabatan,
                     prodi: prodi || null,
                     token: token.trim(),
                     status,
@@ -4479,11 +4487,11 @@
                 if (wrapKk) wrapKk.classList.remove('hidden');
                 if (rowFields) rowFields.className = 'grid grid-cols-1 sm:grid-cols-2 gap-3';
             } else if (isMhs) {
-                container.classList.remove('hidden');
+                // Program studi diisi saat Onboarding, sembunyikan container field tambahan untuk Mahasiswa
+                container.classList.add('hidden');
                 if (wrapJabatan) wrapJabatan.classList.add('hidden');
-                if (wrapProdi) wrapProdi.classList.remove('hidden');
+                if (wrapProdi) wrapProdi.classList.add('hidden');
                 if (wrapKk) wrapKk.classList.add('hidden');
-                if (rowFields) rowFields.className = 'grid grid-cols-1 gap-3';
             } else {
                 container.classList.add('hidden');
                 if (wrapKk) wrapKk.classList.add('hidden');
@@ -4565,7 +4573,7 @@
             const nim_nip = document.getElementById('acc-nim-nip').value.trim();
             const isDosen = role && role.toLowerCase().includes('dosen');
             const isMhs = role && role.toLowerCase().includes('mahasiswa');
-            const jabatan = isDosen && document.getElementById('acc-jabatan') ? document.getElementById('acc-jabatan').value : 'dosen';
+            const jabatan = isDosen && document.getElementById('acc-jabatan') ? (document.getElementById('acc-jabatan').value || 'dosen') : '';
             const prodi = (isDosen || isMhs) && document.getElementById('acc-prodi') ? document.getElementById('acc-prodi').value : '';
             const id_kk = isDosen && document.getElementById('acc-kk') ? document.getElementById('acc-kk').value : '';
 

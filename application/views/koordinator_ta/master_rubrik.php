@@ -99,10 +99,15 @@
                                 <i class="fa-solid fa-graduation-cap text-violet-600 mr-1"></i> Program Studi (Prodi)
                             </label>
                             <select id="masterRubrikProdiSelect" onchange="onMasterRubrikProdiChange(this.value)" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-violet-500 outline-none shadow-2xs cursor-pointer">
-                                <option value="DKV">DKV - Desain Komunikasi Visual</option>
-                                <option value="DI">DI - Desain Interior</option>
-                                <option value="DIB">DIB - Desain Interior Bisnis</option>
-                                <option value="DP">DP - Desain Produk</option>
+                                <?php if (!empty($prodi_list)): ?>
+                                    <?php foreach ($prodi_list as $p): ?>
+                                        <option value="<?= htmlspecialchars($p['kode_prodi']) ?>"><?= htmlspecialchars($p['kode_prodi'] . ' - ' . $p['nama_prodi']) ?></option>
+                                    <?php endforeach; ?>
+                                <?php else: ?>
+                                    <option value="DKV">DKV - Desain Komunikasi Visual</option>
+                                    <option value="DI">DI - Desain Interior</option>
+                                    <option value="DP">DP - Desain Produk</option>
+                                <?php endif; ?>
                             </select>
                         </div>
                         <div>
@@ -219,7 +224,9 @@
             ajaxGetAllMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_get_all_master_rubrik'); ?>",
             ajaxSimpanMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_simpan_master_rubrik'); ?>",
             ajaxPublishMasterRubrikUrl: "<?= site_url('koordinatorta/ajax_publish_master_rubrik'); ?>",
-            ajaxResetDefaultRubrikUrl: "<?= site_url('koordinatorta/ajax_reset_default_rubrik'); ?>"
+            ajaxResetDefaultRubrikUrl: "<?= site_url('koordinatorta/ajax_reset_default_rubrik'); ?>",
+            prodiList: <?= json_encode($prodi_list ?? []); ?>,
+            peminatanList: <?= json_encode($peminatan_list ?? []); ?>
         };
 
         const RUBRIK_PENILAIAN_PRODI = {
@@ -313,8 +320,25 @@
         function setupMasterRubrikPeminatanOptions(prodiKey) {
             const pemSelect = document.getElementById('masterRubrikPeminatanSelect');
             if (!pemSelect) return;
-            const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
-            const list = Object.keys(prodiData.peminatan);
+
+            let list = [];
+            if (Array.isArray(CFG_RUBRIK.peminatanList) && CFG_RUBRIK.peminatanList.length > 0) {
+                const filtered = CFG_RUBRIK.peminatanList.filter(item => item.kode_prodi === prodiKey);
+                if (filtered.length > 0) {
+                    list = filtered.map(item => item.nama_peminatan);
+                }
+            }
+
+            if (list.length === 0) {
+                const prodiData = RUBRIK_PENILAIAN_PRODI[prodiKey] || RUBRIK_PENILAIAN_PRODI['DKV'];
+                if (prodiData && prodiData.peminatan) {
+                    list = Object.keys(prodiData.peminatan);
+                }
+            }
+
+            if (list.length === 0) {
+                list = ['Umum'];
+            }
 
             let html = '';
             list.forEach(p => {

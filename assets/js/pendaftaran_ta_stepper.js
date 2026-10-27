@@ -726,8 +726,30 @@ document.addEventListener('DOMContentLoaded', function () {
                     selectedContainer.style.display = 'none';
                 }
                 zone.classList.remove('border-emerald-400', 'bg-emerald-50/20');
+
+                // Batalkan debounce autosave agar tidak menimpa aksi hapus
+                clearTimeout(draftDebounceTimer);
+
+                // Bersihkan langsung dari localStorage agar tidak ter-restore
+                const cleanDraftStorage = (k) => {
+                    try {
+                        const r = localStorage.getItem(k);
+                        if (r) {
+                            const d = JSON.parse(r);
+                            if (d && d.files) {
+                                delete d.files[fieldNameToDelete];
+                                delete d.files[fieldNameToDelete + '_old'];
+                                localStorage.setItem(k, JSON.stringify(d));
+                            }
+                        }
+                    } catch(err) {}
+                };
+                cleanDraftStorage(DRAFT_KEY);
+                cleanDraftStorage('ifik_ta_form_draft_' + userNim);
+                cleanDraftStorage('ifik_ta_draft');
+                cleanDraftStorage('ifik_ta_form_draft');
+
                 updateStepUI();
-                saveDraft(true);
                 deleteDocFile(fieldNameToDelete, zone);
             });
         }
@@ -750,10 +772,31 @@ document.addEventListener('DOMContentLoaded', function () {
         .then(res => res.json())
         .then(data => {
             if (data.success) {
+                const oldInp = zone.querySelector('.input-doc-old');
+                if (oldInp) oldInp.value = '';
+                const fInp = zone.querySelector('.input-doc-file');
+                if (fInp) fInp.value = '';
+
+                // Pastikan dibersihkan lagi dari localStorage
+                try {
+                    const rawDraft = localStorage.getItem(DRAFT_KEY);
+                    if (rawDraft) {
+                        const d = JSON.parse(rawDraft);
+                        if (d && d.files) {
+                            delete d.files[fieldName];
+                            delete d.files[fieldName + '_old'];
+                            localStorage.setItem(DRAFT_KEY, JSON.stringify(d));
+                        }
+                    }
+                } catch(e) {}
+
                 setDbStatus('saved', 'Berkas berhasil dihapus');
                 showInPageAlert('🗑️ Berkas berhasil dihapus dari database!', 'warning');
+                updateStepUI();
+                saveDraft(false); // Update draft lokal tanpa upload
             } else {
                 setDbStatus('error', 'Gagal menghapus berkas');
+                showInPageAlert('⚠️ ' + (data.message || 'Gagal menghapus berkas'), 'error');
             }
         })
         .catch(err => {
@@ -1014,27 +1057,23 @@ document.addEventListener('DOMContentLoaded', function () {
                 inputJEn.value = draft.judul_en;
             }
 
-            // Pulihkan berkas dari localStorage jika di HTML belum ada
-            if (draft.files && typeof draft.files === 'object') {
-                for (const [fName, fVal] of Object.entries(draft.files)) {
-                    const oldInp = document.querySelector(`input[type="hidden"][name="${fName}"]`);
-                    if (oldInp && !oldInp.value && fVal) {
-                        oldInp.value = fVal;
-                        const card = oldInp.closest('.doc-requirement-card');
-                        const z = card ? card.querySelector('.drop-zone') : null;
-                        if (z) {
-                            const nameEl = z.querySelector('.file-name');
-                            const pContainer = z.querySelector('.drop-zone-prompt');
-                            const sContainer = z.querySelector('.drop-zone-selected');
-                            if (nameEl) nameEl.textContent = fVal.split('/').pop();
-                            if (pContainer) { pContainer.classList.add('hidden'); pContainer.style.display = 'none'; }
-                            if (sContainer) { sContainer.classList.remove('hidden'); sContainer.style.display = 'flex'; }
-                            z.classList.remove('border-rose-500', 'bg-rose-50');
-                            z.classList.add('border-emerald-400', 'bg-emerald-50/20');
-                        }
+            // Sinkronkan berkas dokumen: database server (HTML) adalah sumber kebenaran (source of truth)
+            if (!draft.files || typeof draft.files !== 'object') {
+                draft.files = {};
+            }
+            document.querySelectorAll('.input-doc-old').forEach(inp => {
+                if (inp.name) {
+                    if (inp.value && inp.value.trim() !== '') {
+                        draft.files[inp.name] = inp.value.trim();
+                    } else {
+                        delete draft.files[inp.name];
+                        delete draft.files[inp.name.replace('_old', '')];
                     }
                 }
-            }
+            });
+            try {
+                localStorage.setItem(DRAFT_KEY, JSON.stringify(draft));
+            } catch(e) {}
         } catch (e) {
             console.warn('loadDraft error:', e);
         }
@@ -1350,6 +1389,14 @@ document.addEventListener('DOMContentLoaded', function () {
 
     // Initialize UI and load draft on load
     loadDraft();
+
+    // Manual Save Draft Button Listener
+    const btnSaveDraftManual = document.getElementById('btnSaveDraftManual');
+    if (btnSaveDraftManual) {
+        btnSaveDraftManual.addEventListener('click', () => {
+            saveDraft(true, true, true);
+        });
+    }
 
     // Auto-advance ke step berikutnya hanya jika tidak ada parameter ?step= di URL dan tidak ada step tersimpan di localStorage
     if (!urlStep && !savedStep) {

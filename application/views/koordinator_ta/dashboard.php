@@ -1996,10 +1996,15 @@
                                     Pilih Program Studi (Prodi)
                                 </label>
                                 <select id="masterRubrikProdiSelect" onchange="onMasterRubrikProdiChange(this.value)" class="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-violet-500 outline-none shadow-2xs cursor-pointer">
-                                    <option value="DKV">DKV - Desain Komunikasi Visual</option>
-                                    <option value="DI">DI - Desain Interior</option>
-                                    <option value="DIB">DIB - Desain Interior Bisnis</option>
-                                    <option value="DP">DP - Desain Produk</option>
+                                    <?php if (!empty($prodi_list)): ?>
+                                        <?php foreach ($prodi_list as $p): ?>
+                                            <option value="<?= htmlspecialchars($p['kode_prodi']) ?>"><?= htmlspecialchars($p['kode_prodi'] . ' - ' . $p['nama_prodi']) ?></option>
+                                        <?php endforeach; ?>
+                                    <?php else: ?>
+                                        <option value="DKV">DKV - Desain Komunikasi Visual</option>
+                                        <option value="DI">DI - Desain Interior</option>
+                                        <option value="DP">DP - Desain Produk</option>
+                                    <?php endif; ?>
                                 </select>
                             </div>
                             <div>
@@ -2157,10 +2162,15 @@
                 <div>
                     <label class="font-extrabold text-slate-700 block mb-1">Pilih Program Studi (Prodi):</label>
                     <select id="batchRubrikProdiSelect" onchange="onBatchRubrikProdiChange(this.value)" class="w-full px-3 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-violet-500 outline-none shadow-2xs cursor-pointer">
-                        <option value="DKV">DKV - Desain Komunikasi Visual</option>
-                        <option value="DI">DI - Desain Interior</option>
-                        <option value="DIB">DIB - Desain Interior Bisnis</option>
-                        <option value="DP">DP - Desain Produk</option>
+                        <?php if (!empty($prodi_list)): ?>
+                            <?php foreach ($prodi_list as $p): ?>
+                                <option value="<?= htmlspecialchars($p['kode_prodi']) ?>"><?= htmlspecialchars($p['kode_prodi'] . ' - ' . $p['nama_prodi']) ?></option>
+                            <?php endforeach; ?>
+                        <?php else: ?>
+                            <option value="DKV">DKV - Desain Komunikasi Visual</option>
+                            <option value="DI">DI - Desain Interior</option>
+                            <option value="DP">DP - Desain Produk</option>
+                        <?php endif; ?>
                     </select>
                 </div>
 
@@ -3281,6 +3291,9 @@
             listSidang: <?= json_encode($list_sidang ?? []); ?>,
             dosenList: <?= json_encode($dosen_list ?? []); ?>,
             ruanganList: <?= json_encode($ruangan_list ?? []); ?>,
+            prodiList: <?= json_encode($prodi_list ?? []); ?>,
+            peminatanList: <?= json_encode($peminatan_list ?? []); ?>,
+            ajaxGetMasterPeminatanUrl: "<?= site_url('koordinatorta/ajax_get_master_peminatan'); ?>",
             ajaxBatchUrl: "<?= site_url('koordinatorta/ajax_batch_approval'); ?>",
             ajaxBatchDetailsUrl: "<?= site_url('koordinatorta/ajax_get_batch_details'); ?>",
             ajaxRealtimeUrl: "<?= site_url('koordinatorta/ajax_realtime_dashboard'); ?>",

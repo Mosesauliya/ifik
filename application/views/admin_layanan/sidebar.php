@@ -25,6 +25,13 @@ $laaNavGroups = [
                 'is_active' => ($curr_uri === 'adminlayanan' || $curr_uri === 'adminlayanan/index')
             ],
             [
+// Verifikasi berkas pengajuan dan laporan kerja praktik mahasiswa
+                'heading' => 'Verifikasi Berkas KP',
+                'href'    => site_url('adminlayanan/verifikasi_kp'),
+                'icon_3d' => 'assets/images/icons_3d/approval.png',
+                'is_active' => (strpos($curr_uri, 'adminlayanan/verifikasi_kp') === 0 || strpos($curr_uri, 'adminlayanan/kp') === 0)
+            ],
+            [
                 // Berikan rekomendasi sidang atau kembalikan (rollback) tahap mahasiswa jika butuh revisi
                 'heading' => 'Rekomendasi & Downgrade',
                 'href'    => site_url('adminlayanan/rekomendasi'),

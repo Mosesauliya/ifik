@@ -494,7 +494,14 @@ class Onboarding extends CI_Controller {
         } else {
             $userUpdate['nim'] = $nim;
             if (!empty($dosenWali)) {
-                $userUpdate['dosen_wali'] = $dosenWali;
+                // Resolve Dosen Wali ke user_id (primary key user)
+                $dosenRow = $this->db->group_start()
+                    ->where('id', $dosenWali)
+                    ->or_where('nip', $dosenWali)
+                    ->or_where('username', $dosenWali)
+                    ->group_end()
+                    ->get('user')->row_array();
+                $userUpdate['dosen_wali'] = !empty($dosenRow['id']) ? $dosenRow['id'] : $dosenWali;
             }
         }
 
