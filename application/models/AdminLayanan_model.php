@@ -309,16 +309,65 @@ class AdminLayanan_model extends CI_Model {
      */
     public function is_sidang_doc($doc_name) {
         if (empty($doc_name)) return false;
-        $s = strtolower(trim((string)$doc_name));
+        $raw = strtolower(trim((string)$doc_name));
+        $clean = preg_replace('/[^a-z0-9]/', '', $raw);
+
+        // Jangan anggap syarat berkas TA aktif sebagai berkas sidang
+        $active_ta = $this->get_active_syarat_berkas();
+        if (!empty($active_ta)) {
+            foreach ($active_ta as $at) {
+                $atk = strtolower(trim($at['kode_berkas'] ?? ''));
+                if (!empty($atk) && ($raw === $atk || $clean === preg_replace('/[^a-z0-9]/', '', $atk))) {
+                    return false;
+                }
+            }
+        }
+        $std_ta = ['ksm', 'transkrip', 'pernyataan', 'bebas_lab', 'bebaslab'];
+        if (in_array($raw, $std_ta, true) || in_array($clean, $std_ta, true)) {
+            return false;
+        }
+
+        // 1. Cek pola ID file_pendaftaran khusus sidang (fps_...)
+        if (strpos($raw, 'fps_') === 0 || strpos($clean, 'fps') === 0) return true;
+
+        // 2. Cek keyword / frasa umum yang menandakan dokumen pendaftaran sidang
+        $sidang_indicators = [
+            'sidang', 'eprt', 'skpi', 'logbook', 'bap', 'bap2', 'artikel',
+            'daftarnilai', 'buktibimbingan', 'izinwali', 'izinsidang', 'sertifikattak',
+            'formulirsidang', 'revisisidang', 'draftartikel', 'suratizinwali'
+        ];
+        foreach ($sidang_indicators as $ind) {
+            if (strpos($clean, $ind) !== false || strpos($raw, $ind) !== false) {
+                return true;
+            }
+        }
+
+        // 3. Cek daftar kode berkas sidang standar
         $sidang_keys = [
             'surat_izin_wali', 'formulir_sidang', 'daftar_nilai', 'sertifikat_eprt', 
             'sertifikat_tak', 'bukti_bimbingan', 'bukti_skpi', 'bap', 'bap2', 
             'bap_sidang', 'revisi_sidang', 'draft_artikel', 'skpi', 'eprt', 'tak',
-            'izin_wali', 'izin_sidang', 'logbook'
+            'izin_wali', 'izin_sidang', 'logbook', 'bimbingan'
         ];
         foreach ($sidang_keys as $sk) {
-            if ($s === $sk || strpos($s, $sk) !== false) return true;
+            if ($raw === $sk || strpos($raw, $sk) !== false) return true;
+            $sk_clean = preg_replace('/[^a-z0-9]/', '', $sk);
+            if ($clean === $sk_clean || strpos($clean, $sk_clean) !== false) return true;
         }
+
+        // 4. Cek ke tabel master syarat_berkas_sidang jika ada di database
+        if ($this->db->table_exists('syarat_berkas_sidang')) {
+            $master_sidang = $this->get_master_syarat_sidang();
+            if (!empty($master_sidang)) {
+                foreach ($master_sidang as $ms) {
+                    $mk = strtolower(trim($ms['kode_berkas'] ?? ''));
+                    $mn = strtolower(trim($ms['nama_berkas'] ?? ''));
+                    if (!empty($mk) && ($raw === $mk || strpos($raw, $mk) !== false || $clean === preg_replace('/[^a-z0-9]/', '', $mk))) return true;
+                    if (!empty($mn) && ($raw === $mn || strpos($raw, $mn) !== false || $clean === preg_replace('/[^a-z0-9]/', '', $mn))) return true;
+                }
+            }
+        }
+
         return false;
     }
 
@@ -339,8 +388,10 @@ class AdminLayanan_model extends CI_Model {
                 foreach ($fp_rows as $fp) {
                     $namaDoc = strtolower(trim($fp['nama'] ?? ''));
                     $fileRaw = strtolower(trim($fp['file'] ?? ''));
+                    $idFp    = strtolower(trim($fp['id'] ?? ''));
+
                     // Abaikan dokumen pendaftaran sidang dari pendaftaran TA
-                    if ($this->is_sidang_doc($namaDoc) || $this->is_sidang_doc($fileRaw)) {
+                    if ($this->is_sidang_doc($namaDoc) || $this->is_sidang_doc($fileRaw) || $this->is_sidang_doc($idFp)) {
                         continue;
                     }
 
@@ -355,7 +406,7 @@ class AdminLayanan_model extends CI_Model {
                         $kode = 'bebas_lab';
                     } else {
                         $clean_k = preg_replace('/[^a-z0-9_]/', '_', trim($namaDoc));
-                        if (!empty($clean_k) && !in_array($clean_k, ['mahasiswa', 'na', 'null', 'none', 'berkas', 'file'])) {
+                        if (!empty($clean_k) && !in_array($clean_k, ['mahasiswa', 'na', 'null', 'none', 'berkas', 'file']) && !$this->is_sidang_doc($clean_k)) {
                             $kode = $clean_k;
                         }
                     }
@@ -415,6 +466,14 @@ class AdminLayanan_model extends CI_Model {
                 if (!empty($rows)) {
                     foreach ($rows as $r) {
                         $k_code = $r['kode_berkas'];
+                        $nama_b = $r['nama_berkas'] ?? '';
+                        $file_b = $r['file_name'] ?? '';
+
+                        // Abaikan berkas sidang yang mungkin tersimpan di pendaftaran_berkas
+                        if ($this->is_sidang_doc($k_code) || $this->is_sidang_doc($nama_b) || $this->is_sidang_doc($file_b)) {
+                            continue;
+                        }
+
                         $st_v = $r['status_verifikasi'] ?? 'Pending';
                         $cleanSt = ($st_v === 'Approved' || $st_v === 'Valid') ? 'Valid' : (($st_v === 'Rejected' || $st_v === 'Invalid') ? 'Invalid' : 'Pending');
                         $r['status'] = $cleanSt;
@@ -1074,8 +1133,9 @@ class AdminLayanan_model extends CI_Model {
                 $student_map[$nim]['status_admin'][] = $st_adm;
 
                 $file_raw = strtolower(trim($fp['file'] ?? ''));
+                $id_raw   = strtolower(trim($fp['id'] ?? ''));
                 // Jangan campurkan berkas sidang ke pendaftaran TA
-                if ($this->is_sidang_doc($doc_name_raw) || $this->is_sidang_doc($file_raw)) {
+                if ($this->is_sidang_doc($doc_name_raw) || $this->is_sidang_doc($file_raw) || $this->is_sidang_doc($id_raw) || strpos($id_raw, 'fps_') === 0) {
                     continue;
                 }
 
@@ -1090,7 +1150,7 @@ class AdminLayanan_model extends CI_Model {
                     $kode = 'bebas_lab';
                 } else {
                     $clean_k = preg_replace('/[^a-z0-9_]/', '_', trim($doc_name_raw));
-                    if (!empty($clean_k) && !in_array($clean_k, ['mahasiswa', 'na', 'null', 'none', 'berkas', 'file'])) {
+                    if (!empty($clean_k) && !in_array($clean_k, ['mahasiswa', 'na', 'null', 'none', 'berkas', 'file']) && !$this->is_sidang_doc($clean_k)) {
                         $kode = $clean_k;
                     }
                 }
@@ -1145,6 +1205,11 @@ class AdminLayanan_model extends CI_Model {
                         $pb_nim = (string)($pbr['nim'] ?? '');
                         $k_code = (string)($pbr['kode_berkas'] ?? '');
                         if ($pb_nim !== '' && $k_code !== '') {
+                            // Abaikan berkas sidang
+                            if ($this->is_sidang_doc($k_code) || $this->is_sidang_doc($pbr['nama_berkas'] ?? '') || $this->is_sidang_doc($pbr['file_name'] ?? '')) {
+                                continue;
+                            }
+
                             $st_v = $pbr['status_verifikasi'] ?? 'Pending';
                             $cleanSt = ($st_v === 'Approved' || $st_v === 'Valid') ? 'Valid' : (($st_v === 'Rejected' || $st_v === 'Invalid') ? 'Invalid' : 'Pending');
                             $pbr['status'] = $cleanSt;
@@ -1300,6 +1365,9 @@ class AdminLayanan_model extends CI_Model {
             $pb_for_student = $pb_map[$real_nim_str] ?? ($pb_map[$nim_key_str] ?? array());
             if (!empty($pb_for_student)) {
                 foreach ($pb_for_student as $k_code => $r) {
+                    if ($this->is_sidang_doc($k_code) || $this->is_sidang_doc($r['nama_berkas'] ?? '') || $this->is_sidang_doc($r['file_name'] ?? '')) {
+                        continue;
+                    }
                     if (!isset($p_berkas_map[$k_code])) {
                         $p_berkas_map[$k_code] = $r;
                     } else {
@@ -1616,8 +1684,21 @@ class AdminLayanan_model extends CI_Model {
         $items         = array();
         $processed_kodes = array();
 
+        $active_ta_kodes = !empty($active_syarat) ? array_column($active_syarat, 'kode_berkas') : ['ksm', 'transkrip', 'pernyataan', 'bebas_lab'];
+        $std_ta_kodes    = ['ksm', 'transkrip', 'pernyataan', 'bebas_lab'];
+        $allowed_ta_kodes = array_unique(array_merge($active_ta_kodes, $std_ta_kodes));
+
         // 1. Proses berkas mahasiswa yang sudah ada di file_pendaftaran
         foreach ($map as $kode => $record) {
+            // Saring ketat: abaikan berkas sidang dari pendaftaran TA!
+            if ($this->is_sidang_doc($kode) || $this->is_sidang_doc($record['nama_berkas'] ?? '') || $this->is_sidang_doc($record['file_name'] ?? '')) {
+                continue;
+            }
+            // Pastikan hanya berkas TA yang sah
+            if (!in_array($kode, $allowed_ta_kodes, true)) {
+                continue;
+            }
+
             $processed_kodes[$kode] = true;
             $st = $record['status_verifikasi'] ?? 'Pending';
             if ($st === 'Approved') $st = 'Valid';
