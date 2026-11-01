@@ -863,8 +863,8 @@
                                     <span class="text-[11px] text-slate-600 truncate font-semibold">${p.nama}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
-                                    <a href="${printUrl}" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer">
-                                        <i class="bi bi-printer-fill text-[10px]"></i> Cetak PDF
+                                    <a href="${printUrl}" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer" title="Langsung Unduh Berkas PDF">
+                                        <i class="bi bi-download text-[10px]"></i> Download PDF
                                     </a>
                                     <button type="button" onclick="closeBapPopup('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px] transition cursor-pointer">
                                         Tutup

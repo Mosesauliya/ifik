@@ -356,10 +356,47 @@
 
     </div>
 
-    <?php if (!empty($auto_print)): ?>
+    <!-- Toolbar Layar (Tersembunyi saat Cetak/Download PDF) -->
+    <div class="no-print" style="position: fixed; top: 15px; right: 20px; z-index: 9999; display: flex; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 12px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); padding: 6px 12px; border: 1px solid rgba(255,255,255,0.15);">
+        <button type="button" id="btnDownloadPdf" onclick="downloadBapPdf()" style="background: #ea580c; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 11.5pt; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
+            📥 Download PDF
+        </button>
+        <button type="button" onclick="window.print()" style="background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11.5pt; cursor: pointer; font-family: inherit;">
+            🖨️ Cetak Fisik
+        </button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
-        window.addEventListener('load', function() { window.print(); });
+        function downloadBapPdf() {
+            const element = document.querySelector('.page-container');
+            const btn = document.getElementById('btnDownloadPdf');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = '⏳ Mengunduh PDF...';
+            }
+
+            const opt = {
+                margin:       [10, 15, 10, 15],
+                filename:     'BAP_iGracias_<?= htmlspecialchars($bap['nim'] ?? 'dokumen') ?>.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(element).save().then(function() {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = '✅ Terunduh (Klik Ulang)';
+                }
+            });
+        }
+
+        <?php if (!empty($auto_print)): ?>
+        window.addEventListener('load', function() {
+            setTimeout(downloadBapPdf, 600);
+        });
+        <?php endif; ?>
     </script>
-    <?php endif; ?>
 </body>
 </html>
