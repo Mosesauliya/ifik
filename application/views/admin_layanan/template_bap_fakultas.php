@@ -12,21 +12,24 @@
     <style>
         @page {
             size: A4 portrait;
-            margin: 15mm 20mm;
+            margin: 0 !important;
         }
-        body {
+        html, body {
             font-family: Arial, Helvetica, sans-serif;
             color: #000000;
-            background: #ffffff;
+            background: #e2e8f0;
             margin: 0;
-            padding: 20px 35px;
+            padding: 0;
             font-size: 10pt;
             line-height: 1.4;
         }
         .page-container {
             max-width: 750px;
-            margin: 0 auto;
+            margin: 20px auto;
             background: #ffffff;
+            padding: 25px 35px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.08);
+            border-radius: 4px;
         }
         .page-break {
             page-break-before: always;
@@ -34,9 +37,36 @@
             padding-top: 20px;
         }
         @media print {
-            body { padding: 0; }
+            html, body {
+                background: #ffffff !important;
+                padding: 12mm 15mm !important;
+                margin: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .page-container {
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+            }
             .page-break { page-break-before: always; border-top: none; margin-top: 0; padding-top: 0; }
-            .no-print { display: none !important; }
+            .no-print, #bapToolbar { display: none !important; }
+        }
+        /* Mode Embed / Iframe: Hapus padding luar dan sembunyikan toolbar */
+        body.is-embedded {
+            background: #ffffff !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        body.is-embedded .page-container {
+            margin: 0 auto !important;
+            padding: 15px 25px !important;
+            box-shadow: none !important;
+        }
+        body.is-embedded #bapToolbar {
+            display: none !important;
         }
 
         /* Header Style */
@@ -215,7 +245,30 @@
         }
     </style>
 </head>
-<body>
+<body class="<?= (!empty($_GET['embed']) || !empty($is_embed)) ? 'is-embedded' : ''; ?>">
+
+    <!-- Toolbar Layar Standalone (Hanya tampil saat dibuka langsung di tab baru, tersembunyi saat di-embed/iframe/cetak) -->
+    <div id="bapToolbar" class="no-print" style="position: sticky; top: 0; left: 0; right: 0; z-index: 9999; background: #0f172a; padding: 10px 24px; display: flex; justify-content: flex-end; align-items: center; gap: 10px; border-bottom: 1px solid #334155; margin-bottom: 15px; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+        <div style="color: #cbd5e1; font-size: 13px; margin-right: auto; font-family: sans-serif; display: flex; align-items: center; gap: 8px;">
+            <span style="display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4f46e5;"></span>
+            <strong><?= htmlspecialchars($title ?? 'Berita Acara & Nilai Sidang (Fakultas)'); ?></strong>
+        </div>
+        <button type="button" id="btnDownloadPdf" onclick="downloadBapPdf()" style="background: #4f46e5; color: #ffffff; border: none; padding: 7px 16px; border-radius: 8px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; box-shadow: 0 2px 6px rgba(79, 70, 229, 0.4); font-family: inherit;">
+            📥 Download PDF
+        </button>
+        <button type="button" onclick="window.print()" style="background: #334155; color: #ffffff; border: 1px solid #475569; padding: 7px 14px; border-radius: 8px; font-weight: 700; font-size: 12.5px; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
+            🖨️ Cetak Fisik
+        </button>
+    </div>
+
+    <script>
+        // Otomatis sembunyikan toolbar jika berada di dalam iframe preview
+        if (window.self !== window.top) {
+            document.body.classList.add('is-embedded');
+            const tb = document.getElementById('bapToolbar');
+            if (tb) tb.style.display = 'none';
+        }
+    </script>
 
     <div class="page-container">
 
@@ -494,15 +547,7 @@
 
     </div>
 
-    <!-- Toolbar Layar (Tersembunyi saat Cetak/Download PDF) -->
-    <div class="no-print" style="position: fixed; top: 15px; right: 20px; z-index: 9999; display: flex; gap: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); border-radius: 12px; background: rgba(15, 23, 42, 0.88); backdrop-filter: blur(8px); padding: 6px 12px; border: 1px solid rgba(255,255,255,0.15);">
-        <button type="button" id="btnDownloadPdf" onclick="downloadBapPdf()" style="background: #ea580c; color: #fff; border: none; padding: 6px 14px; border-radius: 8px; font-weight: bold; font-size: 11.5pt; cursor: pointer; display: flex; align-items: center; gap: 6px; font-family: inherit;">
-            📥 Download PDF
-        </button>
-        <button type="button" onclick="window.print()" style="background: #334155; color: #fff; border: none; padding: 6px 12px; border-radius: 8px; font-weight: bold; font-size: 11.5pt; cursor: pointer; font-family: inherit;">
-            🖨️ Cetak Fisik
-        </button>
-    </div>
+
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>

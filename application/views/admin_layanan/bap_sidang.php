@@ -35,6 +35,16 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <style>
+        @page {
+            size: A4 portrait;
+            margin: 0 !important;
+        }
+        @media print {
+            body {
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        }
         body, button, input, textarea, select {
             font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif !important;
         }
@@ -772,9 +782,9 @@
 
             window.activeBapPopups.forEach(p => {
                 const isIgracias = p.type === 'igracias';
-                const previewUrl = isIgracias 
+                const previewUrl = (isIgracias 
                     ? '<?= site_url('adminlayanan/preview_bap_igracias/'); ?>' + p.nim 
-                    : '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + p.nim;
+                    : '<?= site_url('adminlayanan/preview_bap_fakultas/'); ?>' + p.nim) + '?embed=1';
                 const printUrl = isIgracias 
                     ? '<?= site_url('adminlayanan/cetak_bap_igracias/'); ?>' + p.nim 
                     : '<?= site_url('adminlayanan/cetak_bap_fakultas/'); ?>' + p.nim;
@@ -852,7 +862,7 @@
 
                             <!-- Window Body / Iframe -->
                             <div class="flex-1 bg-slate-100 p-1.5 overflow-hidden flex flex-col relative">
-                                <iframe src="${previewUrl}" class="w-full h-full bg-white rounded-2xl shadow-inner border border-slate-200" frameborder="0"></iframe>
+                                <iframe id="bapIframe_${p.id}" src="${previewUrl}" class="w-full h-full bg-white rounded-2xl shadow-inner border border-slate-200" frameborder="0"></iframe>
                             </div>
 
                             <!-- Window Footer -->
@@ -863,9 +873,9 @@
                                     <span class="text-[11px] text-slate-600 truncate font-semibold">${p.nama}</span>
                                 </div>
                                 <div class="flex items-center gap-1.5 shrink-0">
-                                    <a href="${printUrl}" target="_blank" class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer" title="Langsung Unduh Berkas PDF">
+                                    <button type="button" onclick="downloadBapFromModal('${p.id}', '${printUrl}')" class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-[11px] shadow-2xs transition flex items-center gap-1 cursor-pointer" title="Langsung Unduh Berkas PDF">
                                         <i class="bi bi-download text-[10px]"></i> Download PDF
-                                    </a>
+                                    </button>
                                     <button type="button" onclick="closeBapPopup('${p.id}')" class="px-2.5 py-1.5 rounded-xl bg-white hover:bg-slate-100 text-slate-600 border border-slate-200 font-bold text-[11px] transition cursor-pointer">
                                         Tutup
                                     </button>
@@ -881,6 +891,15 @@
         }
 
         function initDraggableBapCards() {}
+
+        function downloadBapFromModal(popupId, fallbackUrl) {
+            const iframe = document.getElementById('bapIframe_' + popupId);
+            if (iframe && iframe.contentWindow && typeof iframe.contentWindow.downloadBapPdf === 'function') {
+                iframe.contentWindow.downloadBapPdf();
+            } else {
+                window.open(fallbackUrl, '_blank');
+            }
+        }
     </script>
 </body>
 </html>
