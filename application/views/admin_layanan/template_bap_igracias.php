@@ -318,7 +318,11 @@
         <div class="result-section">
             <div>Peserta Sidang TA/PA mendapat nilai rata-rata :</div>
             <?php 
-                $is_layak = ($bap['indeks_huruf'] ?? 'B') !== 'E' && ($bap['indeks_huruf'] ?? 'B') !== 'D'; 
+                if (isset($bap['is_layak_referensi']) && $bap['is_layak_referensi'] !== null) {
+                    $is_layak = (bool)$bap['is_layak_referensi'];
+                } else {
+                    $is_layak = ($bap['indeks_huruf'] ?? 'B') !== 'E' && ($bap['indeks_huruf'] ?? 'B') !== 'D';
+                }
             ?>
             <div class="result-option <?= $is_layak ? 'active' : 'inactive'; ?>" style="margin-left: 15px; margin-top: 6px;">
                 LAYAK dijadikan sebagai Referensi

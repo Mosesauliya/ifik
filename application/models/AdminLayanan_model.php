@@ -3194,6 +3194,21 @@ class AdminLayanan_model extends CI_Model {
             ? implode("\n", $notes) 
             : ($has_real_scores ? '-' : 'Perbaiki beberapa format sitasi pada Bab 4 dan perjelas diagram kerangka penelitian.');
 
+        // 3b. Cek keputusan kelayakan referensi khusus dari Penguji 1 (Ketua Sidang)
+        $is_layak_referensi = null;
+        if (!empty($g_row['penilaiansidang_penguji1'])) {
+            $dec_pj1 = json_decode($g_row['penilaiansidang_penguji1'], true);
+            if (is_array($dec_pj1) && isset($dec_pj1['layak_referensi'])) {
+                $is_layak_referensi = (bool)$dec_pj1['layak_referensi'];
+            }
+        }
+        if ($is_layak_referensi === null && isset($g_row['layak_referensi']) && $g_row['layak_referensi'] !== null && $g_row['layak_referensi'] !== '') {
+            $is_layak_referensi = (bool)$g_row['layak_referensi'];
+        }
+        if ($is_layak_referensi === null) {
+            $is_layak_referensi = ($indeks !== 'E' && $indeks !== 'D' && $indeks !== '-');
+        }
+
         // 4. Jadwal & Waktu Sidang Dinamis
         $tgl_raw = $g_row['tanggal_sidang'] ?? ($mhs['tanggal_sidang'] ?? '');
         $hari = 'Selasa';
@@ -3285,6 +3300,7 @@ class AdminLayanan_model extends CI_Model {
             'ttd_penguji_1'    => $ttd_pj1,
             'ttd_penguji_2'    => $ttd_pj2,
             'catatan_penguji'  => $catatan_penguji,
+            'is_layak_referensi'=> $is_layak_referensi,
             'evaluasi_nilai'   => [
                 ['peran' => 'Pembimbing 1', 'nama' => $mhs['pembimbing_1'], 'nilai' => $nilai_p1, 'bobot' => $bobot_p1, 'nilai_bobot' => $nb_p1],
                 ['peran' => 'Pembimbing 2', 'nama' => $mhs['pembimbing_2'], 'nilai' => $nilai_p2, 'bobot' => $bobot_p2, 'nilai_bobot' => $nb_p2],

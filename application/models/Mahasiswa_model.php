@@ -1514,7 +1514,7 @@ class Mahasiswa_model extends CI_Model {
         ];
     }
 
-    public function save_nilai_sidang_by_posisi($nim, $posisi, $nilai, $catatan = '', $detail = null) {
+    public function save_nilai_sidang_by_posisi($nim, $posisi, $nilai, $catatan = '', $detail = null, $is_layak_referensi = null) {
         if (!$this->db->table_exists('guidance')) {
             return ['status' => false, 'message' => 'Tabel guidance tidak ditemukan.'];
         }
@@ -1564,8 +1564,15 @@ class Mahasiswa_model extends CI_Model {
                     'nilai'    => $nilai,
                     'saved_at' => date('Y-m-d H:i:s'),
                 ];
+                if ((int)$posisi === 3 && $is_layak_referensi !== null) {
+                    $payload['layak_referensi'] = (int)$is_layak_referensi;
+                }
                 $update[$colCatatan] = json_encode($payload, JSON_UNESCAPED_UNICODE);
             }
+        }
+
+        if ((int)$posisi === 3 && $is_layak_referensi !== null && $this->db->field_exists('layak_referensi', 'guidance')) {
+            $update['layak_referensi'] = (int)$is_layak_referensi;
         }
 
         if (empty($update)) {
@@ -2732,6 +2739,10 @@ class Mahasiswa_model extends CI_Model {
             $update['komentar_kelayakan2'] = $catatan ?: null;
         }
 
+        if ((int)$posisi === 3 && $is_layak_referensi !== null && $this->db->field_exists('layak_referensi', 'guidance')) {
+            $update['layak_referensi'] = (int)$is_layak_referensi;
+        }
+
         if (empty($update)) {
             return ['status' => false, 'message' => 'Tidak ada kolom guidance yang tersedia untuk jadwal.'];
         }
@@ -2787,6 +2798,10 @@ class Mahasiswa_model extends CI_Model {
         }
         if ($this->db->field_exists($col['catatan'], 'guidance')) {
             $update[$col['catatan']] = (string)$catatan;
+        }
+
+        if ((int)$posisi === 3 && $is_layak_referensi !== null && $this->db->field_exists('layak_referensi', 'guidance')) {
+            $update['layak_referensi'] = (int)$is_layak_referensi;
         }
 
         if (empty($update)) {

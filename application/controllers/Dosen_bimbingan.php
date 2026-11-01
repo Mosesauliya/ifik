@@ -1617,12 +1617,18 @@ class Dosen_bimbingan extends CI_Controller {
             $detail = is_string($detail_raw) ? json_decode($detail_raw, true) : $detail_raw;
         }
 
+        $is_layak_referensi = $this->input->post('is_layak_referensi');
+        if ($is_layak_referensi !== null) {
+            $is_layak_referensi = (int)$is_layak_referensi;
+        }
+
         $res = $this->Mahasiswa_model->save_nilai_sidang_by_posisi(
             $nim,
             $posisi,
             (float)$nilai,
             (string)$catatan,
-            $detail
+            $detail,
+            $is_layak_referensi
         );
 
         echo json_encode($res);
