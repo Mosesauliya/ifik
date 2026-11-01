@@ -1471,6 +1471,7 @@ class AdminLayanan extends CI_Controller {
         $data['stats']          = $this->AdminLayanan_model->get_pendaftaran_sidang_stats();
         $data['list']           = $this->AdminLayanan_model->get_pendaftaran_sidang_list($search, $filter_jenis, $filter_status, $cat);
         $data['master_syarat']  = $this->AdminLayanan_model->get_master_syarat_sidang();
+        $data['berkas_summaries'] = $this->AdminLayanan_model->get_sidang_berkas_summaries($data['list'], $data['master_syarat']);
 
         $this->load->view('admin_layanan/pendaftaran_sidang', $data);
     }

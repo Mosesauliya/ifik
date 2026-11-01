@@ -2874,6 +2874,67 @@ class AdminLayanan_model extends CI_Model {
         return true;
     }
 
+    /**
+     * Hitung ringkasan status berkas sidang (valid, invalid, pending) dan short label dokumen untuk 1 NIM
+     */
+    public function get_student_sidang_berkas_summary($nim, $master_syarat = null) {
+        $berkas = $this->get_berkas_pendaftaran_sidang($nim);
+        $valid_count   = 0;
+        $invalid_count = 0;
+        $pending_count = 0;
+        $items         = array();
+
+        foreach ($berkas as $b) {
+            $st = $b['status'];
+            $stClean = strtolower(trim($st));
+            if ($stClean === 'disetujui admin laa' || strpos($stClean, 'setuju') !== false || strpos($stClean, 'approved') !== false || $stClean === 'valid') {
+                $status_norm = 'Valid';
+                $valid_count++;
+            } elseif ($stClean === 'revisi admin laa' || strpos($stClean, 'revisi') !== false || strpos($stClean, 'tolak') !== false || $stClean === 'invalid') {
+                $status_norm = 'Invalid';
+                $invalid_count++;
+            } else {
+                $status_norm = 'Pending';
+                $pending_count++;
+            }
+
+            $items[] = array(
+                'kode'        => $b['kode'],
+                'nama'        => $b['nama_file'],
+                'short'       => $this->get_short_berkas_label($b['nama_file'], $b['kode']),
+                'status'      => $status_norm,
+                'catatan'     => $b['catatan'] ?? '',
+                'has_file'    => !empty($b['is_uploaded']),
+                'file_name'   => $b['file_name'] ?? '',
+                'file_url'    => $b['file_url'] ?? '',
+                'is_required' => $b['is_required'] ?? 1
+            );
+        }
+
+        return array(
+            'valid_count'   => $valid_count,
+            'invalid_count' => $invalid_count,
+            'pending_count' => $pending_count,
+            'total_count'   => count($berkas),
+            'items'         => $items
+        );
+    }
+
+    /**
+     * Batch hitung ringkasan status berkas sidang untuk banyak mahasiswa
+     */
+    public function get_sidang_berkas_summaries($list, $master_syarat = null) {
+        $summaries = array();
+        if (empty($list)) return $summaries;
+
+        foreach ($list as $item) {
+            $nim = is_array($item) ? ($item['nim'] ?? null) : ($item->nim ?? null);
+            if (empty($nim)) continue;
+            $summaries[$nim] = $this->get_student_sidang_berkas_summary($nim, $master_syarat);
+        }
+        return $summaries;
+    }
+
     // =========================================================================
     // 2. LIHAT PEMBIMBING MODULE METHODS
     // =========================================================================

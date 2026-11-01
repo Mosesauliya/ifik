@@ -347,20 +347,21 @@
                     <thead>
                         <tr class="border-b border-slate-100 bg-slate-50/60 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
                             <th class="py-3 px-3 text-center w-12 whitespace-nowrap">No</th>
-                            <th class="py-3 px-3 text-center whitespace-nowrap">Aksi / Periksa</th>
                             <th class="py-3 px-4">Nama Mahasiswa</th>
                             <th class="py-3 px-3 whitespace-nowrap">NIM</th>
                             <th class="py-3 px-3">Prodi</th>
                             <th class="py-3 px-3">Konsentrasi</th>
                             <th class="py-3 px-3">Dosen Wali</th>
                             <th class="py-3 px-3 text-center whitespace-nowrap">Jenis TA</th>
+                            <th class="py-3.5 px-3 text-center whitespace-nowrap">Status Berkas Persyaratan</th>
                             <th class="py-3 px-3 text-center whitespace-nowrap">Tahapan / Status</th>
+                            <th class="py-3 px-3 text-center whitespace-nowrap">Aksi / Periksa</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-medium" id="sidangTableBody">
                         <?php if (empty($list)): ?>
                             <tr>
-                                <td colspan="9" class="py-12 text-center text-slate-400">
+                                <td colspan="10" class="py-12 text-center text-slate-400">
                                     <div class="w-16 h-16 rounded-3xl bg-orange-50 text-orange-400 flex items-center justify-center mx-auto mb-3 text-2xl">
                                         <i class="bi bi-inbox"></i>
                                     </div>
@@ -378,15 +379,6 @@
                                 <tr class="hover:bg-slate-50/80 transition-colors">
                                     <!-- No -->
                                     <td class="py-3.5 px-3 text-center font-bold text-slate-400"><?= $idx + 1; ?></td>
-
-                                    <!-- Details Button (Matching Photo 1) -->
-                                    <td class="py-3.5 px-3 text-center whitespace-nowrap">
-                                        <a href="<?= site_url('adminlayanan/detail_pendaftaran_sidang/' . $row['nim']); ?>" 
-                                           class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-800 hover:bg-orange-600 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all whitespace-nowrap">
-                                            <span>Details</span>
-                                            <i class="bi bi-arrow-right-short text-sm"></i>
-                                        </a>
-                                    </td>
 
                                     <!-- Nama Mahasiswa -->
                                     <td class="py-3.5 px-4 font-bold text-slate-800">
@@ -431,8 +423,66 @@
                                         <?php endif; ?>
                                     </td>
 
+                                    <!-- Status Berkas Persyaratan (Dinamis dengan Ringkasan Angka & Berkas Singkat yang Bisa Diklik) -->
+                                    <td class="py-3.5 px-2 text-center" id="status_berkas_cell_<?= $row['nim']; ?>">
+                                        <?php 
+                                            $b_summary = $berkas_summaries[$row['nim']] ?? null;
+                                            if (!$b_summary) {
+                                                $b_summary = $this->AdminLayanan_model->get_student_sidang_berkas_summary($row['nim'], $master_syarat);
+                                            }
+                                            $v_cnt = $b_summary['valid_count'];
+                                            $i_cnt = $b_summary['invalid_count'];
+                                            $p_cnt = $b_summary['pending_count'];
+                                            $b_items = $b_summary['items'];
+                                        ?>
+                                        <div class="flex flex-col items-center gap-1.5">
+                                            <!-- Ringkasan Status Warna + Angka -->
+                                            <div class="flex items-center gap-1 flex-wrap justify-center">
+                                                <?php if($v_cnt > 0): ?>
+                                                    <button type="button" onclick="openStudentBerkasPreviewSidang('<?= $row['nim']; ?>', null, 'Valid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $v_cnt; ?> Berkas Disetujui/Valid — Klik untuk Pratinjau Berkas Valid">
+                                                        <i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i>
+                                                        <span><?= $v_cnt; ?> Valid</span>
+                                                    </button>
+                                                <?php endif; ?>
+
+                                                <?php if($i_cnt > 0): ?>
+                                                    <button type="button" onclick="openStudentBerkasPreviewSidang('<?= $row['nim']; ?>', null, 'Invalid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $i_cnt; ?> Berkas Ditolak/Direvisi — Klik untuk Pratinjau Berkas Direvisi">
+                                                        <i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i>
+                                                        <span><?= $i_cnt; ?> Direvisi</span>
+                                                    </button>
+                                                <?php endif; ?>
+
+                                                <?php if($p_cnt > 0): ?>
+                                                    <button type="button" onclick="openStudentBerkasPreviewSidang('<?= $row['nim']; ?>', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="<?= $p_cnt; ?> Berkas Menunggu Verifikasi — Klik untuk Pratinjau Berkas Menunggu">
+                                                        <i class="fa-solid fa-clock text-amber-500 text-[9px]"></i>
+                                                        <span><?= $p_cnt; ?> Menunggu</span>
+                                                    </button>
+                                                <?php endif; ?>
+
+                                                <?php if($v_cnt === 0 && $i_cnt === 0 && $p_cnt === 0): ?>
+                                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">
+                                                        Belum ada berkas
+                                                    </span>
+                                                <?php endif; ?>
+                                            </div>
+
+                                            <!-- Status Berkas Persyaratan Dinamis per Item (Klik untuk Pop-up Multi-Card / Preview PDF) -->
+                                            <div class="inline-flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200 text-[9px] font-mono shadow-2xs flex-wrap justify-center max-w-[210px] mx-auto leading-tight">
+                                                <?php foreach ($b_items as $s_idx => $item): ?>
+                                                    <?php 
+                                                        $st = $item['status'];
+                                                        $color = ($st === 'Valid' || $st === 'Approved') ? 'text-emerald-600 font-extrabold hover:underline hover:scale-125 transition-transform' : (($st === 'Invalid' || $st === 'Rejected') ? 'text-rose-600 font-extrabold hover:underline hover:scale-125 transition-transform' : 'text-slate-400 hover:underline hover:scale-125 transition-transform');
+                                                        $item_nama = htmlspecialchars($item['nama'] ?? '');
+                                                    ?>
+                                                    <?php if($s_idx > 0): ?><span class="text-slate-300">·</span><?php endif; ?>
+                                                    <button type="button" onclick="openStudentBerkasPreviewSidang('<?= $row['nim']; ?>', '<?= $item['kode']; ?>')" class="<?= $color; ?> inline-block px-0.5 cursor-pointer border-0 bg-transparent p-0" title="Klik untuk Pratinjau berkas <?= $item_nama; ?> (<?= $st; ?>)"><?= htmlspecialchars($item['short']); ?></button>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </td>
+
                                     <!-- Status / Tahapan -->
-                                    <td class="py-4 px-4 text-center whitespace-nowrap">
+                                    <td class="py-4 px-4 text-center whitespace-nowrap" id="status_cell_<?= $row['nim']; ?>">
                                         <?php if ($isApproved): ?>
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                                                 <i class="bi bi-check-circle-fill"></i> Disetujui
@@ -442,6 +492,25 @@
                                                 <i class="bi bi-clock-fill"></i> Pending
                                             </span>
                                         <?php endif; ?>
+                                    </td>
+
+                                    <!-- Aksi (Periksa Floating + Detail Link) -->
+                                    <td class="py-3.5 px-3 text-center whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1.5">
+                                            <button type="button" 
+                                                    id="btn_periksa_<?= $row['nim']; ?>"
+                                                    onclick="toggleLihatBerkasSidang('<?= $row['nim']; ?>')" 
+                                                    class="btn-periksa-sidang inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                                                    title="Buka Floating Multi-Card &amp; Preview Berkas Sidang">
+                                                <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
+                                                <span>Periksa</span>
+                                            </button>
+                                            <a href="<?= site_url('adminlayanan/detail_pendaftaran_sidang/' . $row['nim']); ?>" 
+                                               class="w-7 h-7 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center text-xs font-bold transition shadow-2xs"
+                                               title="Buka Halaman Detail Penuh">
+                                                <i class="bi bi-box-arrow-up-right text-[11px]"></i>
+                                            </a>
+                                        </div>
                                     </td>
                                 </tr>
                             <?php endforeach; ?>
@@ -979,6 +1048,146 @@
         window.MASTER_SYARAT_SIDANG = <?= json_encode(!empty($master_syarat) ? $master_syarat : []); ?>;
         window.activeLihatBerkasNims = [];
         window.activePreviews = [];
+
+        // Fungsi Buka & Pratinjau Dokumen Berkas Sidang Instan (dari Status Berkas Persyaratan)
+        async function openStudentBerkasPreviewSidang(nim, docKey, targetStatus) {
+            if (!nim) return;
+            nim = String(nim).trim();
+
+            if (!window.mhsDataMap) window.mhsDataMap = {};
+            if (!window.activeLihatBerkasNims) window.activeLihatBerkasNims = [];
+            if (!window.activePreviews) window.activePreviews = [];
+
+            // Pastikan data mahasiswa dimuat di frontend
+            let mhs = window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)];
+            if (!mhs || !mhs.berkas || mhs.berkas.length === 0) {
+                try {
+                    const res = await fetch('<?= site_url("adminlayanan/ajax_get_sidang_batch_details"); ?>', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
+                        body: new URLSearchParams({ 'nims[]': nim })
+                    }).then(r => r.json());
+
+                    const data = res.data || res;
+                    if (data && data.length > 0) {
+                        window.mhsDataMap[nim] = Object.assign({}, window.mhsDataMap[nim] || {}, data[0]);
+                        mhs = window.mhsDataMap[nim];
+                    } else {
+                        Swal.fire({ icon: 'warning', title: 'Data Tidak Ditemukan', text: 'Data berkas sidang untuk NIM ' + nim + ' tidak ditemukan.' });
+                        return;
+                    }
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat berkas mahasiswa.' });
+                    return;
+                }
+            }
+
+            const activeNims = (window.activeLihatBerkasNims || []).map(n => String(n).trim());
+            if (!activeNims.includes(nim)) {
+                window.activeLihatBerkasNims.push(nim);
+            }
+
+            showLihatBerkasContainer();
+            refreshLihatBerkasView();
+            updateTableButtonHighlights();
+
+            // Jika spesifik dokumen yang diklik
+            if (docKey && typeof docKey === 'string' && docKey.trim() !== '') {
+                docKey = String(docKey).trim();
+                const isPreviewed = (window.activePreviews || []).some(p => String(p.nim).trim() === nim && String(p.docKey).trim() === docKey);
+                if (!isPreviewed) {
+                    previewBerkasSidangItem(nim, docKey);
+                }
+            } else if (targetStatus && typeof targetStatus === 'string' && targetStatus.trim() !== '') {
+                const normTarget = targetStatus.trim().toLowerCase();
+                const berkasList = mhs && mhs.berkas ? mhs.berkas : [];
+                const matchingDoc = berkasList.find(b => {
+                    const st = (b.status || '').toLowerCase();
+                    if (normTarget === 'valid') return st.includes('setuju') || st.includes('valid') || st.includes('approved');
+                    if (normTarget === 'invalid') return st.includes('revisi') || st.includes('tolak') || st.includes('invalid');
+                    return st.includes('pending') || (!st.includes('setuju') && !st.includes('revisi'));
+                });
+                if (matchingDoc) {
+                    const k = matchingDoc.kode;
+                    const isPreviewed = (window.activePreviews || []).some(p => String(p.nim).trim() === nim && String(p.docKey).trim() === k);
+                    if (!isPreviewed) {
+                        previewBerkasSidangItem(nim, k);
+                    }
+                }
+            }
+        }
+        window.openQuickDocReview = openStudentBerkasPreviewSidang;
+        window.openStudentBerkasPreviewSidang = openStudentBerkasPreviewSidang;
+
+        // Update real-time ringkasan status berkas persyaratan pada cell tabel
+        function updateTableRowBerkasSummary(nim) {
+            nim = String(nim).trim();
+            const cell = document.getElementById('status_berkas_cell_' + nim);
+            if (!cell) return;
+
+            const mhs = window.mhsDataMap ? (window.mhsDataMap[nim] || window.mhsDataMap[Number(nim)]) : null;
+            if (!mhs || !mhs.berkas) return;
+
+            const berkasList = mhs.berkas;
+            let v_cnt = 0, i_cnt = 0, p_cnt = 0;
+            berkasList.forEach(b => {
+                const st = (b.status || '').toLowerCase();
+                if (st.includes('setuju') || st.includes('valid') || st.includes('approved')) v_cnt++;
+                else if (st.includes('revisi') || st.includes('tolak') || st.includes('invalid')) i_cnt++;
+                else p_cnt++;
+            });
+
+            let badgesHtml = '';
+            if (v_cnt > 0) {
+                badgesHtml += `
+                    <button type="button" onclick="openStudentBerkasPreviewSidang('${nim}', null, 'Valid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${v_cnt} Berkas Disetujui/Valid">
+                        <i class="fa-solid fa-circle-check text-emerald-500 text-[9px]"></i>
+                        <span>${v_cnt} Valid</span>
+                    </button>
+                `;
+            }
+            if (i_cnt > 0) {
+                badgesHtml += `
+                    <button type="button" onclick="openStudentBerkasPreviewSidang('${nim}', null, 'Invalid')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-50 text-rose-700 border border-rose-200 hover:bg-rose-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${i_cnt} Berkas Direvisi">
+                        <i class="fa-solid fa-circle-xmark text-rose-500 text-[9px]"></i>
+                        <span>${i_cnt} Direvisi</span>
+                    </button>
+                `;
+            }
+            if (p_cnt > 0) {
+                badgesHtml += `
+                    <button type="button" onclick="openStudentBerkasPreviewSidang('${nim}', null, 'Pending')" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 hover:scale-105 transition-all cursor-pointer shadow-2xs" title="${p_cnt} Berkas Menunggu Verifikasi">
+                        <i class="fa-solid fa-clock text-amber-500 text-[9px]"></i>
+                        <span>${p_cnt} Menunggu</span>
+                    </button>
+                `;
+            }
+            if (v_cnt === 0 && i_cnt === 0 && p_cnt === 0) {
+                badgesHtml = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-100 text-slate-500 border border-slate-200">Belum ada berkas</span>';
+            }
+
+            let chipsHtml = berkasList.map((b, sIdx) => {
+                const st = (b.status || '').toLowerCase();
+                const isValid = st.includes('setuju') || st.includes('valid') || st.includes('approved');
+                const isRejected = st.includes('revisi') || st.includes('tolak') || st.includes('invalid');
+                const color = isValid ? 'text-emerald-600 font-extrabold hover:underline hover:scale-125 transition-transform' : (isRejected ? 'text-rose-600 font-extrabold hover:underline hover:scale-125 transition-transform' : 'text-slate-400 hover:underline hover:scale-125 transition-transform');
+                const shortLabel = b.short || (b.kode ? b.kode.toUpperCase().substring(0, 3) : 'DOC');
+                const sep = sIdx > 0 ? '<span class="text-slate-300">·</span>' : '';
+                return `${sep}<button type="button" onclick="openStudentBerkasPreviewSidang('${nim}', '${b.kode}')" class="${color} inline-block px-0.5 cursor-pointer border-0 bg-transparent p-0" title="Klik untuk Pratinjau berkas ${b.nama_file || b.nama || ''}">${shortLabel}</button>`;
+            }).join('');
+
+            cell.innerHTML = `
+                <div class="flex flex-col items-center gap-1.5">
+                    <div class="flex items-center gap-1 flex-wrap justify-center">
+                        ${badgesHtml}
+                    </div>
+                    <div class="inline-flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200 text-[9px] font-mono shadow-2xs flex-wrap justify-center max-w-[210px] mx-auto leading-tight">
+                        ${chipsHtml}
+                    </div>
+                </div>
+            `;
+        }
 
         function toggleLihatBerkasSidang(nim) {
             if (!nim) return;
@@ -1568,6 +1777,7 @@
                             bItem.is_valid = (status === 'Disetujui Admin LAA');
                         }
                     }
+                    updateTableRowBerkasSummary(nim);
 
                     // Update row status di tabel utama jika ada perubahan overall_status
                     const statusCell = document.getElementById('status_cell_' + nim);
@@ -1644,6 +1854,7 @@
                                     b.is_valid = true;
                                 });
                             }
+                            updateTableRowBerkasSummary(nim);
 
                             // Update badge di tabel utama
                             const statusCell = document.getElementById('status_cell_' + nim);
