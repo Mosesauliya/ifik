@@ -1655,15 +1655,19 @@ class AdminLayanan_model extends CI_Model {
         }
 
         $clean = ltrim(str_replace('\\', '/', $filename), '/');
-        $target = (strpos($clean, 'uploads/') === 0) ? $clean : ('uploads/persyaratan_ta/' . $clean);
-
-        if (!file_exists(FCPATH . $target)) {
-            $decoded = rawurldecode($target);
-            if (file_exists(FCPATH . $decoded)) {
-                $target = $decoded;
-            } else {
-                $target = 'uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf';
-            }
+        $target = '';
+        if (strpos($clean, 'uploads/') === 0 && file_exists(FCPATH . $clean)) {
+            $target = $clean;
+        } elseif (file_exists(FCPATH . 'uploads/persyaratan_ta/' . $clean)) {
+            $target = 'uploads/persyaratan_ta/' . $clean;
+        } elseif (file_exists(FCPATH . 'uploads/sidang/' . $clean)) {
+            $target = 'uploads/sidang/' . $clean;
+        } elseif (file_exists(FCPATH . 'uploads/krs/' . $clean)) {
+            $target = 'uploads/krs/' . $clean;
+        } elseif (file_exists(FCPATH . 'uploads/preview_ta/' . $clean)) {
+            $target = 'uploads/preview_ta/' . $clean;
+        } else {
+            $target = 'uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf';
         }
 
         return base_url($encode_path($target));
@@ -2681,7 +2685,7 @@ class AdminLayanan_model extends CI_Model {
                 'nama_file'   => $nama,
                 'deskripsi'   => $s['deskripsi'] ?? '',
                 'file_name'   => $file_name,
-                'file_url'    => $is_uploaded ? $this->resolve_pdf_url($file_name) : '',
+                'file_url'    => $this->resolve_pdf_url($file_name),
                 'status'      => $status,
                 'is_valid'    => ($status === 'Disetujui Admin LAA'),
                 'is_uploaded' => $is_uploaded,

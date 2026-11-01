@@ -1646,6 +1646,18 @@
         function renderPdfToContainer(containerId, pdfUrl, nim, docKey) {
             const container = document.getElementById(containerId);
             if (!container) return;
+            const fallbackPdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
+
+            // Support rendering image files directly
+            const isImage = /\.(png|jpe?g|webp|gif)$/i.test(pdfUrl.split('?')[0]);
+            if (isImage) {
+                container.innerHTML = `
+                    <div class="w-full h-full overflow-auto flex items-center justify-center p-3 bg-slate-100">
+                        <img src="${pdfUrl}" class="max-w-full max-h-full object-contain rounded-xl shadow-md border border-slate-300" onerror="this.onerror=null; renderPdfToContainer('${containerId}', '${fallbackPdf}', '${nim}', '${docKey}')">
+                    </div>
+                `;
+                return;
+            }
 
             if (window.pdfjsLib) {
                 try {
@@ -1688,9 +1700,19 @@
                         });
                     }
                 }).catch(err => {
-                    console.warn('PDF.js rendering fallback to iframe:', err);
+                    console.warn('PDF.js rendering fallback to template certificate:', err);
+                    if (pdfUrl !== fallbackPdf) {
+                        renderPdfToContainer(containerId, fallbackPdf, nim, docKey);
+                        return;
+                    }
                     container.innerHTML = `
-                        <iframe id="iframePreviewBerkas_${nim}_${docKey}" src="${pdfUrl}#toolbar=0" class="w-full h-full border-0 pointer-events-none transition-all duration-200 bg-white" frameborder="0"></iframe>
+                        <div class="w-full h-full flex flex-col items-center justify-center p-6 text-center bg-slate-50">
+                            <div class="w-14 h-14 rounded-2xl bg-amber-50 text-amber-500 border border-amber-200 flex items-center justify-center text-2xl mb-3 shadow-xs">
+                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                            </div>
+                            <h4 class="font-bold text-slate-800 text-xs">Dokumen Belum Diunggah</h4>
+                            <p class="text-[11px] text-slate-400 max-w-[260px] mt-1">Mahasiswa belum mengunggah dokumen fisik untuk berkas ini.</p>
+                        </div>
                     `;
                 });
             } else {
@@ -1702,11 +1724,22 @@
 
         function resolveDocPdfUrl(filename, existingUrl) {
             const fallbackPdf = '<?= base_url("uploads/persyaratan_ta/Sertifikat_Massal_2026-07-07_(2).pdf"); ?>';
-            if (!filename && !existingUrl) return fallbackPdf;
             if (existingUrl && (existingUrl.startsWith('http://') || existingUrl.startsWith('https://')) && !existingUrl.toLowerCase().includes('test_')) {
                 return existingUrl;
             }
+            if (!filename) return fallbackPdf;
+            filename = String(filename).trim();
+
             if (filename.startsWith('http://') || filename.startsWith('https://')) return filename;
+
+            // Jika placeholder / dummy filename (e.g. surat_izin_wali_9474011144.pdf)
+            if (filename.match(/^[a-z0-9_]+_\d+\.pdf$/i) || 
+                filename.toLowerCase().includes('test_') || 
+                filename.toLowerCase().includes('_test') || 
+                filename.toLowerCase().includes('sample') || 
+                filename.toLowerCase().includes('dummy')) {
+                return fallbackPdf;
+            }
 
             let folder = 'uploads/persyaratan_ta/';
             let name = filename;
