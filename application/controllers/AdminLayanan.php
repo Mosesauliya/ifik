@@ -1470,6 +1470,7 @@ class AdminLayanan extends CI_Controller {
         $data['filter_status']  = $filter_status;
         $data['stats']          = $this->AdminLayanan_model->get_pendaftaran_sidang_stats();
         $data['list']           = $this->AdminLayanan_model->get_pendaftaran_sidang_list($search, $filter_jenis, $filter_status, $cat);
+        $data['master_syarat']  = $this->AdminLayanan_model->get_master_syarat_sidang();
 
         $this->load->view('admin_layanan/pendaftaran_sidang', $data);
     }
@@ -1501,6 +1502,69 @@ class AdminLayanan extends CI_Controller {
     /**
      * AJAX: Update status verifikasi 1 berkas pendaftaran sidang
      */
+    /**
+     * AJAX: Ambil data detail berkas sidang untuk floating non-blocking cards
+     */
+    public function ajax_get_sidang_batch_details() {
+        $nims = $this->input->post('nims') ?: array();
+        if (empty($nims)) {
+            $nim_single = trim($this->input->post('nim') ?? '');
+            if (!empty($nim_single)) $nims = [$nim_single];
+        }
+        if (empty($nims)) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'Tidak ada NIM terpilih.']));
+            return;
+        }
+
+        $data = [];
+        foreach ($nims as $nim) {
+            $nim = trim($nim);
+            if (empty($nim)) continue;
+            $detail = $this->AdminLayanan_model->get_detail_pendaftaran_sidang($nim);
+            if (!$detail) {
+                $detail = ['nim' => $nim, 'nama' => 'Mahasiswa ' . $nim];
+            }
+
+            $berkas = $this->AdminLayanan_model->get_berkas_pendaftaran_sidang($nim);
+            $detail['berkas'] = $berkas;
+            $detail['files'] = [];
+            foreach ($berkas as $b) {
+                $detail['files'][$b['kode']] = [
+                    'name'        => $b['file_name'],
+                    'url'         => $b['file_url'],
+                    'status'      => $b['status'],
+                    'is_valid'    => $b['is_valid'],
+                    'is_uploaded' => $b['is_uploaded'],
+                    'nama_file'   => $b['nama_file'],
+                    'catatan'     => $b['catatan'] ?? ''
+                ];
+            }
+            $data[] = $detail;
+        }
+
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode(['success' => true, 'data' => $data]));
+    }
+
+    /**
+     * AJAX: Setujui semua berkas pendaftaran sidang mahasiswa sekaligus
+     */
+    public function ajax_acc_semua_sidang() {
+        $nim = trim($this->input->post('nim') ?? '');
+        $catatan = trim($this->input->post('catatan') ?? '');
+
+        if (empty($nim)) {
+            $this->output->set_content_type('application/json')
+                         ->set_output(json_encode(['success' => false, 'message' => 'NIM tidak boleh kosong.']));
+            return;
+        }
+
+        $this->AdminLayanan_model->approve_all_berkas_sidang($nim, 'Disetujui Admin LAA', $catatan);
+        $this->output->set_content_type('application/json')
+                     ->set_output(json_encode(['success' => true, 'message' => 'Seluruh berkas sidang mahasiswa NIM ' . $nim . ' berhasil disetujui!']));
+    }
+
     public function ajax_update_berkas_sidang() {
         $nim         = trim($this->input->post('nim') ?? '');
         $kode_berkas = trim($this->input->post('kode_berkas') ?? '');
