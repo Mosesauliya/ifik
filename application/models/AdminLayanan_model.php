@@ -3049,6 +3049,7 @@ class AdminLayanan_model extends CI_Model {
 
     /**
      * Ambil detail data BAP lengkap untuk preview & generate dokumen 2 halaman
+     * Nilai, evaluasi, catatan penguji, dan jadwal diambil secara dinamis dari database (tabel guidance & user)
      */
     public function get_detail_bap_sidang($nim) {
         $mhs = $this->get_detail_pendaftaran_sidang($nim);
@@ -3069,34 +3070,173 @@ class AdminLayanan_model extends CI_Model {
             ];
         }
 
-        // Nilai Komprehensif (Page 2)
-        $nilai_p1 = 73;
-        $nilai_p2 = 70;
-        $nilai_pj1 = 64;
-        $nilai_pj2 = 66;
+        // 1. Ambil data asli dari tabel guidance untuk NIM / guidance_id ini
+        $g_row = null;
+        if ($this->db->table_exists('guidance')) {
+            if (!empty($mhs['guidance_id'])) {
+                $g_row = $this->db->where('id', $mhs['guidance_id'])->get('guidance')->row_array();
+            }
+            if (!$g_row && !empty($nim)) {
+                $g_row = $this->db->group_start()
+                                  ->where('id_mhs', $nim)
+                                  ->or_where('id', $nim)
+                                  ->group_end()
+                                  ->order_by('id', 'DESC')
+                                  ->get('guidance')
+                                  ->row_array();
+            }
+        }
 
-        $bobot_p1 = 0.4;
-        $bobot_p2 = 0.2;
+        // 2. Ambil nilai dinamis yang diinputkan oleh 4 evaluator dari tabel guidance
+        $get_numeric_score = function($source, $keys) {
+            if (empty($source) || !is_array($source)) return null;
+            foreach ($keys as $k) {
+                if (isset($source[$k]) && is_numeric($source[$k]) && (float)$source[$k] > 0) {
+                    return (float)$source[$k];
+                }
+            }
+            return null;
+        };
+
+        $db_p1  = $get_numeric_score($g_row, ['nilaisidang_pembimbing1', 'nilaisidang_pembimbing_1', 'nilai_sidang_pembimbing1', 'nilai_pembimbing1']);
+        $db_p2  = $get_numeric_score($g_row, ['nilaisidang_pembimbing2', 'nilaisidang_pembimbing_2', 'nilai_sidang_pembimbing2', 'nilai_pembimbing2']);
+        $db_pj1 = $get_numeric_score($g_row, ['nilaisidang_penguji1', 'nilaisidang_penguji_1', 'nilai_sidang_penguji1', 'nilai_penguji1']);
+        $db_pj2 = $get_numeric_score($g_row, ['nilaisidang_penguji2', 'nilaisidang_penguji_2', 'nilai_sidang_penguji2', 'nilai_penguji2']);
+
+        $has_real_scores = ($db_p1 !== null || $db_p2 !== null || $db_pj1 !== null || $db_pj2 !== null);
+
+        if ($has_real_scores) {
+            $nilai_p1  = $db_p1 !== null ? $db_p1 : 0;
+            $nilai_p2  = $db_p2 !== null ? $db_p2 : 0;
+            $nilai_pj1 = $db_pj1 !== null ? $db_pj1 : 0;
+            $nilai_pj2 = $db_pj2 !== null ? $db_pj2 : 0;
+        } else {
+            // Default jika data baru / belum ada evaluator yang menginput nilai
+            $nilai_p1  = 73;
+            $nilai_p2  = 70;
+            $nilai_pj1 = 64;
+            $nilai_pj2 = 66;
+        }
+
+        // Bobot Komprehensif: Pembimbing 1 (40%), Pembimbing 2 (20%), Penguji 1 (20%), Penguji 2 (20%)
+        $bobot_p1  = 0.4;
+        $bobot_p2  = 0.2;
         $bobot_pj1 = 0.2;
         $bobot_pj2 = 0.2;
 
-        $nb_p1 = round($nilai_p1 * $bobot_p1, 2);
-        $nb_p2 = round($nilai_p2 * $bobot_p2, 2);
+        $nb_p1  = round($nilai_p1 * $bobot_p1, 2);
+        $nb_p2  = round($nilai_p2 * $bobot_p2, 2);
         $nb_pj1 = round($nilai_pj1 * $bobot_pj1, 2);
         $nb_pj2 = round($nilai_pj2 * $bobot_pj2, 2);
 
         $nilai_akhir = round($nb_p1 + $nb_p2 + $nb_pj1 + $nb_pj2, 1);
 
-        // Konversi Huruf
-        if ($nilai_akhir > 85)     $indeks = 'A';
-        elseif ($nilai_akhir > 75) $indeks = 'AB';
-        elseif ($nilai_akhir > 65) $indeks = 'B';
-        elseif ($nilai_akhir > 60) $indeks = 'BC';
-        elseif ($nilai_akhir > 50) $indeks = 'C';
-        elseif ($nilai_akhir > 40) $indeks = 'D';
-        else                       $indeks = 'E';
+        // Konversi Huruf Mutu
+        if ($nilai_akhir >= 85)        $indeks = 'A';
+        elseif ($nilai_akhir >= 77.5)  $indeks = 'AB';
+        elseif ($nilai_akhir >= 70)    $indeks = 'B';
+        elseif ($nilai_akhir >= 62.5)  $indeks = 'BC';
+        elseif ($nilai_akhir >= 55)    $indeks = 'C';
+        elseif ($nilai_akhir >= 45)    $indeks = 'D';
+        else                           $indeks = 'E';
 
-        // Look up digital signature image files from user table
+        // Keputusan Kelulusan
+        if ($indeks === 'E' || $indeks === 'D') {
+            $hasil_sidang = 'Tidak Lulus';
+        } elseif ($indeks === 'BC' || $indeks === 'C') {
+            $hasil_sidang = 'Lulus dengan Revisi';
+        } else {
+            $hasil_sidang = 'Lulus';
+        }
+
+        // 3. Ekstrak Catatan Evaluator Dinamis dari Database
+        $extract_note = function($raw) {
+            if (empty($raw)) return '';
+            if (is_array($raw)) return trim($raw['catatan'] ?? ($raw['komentar'] ?? ''));
+            $trimmed = trim($raw);
+            if ($trimmed !== '' && ($trimmed[0] === '{' || $trimmed[0] === '[')) {
+                $dec = json_decode($trimmed, true);
+                if (is_array($dec)) {
+                    return trim($dec['catatan'] ?? ($dec['komentar'] ?? ''));
+                }
+            }
+            return $trimmed;
+        };
+
+        $notes = [];
+        $note_pj1 = $extract_note($g_row['penilaiansidang_penguji1'] ?? ($g_row['evaluasi_penguji1'] ?? ''));
+        $note_pj2 = $extract_note($g_row['penilaiansidang_penguji2'] ?? ($g_row['evaluasi_penguji2'] ?? ''));
+        $note_p1  = $extract_note($g_row['penilaiansidang_pembimbing1'] ?? ($g_row['evaluasi_pembimbing1'] ?? ''));
+        $note_p2  = $extract_note($g_row['penilaiansidang_pembimbing2'] ?? ($g_row['evaluasi_pembimbing2'] ?? ''));
+
+        if (!empty($note_pj1)) $notes[] = "Penguji 1: " . $note_pj1;
+        if (!empty($note_pj2)) $notes[] = "Penguji 2: " . $note_pj2;
+        if (!empty($note_p1))  $notes[] = "Pembimbing 1: " . $note_p1;
+        if (!empty($note_p2))  $notes[] = "Pembimbing 2: " . $note_p2;
+
+        $catatan_penguji = !empty($notes) 
+            ? implode("\n", $notes) 
+            : ($has_real_scores ? '-' : 'Perbaiki beberapa format sitasi pada Bab 4 dan perjelas diagram kerangka penelitian.');
+
+        // 4. Jadwal & Waktu Sidang Dinamis
+        $tgl_raw = $g_row['tanggal_sidang'] ?? ($mhs['tanggal_sidang'] ?? '');
+        $hari = 'Selasa';
+        $tanggal_text = '30 Juni 2026';
+        $semester = 'Genap';
+        $tahun_akademik = '2025/2026';
+
+        if (!empty($tgl_raw) && strtotime($tgl_raw) !== false) {
+            $ts = strtotime($tgl_raw);
+            $day_names = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+            $month_names = ['', 'Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+            $hari = $day_names[(int)date('w', $ts)];
+            $tanggal_text = date('j', $ts) . ' ' . $month_names[(int)date('n', $ts)] . ' ' . date('Y', $ts);
+            
+            $m_num = (int)date('n', $ts);
+            $y_num = (int)date('Y', $ts);
+            $semester = ($m_num >= 2 && $m_num <= 7) ? 'Genap' : 'Ganjil';
+            $tahun_akademik = ($m_num >= 8) ? $y_num . '/' . ($y_num + 1) : ($y_num - 1) . '/' . $y_num;
+        }
+
+        $waktu_sidang = $g_row['waktu_sidang'] ?? ($mhs['waktu_sidang'] ?? '09:00:00');
+        $ruang_sidang = $g_row['ruang_sidang'] ?? ($mhs['ruang_sidang'] ?? 'Kampus Fakultas Industri Kreatif Jl. Telekomunikasi, Ters. Buah Batu Bandung');
+
+        // 5. Lookup kode dosen / inisial untuk template iGracias
+        $get_dosen_kode = function($name_or_nip, $default = 'DSN') {
+            if (empty($name_or_nip)) return $default;
+            if (!$this->db->table_exists('user')) return $default;
+            $clean_name = trim(preg_replace('/^(Dr\.|Prof\.|Drs\.|Dra\.|Ir\.)\s*/i', '', $name_or_nip));
+            $pure_name  = trim(explode(',', $clean_name)[0]);
+            
+            $u = $this->db->group_start()
+                          ->like('name', $pure_name)
+                          ->or_where('nip', $name_or_nip)
+                          ->or_where('username', $name_or_nip)
+                          ->group_end()
+                          ->get('user')
+                          ->row_array();
+            if ($u) {
+                if (!empty($u['username']) && strlen($u['username']) <= 5 && ctype_alnum($u['username'])) {
+                    return strtoupper($u['username']);
+                }
+                if (!empty($u['nip']) && strlen($u['nip']) <= 5) {
+                    return strtoupper($u['nip']);
+                }
+            }
+            $words = preg_split('/\s+/', $pure_name);
+            $initials = '';
+            foreach ($words as $w) {
+                if (!empty($w)) $initials .= strtoupper($w[0]);
+                if (strlen($initials) >= 3) break;
+            }
+            return !empty($initials) ? $initials : $default;
+        };
+
+        $kode_pj1 = $get_dosen_kode($mhs['penguji_1'] ?? '', 'LGM');
+        $kode_pj2 = $get_dosen_kode($mhs['penguji_2'] ?? '', 'ALW');
+        $kode_p1  = $get_dosen_kode($mhs['pembimbing_1'] ?? '', 'ISI');
+
+        // 6. Look up digital signature image files from user table
         $ttd_p1  = $this->get_dosen_ttd_by_name($mhs['pembimbing_1'] ?? '');
         $ttd_p2  = $this->get_dosen_ttd_by_name($mhs['pembimbing_2'] ?? '');
         $ttd_pj1 = $this->get_dosen_ttd_by_name($mhs['penguji_1'] ?? '');
@@ -3108,20 +3248,27 @@ class AdminLayanan_model extends CI_Model {
             'prodi'            => $mhs['prodi'],
             'konsentrasi'      => $mhs['konsentrasi'],
             'judul'            => $mhs['judul'],
-            'hari'             => 'Selasa',
-            'tanggal_text'     => '30 Juni 2026',
-            'tempat'           => 'Kampus Fakultas Industri Kreatif Jl. Telekomunikasi, Ters. Buah Batu Bandung',
-            'semester'         => 'Genap',
-            'tahun_akademik'   => '2025/2026',
+            'judul_en'         => $mhs['judul_en'] ?? ($g_row['judul_2'] ?? ''),
+            'hari'             => $hari,
+            'tanggal_text'     => $tanggal_text,
+            'tanggal_sidang'   => $tgl_raw,
+            'waktu_sidang'     => $waktu_sidang,
+            'ruang_sidang'     => $ruang_sidang,
+            'tempat'           => $ruang_sidang,
+            'semester'         => $semester,
+            'tahun_akademik'   => $tahun_akademik,
             'pembimbing_1'     => $mhs['pembimbing_1'],
             'pembimbing_2'     => $mhs['pembimbing_2'],
             'penguji_1'        => $mhs['penguji_1'],
             'penguji_2'        => $mhs['penguji_2'],
+            'penguji_1_kode'   => $kode_pj1,
+            'penguji_2_kode'   => $kode_pj2,
+            'pembimbing_1_kode'=> $kode_p1,
             'ttd_pembimbing_1' => $ttd_p1,
             'ttd_pembimbing_2' => $ttd_p2,
             'ttd_penguji_1'    => $ttd_pj1,
             'ttd_penguji_2'    => $ttd_pj2,
-            'catatan_penguji'  => 'Perbaiki beberapa format sitasi pada Bab 4 dan perjelas diagram kerangka penelitian.',
+            'catatan_penguji'  => $catatan_penguji,
             'evaluasi_nilai'   => [
                 ['peran' => 'Pembimbing 1', 'nama' => $mhs['pembimbing_1'], 'nilai' => $nilai_p1, 'bobot' => $bobot_p1, 'nilai_bobot' => $nb_p1],
                 ['peran' => 'Pembimbing 2', 'nama' => $mhs['pembimbing_2'], 'nilai' => $nilai_p2, 'bobot' => $bobot_p2, 'nilai_bobot' => $nb_p2],
@@ -3130,7 +3277,7 @@ class AdminLayanan_model extends CI_Model {
             ],
             'nilai_akhir'      => $nilai_akhir,
             'indeks_huruf'     => $indeks,
-            'hasil_sidang'     => 'Lulus',
+            'hasil_sidang'     => $hasil_sidang,
             'ketua_sidang'     => $mhs['penguji_1']
         );
     }
