@@ -131,7 +131,7 @@
         ]); ?>
         <?php endif; ?>
 
-        <main class="min-h-screen p-4 sm:p-6 lg:p-10 max-w-7xl mx-auto flex-1 w-full">
+        <main class="min-h-screen p-3 sm:p-5 lg:p-6 max-w-[1440px] mx-auto flex-1 w-full">
 
             <!-- Header & Breadcrumb -->
             <div class="mb-6 sm:mb-8">
@@ -342,26 +342,24 @@
             </div>
 
             <!-- Responsive Table View -->
-            <div class="overflow-x-auto">
-                <table class="w-full text-left border-collapse" id="pendaftaranSidangTable">
+            <div class="overflow-x-auto w-full">
+                <table class="w-full text-left border-collapse text-xs" id="pendaftaranSidangTable">
                     <thead>
-                        <tr class="border-b border-slate-100 bg-slate-50/60 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
-                            <th class="py-3 px-3 text-center w-12 whitespace-nowrap">No</th>
-                            <th class="py-3 px-4">Nama Mahasiswa</th>
-                            <th class="py-3 px-3 whitespace-nowrap">NIM</th>
-                            <th class="py-3 px-3">Prodi</th>
-                            <th class="py-3 px-3">Konsentrasi</th>
-                            <th class="py-3 px-3">Dosen Wali</th>
-                            <th class="py-3 px-3 text-center whitespace-nowrap">Jenis TA</th>
-                            <th class="py-3.5 px-3 text-center whitespace-nowrap">Status Berkas Persyaratan</th>
-                            <th class="py-3 px-3 text-center whitespace-nowrap">Tahapan / Status</th>
-                            <th class="py-3 px-3 text-center whitespace-nowrap">Aksi / Periksa</th>
+                        <tr class="border-b border-slate-100 bg-slate-50/75 text-[11px] font-extrabold text-slate-400 uppercase tracking-wider">
+                            <th class="py-3 px-2 text-center w-8 whitespace-nowrap">No</th>
+                            <th class="py-3 px-3">Mahasiswa</th>
+                            <th class="py-3 px-3">Program Studi &amp; Konsentrasi</th>
+                            <th class="py-3 px-2.5">Dosen Wali</th>
+                            <th class="py-3 px-2 text-center whitespace-nowrap">Jenis TA</th>
+                            <th class="py-3 px-2 text-center">Status Berkas Persyaratan</th>
+                            <th class="py-3 px-2 text-center whitespace-nowrap">Status Sidang</th>
+                            <th class="py-3 px-2.5 text-center whitespace-nowrap">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-slate-100 text-xs font-medium" id="sidangTableBody">
                         <?php if (empty($list)): ?>
                             <tr>
-                                <td colspan="10" class="py-12 text-center text-slate-400">
+                                <td colspan="8" class="py-12 text-center text-slate-400">
                                     <div class="w-16 h-16 rounded-3xl bg-orange-50 text-orange-400 flex items-center justify-center mx-auto mb-3 text-2xl">
                                         <i class="bi bi-inbox"></i>
                                     </div>
@@ -376,55 +374,59 @@
                                 $isApproved = $row['is_approved'];
                                 $isNonSidang = $row['is_non_sidang'];
                             ?>
-                                <tr class="hover:bg-slate-50/80 transition-colors">
+                                <tr class="hover:bg-orange-50/30 transition-colors">
                                     <!-- No -->
-                                    <td class="py-3.5 px-3 text-center font-bold text-slate-400"><?= $idx + 1; ?></td>
+                                    <td class="py-3 px-2 text-center font-bold text-slate-400"><?= $idx + 1; ?></td>
 
-                                    <!-- Nama Mahasiswa -->
-                                    <td class="py-3.5 px-4 font-bold text-slate-800">
-                                        <div class="flex items-center gap-2.5">
-                                            <div class="w-7 h-7 rounded-lg bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-extrabold shrink-0">
+                                    <!-- Mahasiswa (Nama + NIM) -->
+                                    <td class="py-3 px-3">
+                                        <div class="flex items-center gap-2.5 min-w-0">
+                                            <div class="w-8 h-8 rounded-xl bg-orange-100 border border-orange-200 text-orange-700 font-bold text-xs flex items-center justify-center shrink-0 shadow-2xs">
                                                 <?= strtoupper(substr($row['nama'], 0, 1)); ?>
                                             </div>
-                                            <span class="truncate max-w-[180px]"><?= htmlspecialchars($row['nama']); ?></span>
+                                            <div class="min-w-0">
+                                                <div class="font-bold text-slate-900 text-xs truncate max-w-[150px] xl:max-w-[190px]" title="<?= htmlspecialchars($row['nama']); ?>">
+                                                    <?= htmlspecialchars($row['nama']); ?>
+                                                </div>
+                                                <div class="text-[10px] text-orange-600 font-mono font-bold flex items-center gap-1">
+                                                    <span><?= htmlspecialchars($row['nim']); ?></span>
+                                                </div>
+                                            </div>
                                         </div>
                                     </td>
 
-                                    <!-- NIM -->
-                                    <td class="py-3.5 px-3 font-mono font-bold text-orange-600 whitespace-nowrap">
-                                        <?= htmlspecialchars($row['nim']); ?>
-                                    </td>
-
-                                    <!-- Prodi -->
-                                    <td class="py-3.5 px-3 text-slate-600 font-semibold truncate max-w-[150px]">
-                                        <?= htmlspecialchars($row['prodi']); ?>
-                                    </td>
-
-                                    <!-- Konsentrasi -->
-                                    <td class="py-3.5 px-3 text-slate-500 truncate max-w-[130px]">
-                                        <?= htmlspecialchars($row['konsentrasi']); ?>
+                                    <!-- Program Studi & Konsentrasi -->
+                                    <td class="py-3 px-3">
+                                        <div class="font-semibold text-slate-700 text-xs truncate max-w-[140px] xl:max-w-[170px]" title="<?= htmlspecialchars($row['prodi']); ?>">
+                                            <?= htmlspecialchars($row['prodi']); ?>
+                                        </div>
+                                        <div class="text-[10px] text-slate-400 font-medium truncate max-w-[140px] xl:max-w-[170px]" title="<?= htmlspecialchars($row['konsentrasi']); ?>">
+                                            <?= htmlspecialchars($row['konsentrasi']); ?>
+                                        </div>
                                     </td>
 
                                     <!-- Dosen Wali -->
-                                    <td class="py-3.5 px-3 text-slate-600 truncate max-w-[150px]">
-                                        <?= htmlspecialchars($row['dosen_wali']); ?>
+                                    <td class="py-3 px-2.5">
+                                        <div class="text-xs text-slate-600 font-medium truncate max-w-[130px] xl:max-w-[160px]" title="<?= htmlspecialchars($row['dosen_wali']); ?>">
+                                            <?= htmlspecialchars($row['dosen_wali']); ?>
+                                        </div>
                                     </td>
 
                                     <!-- Jenis TA (Sidang vs Non-Sidang) -->
-                                    <td class="py-4 px-4 text-center whitespace-nowrap">
+                                    <td class="py-3 px-2 text-center whitespace-nowrap">
                                         <?php if ($isNonSidang): ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200 whitespace-nowrap">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
                                                 <i class="bi bi-journal-check"></i> Non-Sidang
                                             </span>
                                         <?php else: ?>
-                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200 whitespace-nowrap">
+                                            <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-orange-50 text-orange-700 border border-orange-200">
                                                 <i class="bi bi-mortarboard"></i> Sidang TA
                                             </span>
                                         <?php endif; ?>
                                     </td>
 
                                     <!-- Status Berkas Persyaratan (Dinamis dengan Ringkasan Angka & Berkas Singkat yang Bisa Diklik) -->
-                                    <td class="py-3.5 px-2 text-center" id="status_berkas_cell_<?= $row['nim']; ?>">
+                                    <td class="py-2.5 px-2 text-center" id="status_berkas_cell_<?= $row['nim']; ?>">
                                         <?php 
                                             $b_summary = $berkas_summaries[$row['nim']] ?? null;
                                             if (!$b_summary) {
@@ -435,7 +437,7 @@
                                             $p_cnt = $b_summary['pending_count'];
                                             $b_items = $b_summary['items'];
                                         ?>
-                                        <div class="flex flex-col items-center gap-1.5">
+                                        <div class="flex flex-col items-center gap-1">
                                             <!-- Ringkasan Status Warna + Angka -->
                                             <div class="flex items-center gap-1 flex-wrap justify-center">
                                                 <?php if($v_cnt > 0): ?>
@@ -467,7 +469,7 @@
                                             </div>
 
                                             <!-- Status Berkas Persyaratan Dinamis per Item (Klik untuk Pop-up Multi-Card / Preview PDF) -->
-                                            <div class="inline-flex items-center gap-1 bg-slate-50 px-2 py-0.5 rounded-lg border border-slate-200 text-[9px] font-mono shadow-2xs flex-wrap justify-center max-w-[210px] mx-auto leading-tight">
+                                            <div class="inline-flex items-center gap-1 bg-slate-50 px-1.5 py-0.5 rounded-lg border border-slate-200 text-[9px] font-mono shadow-2xs flex-wrap justify-center max-w-[180px] mx-auto leading-tight">
                                                 <?php foreach ($b_items as $s_idx => $item): ?>
                                                     <?php 
                                                         $st = $item['status'];
@@ -482,7 +484,7 @@
                                     </td>
 
                                     <!-- Status / Tahapan -->
-                                    <td class="py-4 px-4 text-center whitespace-nowrap" id="status_cell_<?= $row['nim']; ?>">
+                                    <td class="py-3 px-2 text-center whitespace-nowrap" id="status_cell_<?= $row['nim']; ?>">
                                         <?php if ($isApproved): ?>
                                             <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200 whitespace-nowrap">
                                                 <i class="bi bi-check-circle-fill"></i> Disetujui
@@ -495,12 +497,12 @@
                                     </td>
 
                                     <!-- Aksi (Periksa Floating + Detail Link) -->
-                                    <td class="py-3.5 px-3 text-center whitespace-nowrap">
-                                        <div class="inline-flex items-center gap-1.5">
+                                    <td class="py-3 px-2.5 text-center whitespace-nowrap">
+                                        <div class="inline-flex items-center gap-1">
                                             <button type="button" 
                                                     id="btn_periksa_<?= $row['nim']; ?>"
                                                     onclick="toggleLihatBerkasSidang('<?= $row['nim']; ?>')" 
-                                                    class="btn-periksa-sidang inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap"
+                                                    class="btn-periksa-sidang inline-flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white text-[11px] font-bold shadow-xs hover:shadow-md transition-all active:scale-95 cursor-pointer whitespace-nowrap"
                                                     title="Buka Floating Multi-Card &amp; Preview Berkas Sidang">
                                                 <i class="fa-solid fa-magnifying-glass text-[10px]"></i>
                                                 <span>Periksa</span>
