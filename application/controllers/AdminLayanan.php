@@ -1815,7 +1815,10 @@ class AdminLayanan extends CI_Controller {
      * Preview Dokumen 1: BAP IGrACIAS (Foto 4)
      */
     public function preview_bap_igracias($nim = '') {
-        if (empty($nim)) $nim = '1601200295';
+        if (empty($nim)) {
+            $first_g = $this->db->select('id_mhs')->where('tanggal_sidang IS NOT NULL')->order_by('id', 'DESC')->limit(1)->get('guidance')->row_array();
+            $nim = !empty($first_g['id_mhs']) ? $first_g['id_mhs'] : '';
+        }
         $bap = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
         $data['title'] = 'BAP IGrACIAS — ' . $bap['nama'];
         $data['bap']   = $bap;
@@ -1826,7 +1829,10 @@ class AdminLayanan extends CI_Controller {
      * Cetak Dokumen 1: BAP IGrACIAS (Foto 4)
      */
     public function cetak_bap_igracias($nim = '') {
-        if (empty($nim)) $nim = '1601200295';
+        if (empty($nim)) {
+            $first_g = $this->db->select('id_mhs')->where('tanggal_sidang IS NOT NULL')->order_by('id', 'DESC')->limit(1)->get('guidance')->row_array();
+            $nim = !empty($first_g['id_mhs']) ? $first_g['id_mhs'] : '';
+        }
         $data['bap'] = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
         $data['title'] = 'Cetak BAP IGrACIAS — ' . $data['bap']['nama'];
         $data['auto_print'] = true;
@@ -1837,7 +1843,10 @@ class AdminLayanan extends CI_Controller {
      * Preview Dokumen 2: BAP Fakultas 2 Halaman (Foto 5 & 6)
      */
     public function preview_bap_fakultas($nim = '') {
-        if (empty($nim)) $nim = '1601200295';
+        if (empty($nim)) {
+            $first_g = $this->db->select('id_mhs')->where('tanggal_sidang IS NOT NULL')->order_by('id', 'DESC')->limit(1)->get('guidance')->row_array();
+            $nim = !empty($first_g['id_mhs']) ? $first_g['id_mhs'] : '';
+        }
         $bap = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
         $data['title'] = 'BAP Fakultas — ' . $bap['nama'];
         $data['bap']   = $bap;
@@ -1848,7 +1857,10 @@ class AdminLayanan extends CI_Controller {
      * Cetak Dokumen 2: BAP Fakultas 2 Halaman (Foto 5 & 6)
      */
     public function cetak_bap_fakultas($nim = '') {
-        if (empty($nim)) $nim = '1601200295';
+        if (empty($nim)) {
+            $first_g = $this->db->select('id_mhs')->where('tanggal_sidang IS NOT NULL')->order_by('id', 'DESC')->limit(1)->get('guidance')->row_array();
+            $nim = !empty($first_g['id_mhs']) ? $first_g['id_mhs'] : '';
+        }
         $data['bap'] = $this->AdminLayanan_model->get_detail_bap_sidang($nim);
         $data['title'] = 'Cetak BAP Fakultas — ' . $data['bap']['nama'];
         $data['auto_print'] = true;

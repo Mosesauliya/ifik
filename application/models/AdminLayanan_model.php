@@ -3054,19 +3054,30 @@ class AdminLayanan_model extends CI_Model {
     public function get_detail_bap_sidang($nim) {
         $mhs = $this->get_detail_pendaftaran_sidang($nim);
         if (!$mhs) {
+            $u = !empty($nim) && $this->db->table_exists('user') 
+                ? $this->db->where('nim', $nim)->or_where('id', $nim)->get('user')->row_array() 
+                : null;
+            $m = !empty($nim) && $this->db->table_exists('mahasiswa') 
+                ? $this->db->where('nim', $nim)->get('mahasiswa')->row_array() 
+                : null;
+
+            $nama_mhs = $u['name'] ?? ($m ? trim(($m['nama_depan'] ?? '') . ' ' . ($m['nama_belakang'] ?? '')) : (!empty($nim) ? 'Mahasiswa ' . $nim : '-'));
+            $prodi_mhs = $m['prodi'] ?? 'Desain Komunikasi Visual';
+            $kons_mhs  = $m['konsentrasi_dkv'] ?? '-';
+
             $mhs = [
                 'nim'          => $nim,
-                'nama'         => 'Muhammad Aqillah Putra Irawan',
-                'prodi'        => 'Desain Komunikasi Visual',
-                'konsentrasi'  => 'ADVERTISING',
-                'judul'        => 'Pengaruh Strategi Brand Activation dalam Meningkatkan Penggunaan Produk Body Lotion Vaseline pada Konsumen',
-                'pembimbing_1' => 'Nina Nursetia Ningrum, S.Pd., S.Pd., M.Pd.',
-                'pembimbing_2' => 'I Gusti Agung Rangga Lawe, S.Ds., M.Ds.',
-                'penguji_1'    => 'Dr. Samsul Alam, S.Pd., M.Pd.',
-                'penguji_2'    => 'Putu Raka Setya Putra, S.Ds., M.Ds.',
-                'tanggal_sidang'=> '2026-06-30',
-                'waktu_sidang' => '09:00:00',
-                'ruang_sidang' => 'Kampus Fakultas Industri Kreatif Jl. Telekomunikasi, Ters. Buah Batu Bandung'
+                'nama'         => $nama_mhs,
+                'prodi'        => $prodi_mhs,
+                'konsentrasi'  => $kons_mhs,
+                'judul'        => '-',
+                'pembimbing_1' => '-',
+                'pembimbing_2' => '-',
+                'penguji_1'    => '-',
+                'penguji_2'    => '-',
+                'tanggal_sidang'=> null,
+                'waktu_sidang' => '-',
+                'ruang_sidang' => '-'
             ];
         }
 
@@ -3111,11 +3122,11 @@ class AdminLayanan_model extends CI_Model {
             $nilai_pj1 = $db_pj1 !== null ? $db_pj1 : 0;
             $nilai_pj2 = $db_pj2 !== null ? $db_pj2 : 0;
         } else {
-            // Default jika data baru / belum ada evaluator yang menginput nilai
-            $nilai_p1  = 73;
-            $nilai_p2  = 70;
-            $nilai_pj1 = 64;
-            $nilai_pj2 = 66;
+            // Jika dosen evaluator belum menginput nilai di sistem penilaian
+            $nilai_p1  = 0;
+            $nilai_p2  = 0;
+            $nilai_pj1 = 0;
+            $nilai_pj2 = 0;
         }
 
         // Bobot Komprehensif: Pembimbing 1 (40%), Pembimbing 2 (20%), Penguji 1 (20%), Penguji 2 (20%)
@@ -3132,21 +3143,26 @@ class AdminLayanan_model extends CI_Model {
         $nilai_akhir = round($nb_p1 + $nb_p2 + $nb_pj1 + $nb_pj2, 1);
 
         // Konversi Huruf Mutu
-        if ($nilai_akhir >= 85)        $indeks = 'A';
-        elseif ($nilai_akhir >= 77.5)  $indeks = 'AB';
-        elseif ($nilai_akhir >= 70)    $indeks = 'B';
-        elseif ($nilai_akhir >= 62.5)  $indeks = 'BC';
-        elseif ($nilai_akhir >= 55)    $indeks = 'C';
-        elseif ($nilai_akhir >= 45)    $indeks = 'D';
-        else                           $indeks = 'E';
-
-        // Keputusan Kelulusan
-        if ($indeks === 'E' || $indeks === 'D') {
-            $hasil_sidang = 'Tidak Lulus';
-        } elseif ($indeks === 'BC' || $indeks === 'C') {
-            $hasil_sidang = 'Lulus dengan Revisi';
+        if (!$has_real_scores && $nilai_akhir <= 0) {
+            $indeks = '-';
+            $hasil_sidang = 'Belum Dinilai';
         } else {
-            $hasil_sidang = 'Lulus';
+            if ($nilai_akhir >= 85)        $indeks = 'A';
+            elseif ($nilai_akhir >= 77.5)  $indeks = 'AB';
+            elseif ($nilai_akhir >= 70)    $indeks = 'B';
+            elseif ($nilai_akhir >= 62.5)  $indeks = 'BC';
+            elseif ($nilai_akhir >= 55)    $indeks = 'C';
+            elseif ($nilai_akhir >= 45)    $indeks = 'D';
+            else                           $indeks = 'E';
+
+            // Keputusan Kelulusan
+            if ($indeks === 'E' || $indeks === 'D') {
+                $hasil_sidang = 'Tidak Lulus';
+            } elseif ($indeks === 'BC' || $indeks === 'C') {
+                $hasil_sidang = 'Lulus dengan Revisi';
+            } else {
+                $hasil_sidang = 'Lulus';
+            }
         }
 
         // 3. Ekstrak Catatan Evaluator Dinamis dari Database
