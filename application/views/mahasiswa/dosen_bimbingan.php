@@ -2089,7 +2089,7 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     const alasanLock = 'Pembimbing 1 belum memberikan Rekomendasi (Sidang / Non-Sidang)';
                     btnLulus = `<button disabled title="Terkunci: ${alasanLock}" class="px-3 py-1.5 rounded-lg bg-slate-200 text-slate-400 font-bold text-[11px] cursor-not-allowed inline-flex items-center gap-1.5 whitespace-nowrap"><i class="bi bi-lock-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 } else {
-                    btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
+                    btnLulus = `<button onclick="handleLulusPreview3('${mhs.nim}', '${latest.id}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
                 }
             } else if (c.approved > 0) {
                 btnLulus = `<button onclick="handleLulusStage('${mhs.nim}')" class="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-500 to-fuchsia-600 hover:from-purple-600 hover:to-fuchsia-700 text-white font-bold text-[11px] shadow-md inline-flex items-center gap-1.5 cursor-pointer transition whitespace-nowrap"><i class="bi bi-arrow-right-circle-fill"></i> Lanjut ke Tahap Berikutnya</button>`;
@@ -2185,13 +2185,13 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                     timeHtml = `<div class="text-xs font-semibold text-slate-700">${dt.toLocaleDateString('id-ID', {day:'2-digit', month:'short', year:'numeric'})}</div><div class="text-[10px] text-slate-500">${dt.toLocaleTimeString('id-ID', {hour:'2-digit', minute:'2-digit'})} WIB</div>`;
 
                     if (IS_P1 && currentTahap === 'Preview 3') {
-                        let rekomenBadge = `<button onclick="openRekomendasiModal('${mhs.nim}', '${latest.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-gradient-to-r from-orange-500 to-amber-500 hover:from-orange-600 hover:to-amber-600 text-white rounded-xl text-xs font-bold shadow-xs transition cursor-pointer whitespace-nowrap"><i class="bi bi-plus-circle-fill"></i> Rekomendasi</button>`;
+                        let rekomenBadge = `<span class="text-slate-400 italic text-xs">-</span>`;
                         if (mhs.rekomendasi) {
                             if (mhs.rekomendasi.recommendation_type === 'sidang') {
-                                rekomenBadge = `<span onclick="openRekomendasiModal('${mhs.nim}', '${latest.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-purple-100 text-purple-800 border border-purple-300 rounded-xl text-xs font-extrabold cursor-pointer hover:bg-purple-200 transition whitespace-nowrap shadow-2xs" title="Klik untuk ubah rekomendasi"><i class="bi bi-mortarboard-fill text-purple-600"></i> Sidang TA</span>`;
+                                rekomenBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-purple-100 text-purple-800 border border-purple-200 rounded-xl text-xs font-bold whitespace-nowrap"><i class="bi bi-mortarboard-fill text-purple-600"></i> Sidang TA</span>`;
                             } else if (mhs.rekomendasi.recommendation_type === 'non_sidang') {
                                 const titleText = mhs.rekomendasi.jalur_title || 'Non-Sidang';
-                                rekomenBadge = `<span onclick="openRekomendasiModal('${mhs.nim}', '${latest.id}')" class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-amber-100 text-amber-900 border border-amber-300 rounded-xl text-xs font-extrabold cursor-pointer hover:bg-amber-200 transition whitespace-nowrap shadow-2xs" title="Jalur: ${titleText} (Klik untuk ubah)"><i class="bi bi-award-fill text-amber-600 text-sm"></i> ${titleText}</span>`;
+                                rekomenBadge = `<span class="inline-flex items-center gap-1.5 px-3 py-1 bg-amber-100 text-amber-900 border border-amber-200 rounded-xl text-xs font-bold whitespace-nowrap"><i class="bi bi-award-fill text-amber-600 text-sm"></i> ${titleText}</span>`;
                             }
                         }
                         rekomenCell = `<td data-label="Rekomendasi" class="py-4 px-4 text-center">${rekomenBadge}</td>`;
@@ -3548,6 +3548,64 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
         });
 
         // ============================================================
+        // ACTION: Lulus Tahap Preview 3 (Popup Rekomendasi -> Sidang)
+        // ============================================================
+        function handleLulusPreview3(nim, previewId) {
+            // Sebelum pindah step ke Sidang, buka pop up rekomendasi sidang / non-sidang dulu
+            window.onRekomendasiSaved = () => {
+                doLulusStage(nim, 'Preview 3', previewId);
+            };
+            openRekomendasiModal(nim, previewId);
+        }
+
+        function doLulusStage(nim, tahap = 'Preview 3', previewId = null) {
+            const fd = new FormData();
+            fd.append('nim', nim);
+            fd.append('tahap', tahap);
+            if (previewId) fd.append('id_preview', previewId);
+
+            Swal.fire({
+                title: 'Meluluskan Tahap...',
+                text: 'Memproses kelulusan mahasiswa ke tahapan Sidang...',
+                didOpen: () => Swal.showLoading(),
+                allowOutsideClick: false
+            });
+
+            fetch('<?= site_url("dosen_bimbingan/lulus_stage_ajax") ?>', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: data.message || 'Mahasiswa berhasil diluluskan ke tahapan Sidang.',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => fetchBimbinganData(true));
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal',
+                        text: data.message || 'Gagal meluluskan tahap.'
+                    });
+                    fetchBimbinganData(true);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Terjadi kesalahan koneksi saat memproses kelulusan.'
+                });
+            });
+        }
+
+        // ============================================================
         // ACTION: Lulus Tahap
         // ============================================================
         function handleLulusStage(nim) {
@@ -4307,7 +4365,16 @@ $default_tahap_key  = strtolower(str_replace(' ', '', $default_tahap));
                 document.getElementById('penilaianPrevNilaiWrap').classList.add('hidden');
             }
 
-            document.getElementById('penilaianCatatan').value = (myDetail && myDetail.catatan) ? myDetail.catatan : '';
+            let noteVal = (myDetail && myDetail.catatan) ? myDetail.catatan : '';
+            if (typeof noteVal === 'string' && noteVal.trim().startsWith('{') && noteVal.trim().endsWith('}')) {
+                try {
+                    const parsed = JSON.parse(noteVal);
+                    noteVal = parsed.catatan || '';
+                } catch(e) {
+                    noteVal = '';
+                }
+            }
+            document.getElementById('penilaianCatatan').value = noteVal;
             document.getElementById('penilaianStatusKelulusan').value = 'Lulus';
 
             // 4. Setup Riwayat Versi Selector

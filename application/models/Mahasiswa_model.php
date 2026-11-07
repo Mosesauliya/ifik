@@ -1564,8 +1564,23 @@ class Mahasiswa_model extends CI_Model {
                     'nilai'    => $nilai,
                     'saved_at' => date('Y-m-d H:i:s'),
                 ];
-                if ((int)$posisi === 3 && $is_layak_referensi !== null) {
-                    $payload['layak_referensi'] = (int)$is_layak_referensi;
+                if ((int)$posisi === 3) {
+                    if ($is_layak_referensi !== null) {
+                        $payload['layak_referensi'] = (int)$is_layak_referensi;
+                    } else {
+                        $prevRaw = $g[$colCatatan] ?? '';
+                        if (!empty($prevRaw)) {
+                            $prevDec = json_decode($prevRaw, true);
+                            if (is_array($prevDec)) {
+                                if (isset($prevDec['layak_referensi'])) {
+                                    $payload['layak_referensi'] = $prevDec['layak_referensi'];
+                                }
+                                if (isset($prevDec['keputusan_sidang_fakultas'])) {
+                                    $payload['keputusan_sidang_fakultas'] = $prevDec['keputusan_sidang_fakultas'];
+                                }
+                            }
+                        }
+                    }
                 }
                 $update[$colCatatan] = json_encode($payload, JSON_UNESCAPED_UNICODE);
             }
@@ -1632,7 +1647,15 @@ class Mahasiswa_model extends CI_Model {
         $parse_detail = function ($raw) {
             if (empty($raw)) return ['catatan' => '', 'detail' => null, 'saved_at' => null];
             $j = json_decode($raw, true);
-            if (is_array($j) && (isset($j['catatan']) || isset($j['detail']))) {
+            if (is_array($j)) {
+                $rawNote = isset($j['catatan']) ? (string)$j['catatan'] : '';
+                if (!empty($rawNote) && ($rawNote[0] === '{' || $rawNote[0] === '[')) {
+                    $subJ = json_decode($rawNote, true);
+                    if (is_array($subJ)) {
+                        $rawNote = isset($subJ['catatan']) ? (string)$subJ['catatan'] : '';
+                    }
+                }
+                $j['catatan'] = $rawNote;
                 return $j;
             }
             return ['catatan' => (string)$raw, 'detail' => null, 'saved_at' => null];
@@ -1698,6 +1721,14 @@ class Mahasiswa_model extends CI_Model {
             }
         }
 
+        $detailU1 = $parse_detail($g['penilaiansidang_penguji1'] ?? '');
+        $savedLayak = null;
+        if (isset($g['layak_referensi']) && $g['layak_referensi'] !== null && $g['layak_referensi'] !== '') {
+            $savedLayak = (int)$g['layak_referensi'];
+        } elseif (isset($detailU1['layak_referensi']) && $detailU1['layak_referensi'] !== null) {
+            $savedLayak = (int)$detailU1['layak_referensi'];
+        }
+
         return [
             'nim'              => $mhs['nim_mhs'] ?? $nim,
             'nama'             => $mhs['nama_mahasiswa'] ?? '-',
@@ -1712,6 +1743,7 @@ class Mahasiswa_model extends CI_Model {
             'pembimbing_2'     => $this->_get_dosen_name($tl['dosen_pembimbing2'] ?? ''),
             'penguji_1'        => $this->_get_dosen_name($tl['dosen_penguji1'] ?? ''),
             'penguji_2'        => $this->_get_dosen_name($tl['dosen_penguji2'] ?? ''),
+            'is_layak_referensi' => $savedLayak,
             'nilai'            => [
                 1 => (float)($g['nilaisidang_pembimbing1'] ?? 0),
                 2 => (float)($g['nilaisidang_pembimbing2'] ?? 0),
@@ -1721,7 +1753,7 @@ class Mahasiswa_model extends CI_Model {
             'detail'           => [
                 1 => $parse_detail($g['penilaiansidang_pembimbing1'] ?? ''),
                 2 => $parse_detail($g['penilaiansidang_pembimbing2'] ?? ''),
-                3 => $parse_detail($g['penilaiansidang_penguji1'] ?? ''),
+                3 => $detailU1,
                 4 => $parse_detail($g['penilaiansidang_penguji2'] ?? ''),
             ],
             'master_rubriks'   => $master_rubriks,

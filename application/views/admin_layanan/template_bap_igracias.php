@@ -131,17 +131,71 @@
         .result-section {
             margin: 20px 0 35px 0;
             font-size: 10.5pt;
+            position: relative;
         }
         .result-option {
             font-weight: bold;
             margin-top: 4px;
+            display: inline-block;
+            cursor: pointer;
+            padding: 3px 8px;
+            border-radius: 6px;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+        .result-option:hover {
+            background-color: #fef3c7;
+            color: #b45309;
+            box-shadow: 0 0 0 1px #f59e0b;
         }
         .result-option.active {
             text-decoration: none;
+            color: #000000;
         }
         .result-option.inactive {
             text-decoration: line-through;
-            color: #475569;
+            color: #64748b;
+        }
+        .result-option.saving {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .live-hint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 8pt;
+            font-weight: 700;
+            color: #b45309;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 10px;
+            vertical-align: middle;
+            user-select: none;
+        }
+        .live-toast {
+            position: absolute;
+            left: 15px;
+            bottom: -28px;
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #065f46;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            padding: 3px 12px;
+            border-radius: 6px;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .live-toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
         .footer-grid {
             display: table;
@@ -180,7 +234,13 @@
                 box-shadow: none !important;
                 border-radius: 0 !important;
             }
-            .no-print, #bapToolbar {
+            .result-option {
+                cursor: default !important;
+                padding: 0 !important;
+                background: none !important;
+                box-shadow: none !important;
+            }
+            .live-hint-badge, .live-toast, .no-print, #bapToolbar {
                 display: none !important;
             }
         }
@@ -371,7 +431,12 @@
 
         <!-- Keputusan Hasil Evaluasi (Layak / Tidak Layak) -->
         <div class="result-section">
-            <div>Peserta Sidang TA/PA mendapat nilai rata-rata :</div>
+            <div style="display: flex; align-items: center; flex-wrap: wrap;">
+                <span>Peserta Sidang TA/PA mendapat nilai rata-rata :</span>
+                <span class="live-hint-badge no-print" title="Klik langsung teks di bawah untuk mengubah status kelayakan naskah sebagai referensi">
+                    👆 Klik langsung teks di bawah untuk ubah
+                </span>
+            </div>
             <?php 
                 if (isset($bap['is_layak_referensi']) && $bap['is_layak_referensi'] !== null) {
                     $is_layak = (bool)$bap['is_layak_referensi'];
@@ -379,12 +444,23 @@
                     $is_layak = ($bap['indeks_huruf'] ?? 'B') !== 'E' && ($bap['indeks_huruf'] ?? 'B') !== 'D';
                 }
             ?>
-            <div class="result-option <?= $is_layak ? 'active' : 'inactive'; ?>" style="margin-left: 15px; margin-top: 6px;">
-                LAYAK dijadikan sebagai Referensi
+            <div style="margin-left: 15px; margin-top: 6px;">
+                <div id="btnOptLayak" 
+                     class="result-option <?= $is_layak ? 'active' : 'inactive'; ?>" 
+                     onclick="setKelayakanReferensi(1)" 
+                     title="Klik untuk memilih: LAYAK dijadikan sebagai Referensi">
+                    LAYAK dijadikan sebagai Referensi
+                </div>
             </div>
-            <div class="result-option <?= !$is_layak ? 'active' : 'inactive'; ?>" style="margin-left: 15px; margin-top: 3px;">
-                TIDAK LAYAK dijadikan sebagai Referensi
+            <div style="margin-left: 15px; margin-top: 3px;">
+                <div id="btnOptTidakLayak" 
+                     class="result-option <?= !$is_layak ? 'active' : 'inactive'; ?>" 
+                     onclick="setKelayakanReferensi(0)" 
+                     title="Klik untuk memilih: TIDAK LAYAK dijadikan sebagai Referensi">
+                    TIDAK LAYAK dijadikan sebagai Referensi
+                </div>
             </div>
+            <div id="liveToastKelayakan" class="live-toast no-print"></div>
         </div>
 
         <!-- Footer TTD Ketua Penguji & Catatan Penting -->
@@ -415,6 +491,76 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+        const ST_NIM_MHS = '<?= htmlspecialchars($bap['nim'] ?? '') ?>';
+        let isSavingKelayakan = false;
+
+        function setKelayakanReferensi(isLayak) {
+            if (isSavingKelayakan || !ST_NIM_MHS) return;
+
+            const optLayak = document.getElementById('btnOptLayak');
+            const optTidakLayak = document.getElementById('btnOptTidakLayak');
+            const toast = document.getElementById('liveToastKelayakan');
+
+            // Optimistic UI: langsung ubah coretan seketika di dokumen
+            if (isLayak === 1) {
+                if (optLayak) { optLayak.classList.remove('inactive'); optLayak.classList.add('active'); }
+                if (optTidakLayak) { optTidakLayak.classList.remove('active'); optTidakLayak.classList.add('inactive'); }
+            } else {
+                if (optTidakLayak) { optTidakLayak.classList.remove('inactive'); optTidakLayak.classList.add('active'); }
+                if (optLayak) { optLayak.classList.remove('active'); optLayak.classList.add('inactive'); }
+            }
+
+            if (optLayak) optLayak.classList.add('saving');
+            if (optTidakLayak) optTidakLayak.classList.add('saving');
+            isSavingKelayakan = true;
+
+            const fd = new FormData();
+            fd.append('nim', ST_NIM_MHS);
+            fd.append('is_layak', isLayak);
+
+            fetch('<?= site_url('adminlayanan/ajax_update_layak_referensi') ?>', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                if (optLayak) optLayak.classList.remove('saving');
+                if (optTidakLayak) optTidakLayak.classList.remove('saving');
+                isSavingKelayakan = false;
+
+                if (toast) {
+                    if (res && res.status) {
+                        toast.textContent = '✓ ' + (res.message || 'Status kelayakan referensi berhasil disimpan.');
+                        toast.style.color = '#065f46';
+                        toast.style.background = '#d1fae5';
+                        toast.style.borderColor = '#6ee7b7';
+                    } else {
+                        toast.textContent = '⚠ ' + (res.message || 'Gagal menyimpan perubahan.');
+                        toast.style.color = '#991b1b';
+                        toast.style.background = '#fee2e2';
+                        toast.style.borderColor = '#fca5a5';
+                    }
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2500);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                if (optLayak) optLayak.classList.remove('saving');
+                if (optTidakLayak) optTidakLayak.classList.remove('saving');
+                isSavingKelayakan = false;
+                if (toast) {
+                    toast.textContent = '⚠ Gagal koneksi ke server.';
+                    toast.style.color = '#991b1b';
+                    toast.style.background = '#fee2e2';
+                    toast.style.borderColor = '#fca5a5';
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2500);
+                }
+            });
+        }
+
         function downloadBapPdf() {
             const element = document.querySelector('.page-container');
             const btn = document.getElementById('btnDownloadPdf');
@@ -422,6 +568,10 @@
                 btn.disabled = true;
                 btn.innerText = '⏳ Mengunduh PDF...';
             }
+
+            // Sembunyikan elemen no-print sementara agar tidak masuk ke PDF
+            const noPrints = element.querySelectorAll('.no-print, .live-hint-badge, .live-toast');
+            noPrints.forEach(el => el.style.visibility = 'hidden');
 
             const opt = {
                 margin:       [10, 15, 10, 15],
@@ -432,9 +582,16 @@
             };
 
             html2pdf().set(opt).from(element).save().then(function() {
+                noPrints.forEach(el => el.style.visibility = '');
                 if (btn) {
                     btn.disabled = false;
                     btn.innerText = '✅ Terunduh (Klik Ulang)';
+                }
+            }).catch(function() {
+                noPrints.forEach(el => el.style.visibility = '');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Cetak / Unduh PDF';
                 }
             });
         }

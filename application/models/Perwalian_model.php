@@ -95,7 +95,29 @@ class Perwalian_model extends CI_Model {
             }
         }
 
-        // 4. Pastikan collation tabel-tabel perwalian selaras dengan tabel user/mahasiswa (utf8mb4_general_ci)
+        // 4. master_mata_kuliah_ekuivalensi (Pemetaan Ekuivalensi Antar Kurikulum / MK)
+        if (!$this->db->table_exists('master_mata_kuliah_ekuivalensi')) {
+            $this->db->query("
+                CREATE TABLE IF NOT EXISTS `master_mata_kuliah_ekuivalensi` (
+                  `id` INT AUTO_INCREMENT PRIMARY KEY,
+                  `id_mk_utama` INT NOT NULL,
+                  `kode_mk_utama` VARCHAR(30) NOT NULL,
+                  `kode_mk_ekuivalen` VARCHAR(30) NOT NULL,
+                  `nama_mk_ekuivalen` VARCHAR(255) NOT NULL,
+                  `sks_ekuivalen` INT NOT NULL DEFAULT 3,
+                  `kurikulum_asal` VARCHAR(50) NULL DEFAULT 'Kurikulum Lama',
+                  `prodi_asal` VARCHAR(100) NULL,
+                  `keterangan` TEXT NULL,
+                  `created_at` DATETIME NULL,
+                  `updated_at` DATETIME NULL,
+                  INDEX `idx_ekuivalen_mk_utama` (`id_mk_utama`),
+                  INDEX `idx_ekuivalen_kode_utama` (`kode_mk_utama`),
+                  INDEX `idx_ekuivalen_kode_asal` (`kode_mk_ekuivalen`)
+                ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+            ");
+        }
+
+        // 5. Pastikan collation tabel-tabel perwalian selaras dengan tabel user/mahasiswa (utf8mb4_general_ci)
         try {
             if ($this->db->table_exists('perwalian')) {
                 $check = $this->db->query("SELECT TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'perwalian'")->row_array();
@@ -187,6 +209,9 @@ class Perwalian_model extends CI_Model {
     }
 
     public function delete_mata_kuliah($id) {
+        if ($this->db->table_exists('master_mata_kuliah_ekuivalensi')) {
+            $this->db->where('id_mk_utama', (int)$id)->delete('master_mata_kuliah_ekuivalensi');
+        }
         return $this->db->where('id', (int)$id)->delete('master_mata_kuliah');
     }
 
@@ -196,7 +221,190 @@ class Perwalian_model extends CI_Model {
         $ids = array_filter($ids, function($v) { return $v > 0; });
         if (empty($ids)) return false;
         $this->db->where_in('id', $ids)->delete('master_mata_kuliah');
+        if ($this->db->table_exists('master_mata_kuliah_ekuivalensi')) {
+            $this->db->where_in('id_mk_utama', $ids)->delete('master_mata_kuliah_ekuivalensi');
+        }
         return $this->db->affected_rows();
+    }
+
+    // =========================================================================
+    // EKUIVALENSI MATA KULIAH (MAPPING & SKS BALANCING)
+    // =========================================================================
+
+    /**
+     * Ambil data ekuivalensi untuk mata kuliah utama tertentu
+     */
+    public function get_ekuivalensi_by_mk_utama($id_mk_utama) {
+        if (!$this->db->table_exists('master_mata_kuliah_ekuivalensi')) return [];
+        return $this->db->order_by('id', 'ASC')->get_where('master_mata_kuliah_ekuivalensi', ['id_mk_utama' => (int)$id_mk_utama])->result_array();
+    }
+
+    /**
+     * Ambil pemetaan ekuivalensi semua mata kuliah (untuk badge & ringkasan di tabel)
+     * Mengembalikan array dengan key id_mk_utama => [items => [...], total_sks => int, count => int]
+     */
+    public function get_all_ekuivalensi_summary() {
+        if (!$this->db->table_exists('master_mata_kuliah_ekuivalensi')) {
+            return [];
+        }
+        $rows = $this->db->order_by('id', 'ASC')->get('master_mata_kuliah_ekuivalensi')->result_array();
+        $summary = [];
+        foreach ($rows as $r) {
+            $id = (int)$r['id_mk_utama'];
+            if (!isset($summary[$id])) {
+                $summary[$id] = [
+                    'count'     => 0,
+                    'total_sks' => 0,
+                    'items'     => []
+                ];
+            }
+            $summary[$id]['count']++;
+            $summary[$id]['total_sks'] += (int)$r['sks_ekuivalen'];
+            $summary[$id]['items'][] = $r;
+        }
+        return $summary;
+    }
+
+    /**
+     * Simpan satu item ekuivalensi
+     */
+    public function save_ekuivalensi_item($data) {
+        if (!$this->db->table_exists('master_mata_kuliah_ekuivalensi')) $this->ensure_schema();
+        $now = date('Y-m-d H:i:s');
+        $id = isset($data['id']) ? (int)$data['id'] : 0;
+        
+        $payload = [
+            'id_mk_utama'       => (int)($data['id_mk_utama'] ?? 0),
+            'kode_mk_utama'     => strtoupper(trim($data['kode_mk_utama'] ?? '')),
+            'kode_mk_ekuivalen' => strtoupper(trim($data['kode_mk_ekuivalen'] ?? '')),
+            'nama_mk_ekuivalen' => trim($data['nama_mk_ekuivalen'] ?? ''),
+            'sks_ekuivalen'     => max(1, (int)($data['sks_ekuivalen'] ?? 3)),
+            'kurikulum_asal'    => trim($data['kurikulum_asal'] ?? 'Kurikulum Lama'),
+            'prodi_asal'        => trim($data['prodi_asal'] ?? ''),
+            'keterangan'        => trim($data['keterangan'] ?? ''),
+            'updated_at'        => $now
+        ];
+
+        if ($id > 0) {
+            $this->db->where('id', $id)->update('master_mata_kuliah_ekuivalensi', $payload);
+            return $id;
+        } else {
+            // Hindari duplikat MK ekuivalen untuk MK utama yang sama
+            $exists = $this->db->get_where('master_mata_kuliah_ekuivalensi', [
+                'id_mk_utama'       => $payload['id_mk_utama'],
+                'kode_mk_ekuivalen' => $payload['kode_mk_ekuivalen']
+            ])->row_array();
+
+            if ($exists) {
+                $this->db->where('id', $exists['id'])->update('master_mata_kuliah_ekuivalensi', $payload);
+                return $exists['id'];
+            }
+
+            $payload['created_at'] = $now;
+            $this->db->insert('master_mata_kuliah_ekuivalensi', $payload);
+            return $this->db->insert_id();
+        }
+    }
+
+    /**
+     * Simpan batch ekuivalensi (dari multi-select)
+     */
+    public function save_ekuivalensi_batch($id_mk_utama, $items) {
+        $mkUtama = $this->get_mata_kuliah_by_id($id_mk_utama);
+        if (!$mkUtama) return false;
+
+        $inserted = 0;
+        foreach ($items as $item) {
+            $item['id_mk_utama']   = $mkUtama['id'];
+            $item['kode_mk_utama'] = $mkUtama['kode_mk'];
+            if ($this->save_ekuivalensi_item($item)) {
+                $inserted++;
+            }
+        }
+        return $inserted;
+    }
+
+    /**
+     * Hapus satu item ekuivalensi
+     */
+    public function delete_ekuivalensi_item($id) {
+        return $this->db->where('id', (int)$id)->delete('master_mata_kuliah_ekuivalensi');
+    }
+
+    /**
+     * Hapus semua ekuivalensi untuk MK utama tertentu
+     */
+    public function delete_ekuivalensi_by_mk_utama($id_mk_utama) {
+        return $this->db->where('id_mk_utama', (int)$id_mk_utama)->delete('master_mata_kuliah_ekuivalensi');
+    }
+
+    /**
+     * Bulk Upsert Ekuivalensi dari Import Excel
+     */
+    public function upsert_ekuivalensi_bulk($rows) {
+        if (!$this->db->table_exists('master_mata_kuliah_ekuivalensi')) $this->ensure_schema();
+        $inserted = 0;
+        $updated = 0;
+        $skipped = 0;
+        $errors = [];
+
+        foreach ($rows as $idx => $r) {
+            $rowNum = $idx + 2;
+            $kodeUtama = strtoupper(trim((string)($r['kode_mk_utama'] ?? ($r['Kode MK Utama'] ?? ($r['kode_utama'] ?? '')))));
+            $kodeEkuiv = strtoupper(trim((string)($r['kode_mk_ekuivalen'] ?? ($r['Kode MK Ekuivalen'] ?? ($r['kode_ekuivalen'] ?? '')))));
+            $namaEkuiv = trim((string)($r['nama_mk_ekuivalen'] ?? ($r['Nama MK Ekuivalen'] ?? ($r['nama_ekuivalen'] ?? ''))));
+            $sksEkuiv  = (int)($r['sks_ekuivalen'] ?? ($r['SKS Ekuivalen'] ?? ($r['sks'] ?? 0)));
+            $kurikulum = trim((string)($r['kurikulum_asal'] ?? ($r['Kurikulum Asal'] ?? 'Kurikulum Lama')));
+            $prodiAsal = trim((string)($r['prodi_asal'] ?? ($r['Prodi Asal'] ?? '')));
+            $ket       = trim((string)($r['keterangan'] ?? ($r['Keterangan'] ?? '')));
+
+            if (empty($kodeUtama) || empty($kodeEkuiv) || empty($namaEkuiv) || $sksEkuiv <= 0) {
+                $skipped++;
+                $errors[] = "Baris $rowNum: Kode MK Utama, Kode/Nama/SKS Ekuivalen tidak boleh kosong.";
+                continue;
+            }
+
+            // Cari MK utama di master_mata_kuliah
+            $mkUtama = $this->get_mata_kuliah_by_kode($kodeUtama);
+            if (!$mkUtama) {
+                $skipped++;
+                $errors[] = "Baris $rowNum: Mata Kuliah Utama dengan kode '$kodeUtama' tidak ditemukan di Master MK.";
+                continue;
+            }
+
+            $exists = $this->db->get_where('master_mata_kuliah_ekuivalensi', [
+                'id_mk_utama'       => $mkUtama['id'],
+                'kode_mk_ekuivalen' => $kodeEkuiv
+            ])->row_array();
+
+            $payload = [
+                'id_mk_utama'       => $mkUtama['id'],
+                'kode_mk_utama'     => $mkUtama['kode_mk'],
+                'kode_mk_ekuivalen' => $kodeEkuiv,
+                'nama_mk_ekuivalen' => $namaEkuiv,
+                'sks_ekuivalen'     => $sksEkuiv,
+                'kurikulum_asal'    => !empty($kurikulum) ? $kurikulum : 'Kurikulum Lama',
+                'prodi_asal'        => !empty($prodiAsal) ? $prodiAsal : ($mkUtama['prodi'] ?? ''),
+                'keterangan'        => $ket,
+                'updated_at'        => date('Y-m-d H:i:s')
+            ];
+
+            if ($exists) {
+                $this->db->where('id', $exists['id'])->update('master_mata_kuliah_ekuivalensi', $payload);
+                $updated++;
+            } else {
+                $payload['created_at'] = date('Y-m-d H:i:s');
+                $this->db->insert('master_mata_kuliah_ekuivalensi', $payload);
+                $inserted++;
+            }
+        }
+
+        return [
+            'inserted' => $inserted,
+            'updated'  => $updated,
+            'skipped'  => $skipped,
+            'errors'   => $errors
+        ];
     }
 
     /**

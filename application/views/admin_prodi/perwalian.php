@@ -217,6 +217,12 @@
                             <button onclick="downloadTemplateMK()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition">
                                 <span>📄</span> Template XLSX
                             </button>
+                            <button onclick="openModalImportEkuivalensi()" class="px-3.5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-sm flex items-center gap-1.5 transition">
+                                <span>🔄</span> Import Ekuivalensi
+                            </button>
+                            <button onclick="downloadTemplateEkuivalensi()" class="px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-xs font-bold border border-slate-200 flex items-center gap-1.5 transition" title="Unduh format excel pemetaan ekuivalensi">
+                                <span>📄</span> Template Ekuivalensi
+                            </button>
                         </div>
                     </div>
 
@@ -241,6 +247,9 @@
                             <span class="font-bold text-rose-900"><span id="countSelectedMKText">0</span> mata kuliah dipilih</span>
                         </div>
                         <div class="flex items-center gap-2">
+                            <button type="button" onclick="openModalEkuivalensiMultiple()" class="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer" title="Atur pemetaan ekuivalensi untuk mata kuliah yang dipilih">
+                                <span>🔄</span> Atur Ekuivalensi (<span id="countSelectedMKEkuiBtn">0</span> MK)
+                            </button>
                             <button type="button" onclick="deselectAllMK()" class="px-3 py-1.5 text-slate-600 hover:text-slate-800 bg-white hover:bg-slate-100 border border-slate-200 rounded-lg font-semibold transition cursor-pointer">
                                 Batal Pilih
                             </button>
@@ -265,13 +274,14 @@
                                     <th class="p-3 text-center">Semester</th>
                                     <th class="p-3">Prodi</th>
                                     <th class="p-3 text-center">Jenis</th>
-                                    <th class="p-3 text-center w-24">Aksi</th>
+                                    <th class="p-3 text-center">Ekuivalensi</th>
+                                    <th class="p-3 text-center w-28">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-100">
                                 <?php if(empty($mata_kuliah)): ?>
                                     <tr>
-                                        <td colspan="9" class="p-8 text-center text-slate-400">
+                                        <td colspan="10" class="p-8 text-center text-slate-400">
                                             <div class="flex flex-col items-center justify-center">
                                                 <span class="text-3xl mb-2">📂</span>
                                                 <p class="font-semibold text-slate-600">Belum ada data mata kuliah</p>
@@ -296,8 +306,33 @@
                                             <td class="p-3 text-center">
                                                 <span class="px-2 py-0.5 <?= ($mk['jenis'] === 'Wajib') ? 'bg-orange-100 text-brand-800' : 'bg-slate-100 text-slate-600' ?> rounded-md font-semibold text-[11px]"><?= htmlspecialchars($mk['jenis'] ?: 'Wajib') ?></span>
                                             </td>
+                                            <td class="p-3 text-center" id="col-ekuivalensi-<?= $mk['id'] ?>">
+                                                <?php 
+                                                    $sumEkui = $ekuivalensi_summary[$mk['id']] ?? null;
+                                                    if ($sumEkui && $sumEkui['count'] > 0): 
+                                                        $tSks = (int)$sumEkui['total_sks'];
+                                                        $targetSks = (int)$mk['sks'];
+                                                        $badgeClass = ($tSks === $targetSks) 
+                                                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100' 
+                                                            : (($tSks < $targetSks) 
+                                                                ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' 
+                                                                : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100');
+                                                        $iconStatus = ($tSks === $targetSks) ? '✅' : (($tSks < $targetSks) ? '⚠️' : 'ℹ️');
+                                                ?>
+                                                    <button onclick='openModalEkuivalensiSingle(<?= json_encode($mk) ?>)' class="px-2 py-0.5 rounded-lg border text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer <?= $badgeClass ?>" title="Klik untuk mengelola ekuivalensi: <?= $sumEkui['count'] ?> MK ekuivalen (Total <?= $tSks ?> dari <?= $targetSks ?> SKS)">
+                                                        <span><?= $iconStatus ?></span> <?= $sumEkui['count'] ?> MK (<?= $tSks ?>/<?= $targetSks ?> SKS)
+                                                    </button>
+                                                <?php else: ?>
+                                                    <button onclick='openModalEkuivalensiSingle(<?= json_encode($mk) ?>)' class="px-2 py-0.5 rounded-lg border border-dashed border-slate-300 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/50 transition cursor-pointer" title="Belum ada ekuivalensi. Klik untuk menambahkan.">
+                                                        + Atur
+                                                    </button>
+                                                <?php endif; ?>
+                                            </td>
                                             <td class="p-3 text-center">
                                                 <div class="flex items-center justify-center gap-1.5">
+                                                    <button onclick='openModalEkuivalensiSingle(<?= json_encode($mk) ?>)' class="p-1.5 hover:bg-indigo-100 text-indigo-600 rounded-lg transition" title="Kelola Ekuivalensi">
+                                                        🔄
+                                                    </button>
                                                     <button onclick='openModalEditMK(<?= json_encode($mk) ?>)' class="p-1.5 hover:bg-slate-200 text-slate-600 rounded-lg transition" title="Edit Mata Kuliah">
                                                         ✏️
                                                     </button>
@@ -806,6 +841,269 @@
         </div>
     </div>
 
+    <!-- ======================================================================= -->
+    <!-- MODAL 3: KELOLA EKUIVALENSI MATA KULIAH (SINGLE & MULTIPLE SELECT) -->
+    <!-- ======================================================================= -->
+    <div id="modalEkuivalensi" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" onclick="if(event.target === this) closeModalEkuivalensi()">
+        <div class="bg-white rounded-3xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-gradient-to-r from-indigo-50/90 via-purple-50/50 to-white border-b border-indigo-100 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-2xl bg-indigo-600 text-white flex items-center justify-center text-xl shadow-md shadow-indigo-200">
+                        🔄
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-800">Kelola Ekuivalensi Mata Kuliah</h3>
+                        <p class="text-xs text-slate-500">Petakan mata kuliah kurikulum lama / setara ke mata kuliah kurikulum utama.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="closeModalEkuivalensi()" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 border border-slate-200 flex items-center justify-center font-bold text-sm transition cursor-pointer">✕</button>
+            </div>
+
+            <!-- Multiple MK Tabs Strip (Visible only when multiple MKs were selected from table) -->
+            <div id="ekuiMultiTabsBar" class="hidden px-6 py-2.5 bg-slate-50 border-b border-slate-200 overflow-x-auto flex items-center gap-2 text-xs scrollbar-none shrink-0">
+                <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider shrink-0 mr-1">Mata Kuliah:</span>
+                <div id="ekuiMultiTabsList" class="flex items-center gap-1.5 flex-nowrap"></div>
+            </div>
+
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-5 flex-1">
+                <!-- Target Course Card with Live SKS Status Bar -->
+                <div class="p-4 rounded-2xl bg-gradient-to-br from-indigo-50/60 to-purple-50/30 border border-indigo-100/80 shadow-xs">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-indigo-100/60">
+                        <div>
+                            <span class="text-[10px] font-bold uppercase tracking-wider text-indigo-600 bg-indigo-100/80 px-2 py-0.5 rounded-md">Mata Kuliah Utama</span>
+                            <div class="flex items-baseline gap-2 mt-1">
+                                <span id="ekuiTargetKode" class="font-mono font-extrabold text-indigo-900 text-base">CS101</span>
+                                <h4 id="ekuiTargetNama" class="font-bold text-slate-800 text-sm">Algoritma & Pemrograman</h4>
+                            </div>
+                            <span id="ekuiTargetMeta" class="text-xs text-slate-500 mt-0.5 block">S1 Informatika • Kurikulum 2024 • Semester 1</span>
+                        </div>
+                        <div class="text-left sm:text-right shrink-0">
+                            <span class="text-[11px] font-bold text-slate-500 block uppercase">Target SKS</span>
+                            <span id="ekuiTargetSksBadge" class="text-2xl font-black text-indigo-700 font-mono">4 <span class="text-xs font-semibold text-slate-500">SKS</span></span>
+                        </div>
+                    </div>
+
+                    <!-- Live SKS Balance Bar (Kombinasi / Many-to-One Status) -->
+                    <div class="mt-3 pt-1">
+                        <div class="flex items-center justify-between text-xs font-bold mb-1.5">
+                            <div class="flex items-center gap-1.5">
+                                <span>⚖️ Pemenuhan SKS:</span>
+                                <span id="ekuiTotalSksText" class="font-mono text-indigo-950 font-extrabold">0 / 4 SKS</span>
+                            </div>
+                            <div id="ekuiStatusBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200">
+                                Memuat...
+                            </div>
+                        </div>
+                        <!-- Progress bar -->
+                        <div class="w-full bg-slate-200 h-2.5 rounded-full overflow-hidden">
+                            <div id="ekuiProgressBar" class="h-full bg-indigo-600 transition-all duration-300 rounded-full" style="width: 0%"></div>
+                        </div>
+                        <p id="ekuiStatusHint" class="text-[11px] text-slate-500 mt-1.5">
+                            💡 Total SKS dari mata kuliah ekuivalen harus mencukupi target SKS mata kuliah utama.
+                        </p>
+                    </div>
+                </div>
+
+                <!-- Existing Linked Ekuivalensi Courses -->
+                <div>
+                    <div class="flex items-center justify-between mb-2.5">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                            <span>📋</span> Mata Kuliah Yang Ditautkan Sebagai Ekuivalen (<span id="ekuiLinkedCount">0</span>)
+                        </h4>
+                    </div>
+                    
+                    <div class="rounded-xl border border-slate-200 overflow-hidden bg-white">
+                        <div id="ekuiEmptyNotice" class="p-6 text-center text-slate-400">
+                            <span class="text-2xl block mb-1">🔗</span>
+                            <p class="font-semibold text-xs text-slate-600">Belum ada mata kuliah ekuivalen yang ditautkan</p>
+                            <p class="text-[11px] text-slate-400 mt-0.5">Pilih dari master mata kuliah lain di bawah atau masukkan manual.</p>
+                        </div>
+                        <table id="ekuiLinkedTable" class="w-full text-left text-xs hidden">
+                            <thead class="bg-slate-50 text-slate-600 font-bold uppercase text-[10px] tracking-wider border-b border-slate-200">
+                                <tr>
+                                    <th class="p-2.5 w-24">Kode MK</th>
+                                    <th class="p-2.5">Nama MK Ekuivalen</th>
+                                    <th class="p-2.5 text-center w-16">SKS</th>
+                                    <th class="p-2.5 w-32">Kurikulum Asal</th>
+                                    <th class="p-2.5">Keterangan</th>
+                                    <th class="p-2.5 text-center w-14">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="ekuiLinkedBody" class="divide-y divide-slate-100"></tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Section: Tambah Ekuivalensi Baru (2 Mode: Multi-Select dari Master & Input Manual) -->
+                <div class="pt-2 border-t border-slate-200">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="text-xs font-extrabold uppercase tracking-wider text-slate-700 flex items-center gap-1.5">
+                            <span>➕</span> Tambah Mata Kuliah Ekuivalen
+                        </h4>
+                        <!-- Sub tabs -->
+                        <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl text-xs">
+                            <button type="button" onclick="switchEkuiAddMode('multiselect')" id="btnEkuiModeMulti" class="px-3 py-1 font-bold rounded-lg bg-white text-indigo-700 shadow-2xs transition cursor-pointer">
+                                <span>☑️</span> Pilih dari Master MK
+                            </button>
+                            <button type="button" onclick="switchEkuiAddMode('manual')" id="btnEkuiModeManual" class="px-3 py-1 font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer">
+                                <span>✍️</span> Input Manual
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Panel A: Multi-Select from Master MK Candidates -->
+                    <div id="ekuiPanelMulti" class="space-y-3">
+                        <div class="flex flex-col sm:flex-row gap-2">
+                            <div class="relative flex-1">
+                                <input type="text" id="searchEkuiCandidate" onkeyup="filterEkuiCandidates()" placeholder="Cari Kode atau Nama MK master untuk dijadikan ekuivalen..." class="w-full pl-8 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                                <span class="absolute left-2.5 top-2.5 text-slate-400">🔍</span>
+                            </div>
+                            <button type="button" onclick="linkSelectedEkuiCandidates()" id="btnLinkCandidate" disabled class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                                <span>🔗</span> Tautkan Terpilih (<span id="countSelectedCandidate">0</span>)
+                            </button>
+                        </div>
+
+                        <!-- Candidates List with Checkboxes -->
+                        <div class="max-h-56 overflow-y-auto rounded-xl border border-slate-200 divide-y divide-slate-100 bg-white" id="ekuiCandidateList">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                        <div class="text-[11px] text-slate-500 flex items-center justify-between">
+                            <span>Tip: Kamu bisa centang beberapa MK sekaligus jika SKS MK utama membutuhkan gabungan ekuivalensi.</span>
+                            <span id="ekuiSelectedCandidateSksInfo" class="font-bold text-indigo-700"></span>
+                        </div>
+                    </div>
+
+                    <!-- Panel B: Manual Form Input -->
+                    <div id="ekuiPanelManual" class="hidden p-4 rounded-2xl bg-slate-50 border border-slate-200 space-y-3">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Kode MK Ekuivalen <span class="text-rose-500">*</span></label>
+                                <input type="text" id="manual_kode_ekuivalen" placeholder="Misal: IF101" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl uppercase font-mono outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div class="sm:col-span-2">
+                                <label class="block font-bold text-slate-700 mb-1">Nama MK Ekuivalen <span class="text-rose-500">*</span></label>
+                                <input type="text" id="manual_nama_ekuivalen" placeholder="Misal: Dasar Algoritma & Pemrograman" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs">
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">SKS Ekuivalen <span class="text-rose-500">*</span></label>
+                                <input type="number" id="manual_sks_ekuivalen" min="1" max="10" value="2" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Kurikulum Asal</label>
+                                <input type="text" id="manual_kurikulum_asal" placeholder="Misal: Kurikulum 2020 / MBKM" value="Kurikulum 2020" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                            <div>
+                                <label class="block font-bold text-slate-700 mb-1">Keterangan (Opsional)</label>
+                                <input type="text" id="manual_keterangan" placeholder="Catatan konversi" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-indigo-500">
+                            </div>
+                        </div>
+                        <div class="flex justify-end pt-1">
+                            <button type="button" onclick="simpanEkuiManual()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition flex items-center gap-1.5 cursor-pointer">
+                                <span>+</span> Simpan MK Ekuivalen
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <span class="text-xs text-slate-500">Perubahan ekuivalensi otomatis tersimpan ke sistem perwalian.</span>
+                <button type="button" onclick="closeModalEkuivalensi()" class="px-5 py-2 bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer">
+                    Selesai
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ======================================================================= -->
+    <!-- MODAL 4: IMPORT EXCEL EKUIVALENSI MATA KULIAH -->
+    <!-- ======================================================================= -->
+    <div id="modalImportEkuivalensi" class="fixed inset-0 z-50 hidden bg-slate-900/50 backdrop-blur-sm flex items-center justify-center p-3 sm:p-5" onclick="if(event.target === this) closeModalImportEkuivalensi()">
+        <div class="bg-white rounded-2xl max-w-4xl w-full max-h-[92vh] flex flex-col shadow-2xl border border-slate-200 overflow-hidden animate-in fade-in zoom-in duration-200">
+            <!-- Modal Header -->
+            <div class="px-6 py-4 bg-slate-50/80 border-b border-slate-200 flex items-center justify-between shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-indigo-100 text-indigo-600 flex items-center justify-center text-xl shadow-xs">
+                        📥
+                    </div>
+                    <div>
+                        <h3 class="text-base font-extrabold text-slate-800">Import Pemetaan Ekuivalensi Excel</h3>
+                        <p class="text-xs text-slate-500">Unggah pemetaan mata kuliah ekuivalen secara massal (.xlsx / .csv)</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="downloadTemplateEkuivalensi()" class="px-3 py-1.5 bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold rounded-xl border border-slate-200 shadow-2xs transition flex items-center gap-1.5 cursor-pointer">
+                        <span>📄</span> Unduh Template
+                    </button>
+                    <button type="button" onclick="closeModalImportEkuivalensi()" class="w-8 h-8 rounded-xl bg-white hover:bg-slate-100 text-slate-400 hover:text-slate-600 border border-slate-200 flex items-center justify-center font-bold text-sm transition cursor-pointer">✕</button>
+                </div>
+            </div>
+            
+            <!-- Modal Body Scrollable -->
+            <div class="p-6 overflow-y-auto space-y-4 flex-1">
+                <!-- Dropzone Area -->
+                <input type="file" id="fileEkuiInput" accept=".xlsx, .xls, .csv" class="hidden" onchange="handleEkuiFileSelect(event)">
+                <div onclick="document.getElementById('fileEkuiInput').click()" class="dropzone-box p-6 text-center cursor-pointer transition hover:border-indigo-500 hover:bg-indigo-50/30" id="ekuiDropzone">
+                    <div class="w-12 h-12 rounded-2xl bg-indigo-50 text-indigo-600 mx-auto flex items-center justify-center text-2xl mb-2">📊</div>
+                    <h4 class="text-xs font-bold text-slate-800">Klik atau Tarik File Excel Ekuivalensi ke Sini</h4>
+                    <p class="text-[11px] text-slate-500 mt-1">Kolom yang dibutuhkan: <code>Kode MK Utama</code>, <code>Kode MK Ekuivalen</code>, <code>Nama MK Ekuivalen</code>, <code>SKS Ekuivalen</code>, <code>Kurikulum Asal</code>, <code>Keterangan</code></p>
+                </div>
+
+                <!-- Preview Container -->
+                <div id="previewEkuiContainer" class="hidden space-y-4">
+                    <div class="grid grid-cols-3 gap-2.5 text-xs">
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                            <span class="text-[11px] font-bold text-slate-500 block">Total Baris</span>
+                            <span class="text-lg font-extrabold text-slate-800 font-mono" id="statEkuiTotal">0</span>
+                        </div>
+                        <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                            <span class="text-[11px] font-bold text-emerald-700 block">✓ Valid</span>
+                            <span class="text-lg font-extrabold text-emerald-700 font-mono" id="statEkuiValid">0</span>
+                        </div>
+                        <div class="p-3 bg-rose-50 border border-rose-200 rounded-xl">
+                            <span class="text-[11px] font-bold text-rose-700 block">✕ Tidak Lengkap</span>
+                            <span class="text-lg font-extrabold text-rose-700 font-mono" id="statEkuiError">0</span>
+                        </div>
+                    </div>
+
+                    <!-- Table Preview -->
+                    <div class="max-h-64 overflow-y-auto rounded-xl border border-slate-200 text-xs">
+                        <table class="w-full text-left" id="tablePreviewEkui">
+                            <thead class="bg-slate-100 text-slate-700 uppercase text-[10px] font-bold sticky top-0 shadow-xs">
+                                <tr>
+                                    <th class="p-2.5 text-center w-10">No</th>
+                                    <th class="p-2.5 w-24">MK Utama</th>
+                                    <th class="p-2.5 w-28">MK Ekuivalen</th>
+                                    <th class="p-2.5">Nama MK Ekuivalen</th>
+                                    <th class="p-2.5 text-center w-14">SKS</th>
+                                    <th class="p-2.5 w-28">Kurikulum</th>
+                                    <th class="p-2.5">Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-100" id="tbodyPreviewEkui"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="px-6 py-3.5 bg-slate-50 border-t border-slate-200 flex items-center justify-between shrink-0">
+                <span class="text-xs text-slate-500" id="footerEkuiNote">Pilih file excel untuk memproses ekuivalensi.</span>
+                <div class="flex items-center gap-2">
+                    <button type="button" onclick="closeModalImportEkuivalensi()" class="px-4 py-2 bg-white hover:bg-slate-100 text-slate-700 font-bold text-xs rounded-xl border border-slate-200 transition cursor-pointer">Batal</button>
+                    <button type="button" onclick="sendImportEkuivalensi()" id="btnSaveImportEkui" disabled class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-xs transition disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer">
+                        Simpan ke Database
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- JAVASCRIPT LOGIC -->
     <script>
         function switchTab(tabId) {
@@ -917,6 +1215,8 @@
             const cntTop = document.getElementById('countSelectedMK');
             const cntText = document.getElementById('countSelectedMKText');
             const cntBtn = document.getElementById('countSelectedMKBtn');
+            const cntEkui = document.getElementById('countSelectedMKEkuiBtn');
+            if (cntEkui) cntEkui.innerText = count;
             const masterCb = document.getElementById('checkAllMK');
 
             if (cntTop) cntTop.innerText = count;
@@ -1031,6 +1331,7 @@
 
         const EXISTING_MK_CODES = <?= json_encode(array_values(array_filter(array_map('strtoupper', array_column($mata_kuliah, 'kode_mk'))))) ?>;
         const EXISTING_MK_NAMES = <?= json_encode(array_values(array_filter(array_map('strtolower', array_column($mata_kuliah, 'nama_mk'))))) ?>;
+        const ALL_MASTER_MKS = <?= json_encode($mata_kuliah) ?>;
 
         let parsedMKData = [];
         let mkPreviewFilter = 'all';
@@ -1360,6 +1661,743 @@
             const wb = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(wb, ws, 'Template Master MK');
             XLSX.writeFile(wb, 'template_master_mata_kuliah.xlsx');
+        }
+
+        function escapeHtml(str) {
+            if (str === null || str === undefined) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#039;');
+        }
+
+        // --- EKUIVALENSI MATA KULIAH MANAGEMENT ---
+        let currentEkuiMK = null;
+        let ekuiSelectedMKList = [];
+        let ekuiActiveIndex = 0;
+        let ekuiCandidates = [];
+        let selectedCandidateIds = new Set();
+        let parsedEkuiExcelData = [];
+
+        function openModalEkuivalensiSingle(mk) {
+            if (typeof mk === 'string') {
+                try { mk = JSON.parse(mk); } catch (e) { console.error(e); }
+            }
+            if (!mk || !mk.id) return;
+            ekuiSelectedMKList = [mk];
+            ekuiActiveIndex = 0;
+            renderEkuiMultiTabs();
+            loadEkuivalensiForMk(mk);
+            document.getElementById('modalEkuivalensi').classList.remove('hidden');
+        }
+
+        function openModalEkuivalensiMultiple() {
+            const checkedBoxes = Array.from(document.querySelectorAll('.check-item-mk:checked'));
+            if (checkedBoxes.length === 0) {
+                Swal.fire('Pilih Mata Kuliah', 'Centang minimal satu mata kuliah pada tabel untuk mengatur ekuivalensi.', 'info');
+                return;
+            }
+
+            const selectedIds = new Set(checkedBoxes.map(cb => String(cb.value)));
+            ekuiSelectedMKList = (typeof ALL_MASTER_MKS !== 'undefined' ? ALL_MASTER_MKS : []).filter(m => selectedIds.has(String(m.id)));
+
+            if (ekuiSelectedMKList.length === 0) {
+                Swal.fire('Error', 'Data mata kuliah terpilih tidak ditemukan.', 'error');
+                return;
+            }
+
+            ekuiActiveIndex = 0;
+            renderEkuiMultiTabs();
+            loadEkuivalensiForMk(ekuiSelectedMKList[0]);
+            document.getElementById('modalEkuivalensi').classList.remove('hidden');
+        }
+
+        function closeModalEkuivalensi() {
+            const modal = document.getElementById('modalEkuivalensi');
+            if (modal) modal.classList.add('hidden');
+            currentEkuiMK = null;
+            selectedCandidateIds.clear();
+        }
+
+        function renderEkuiMultiTabs() {
+            const bar = document.getElementById('ekuiMultiTabsBar');
+            const list = document.getElementById('ekuiMultiTabsList');
+            if (!bar || !list) return;
+
+            if (ekuiSelectedMKList.length <= 1) {
+                bar.classList.add('hidden');
+                list.innerHTML = '';
+                return;
+            }
+
+            bar.classList.remove('hidden');
+            list.innerHTML = ekuiSelectedMKList.map((mk, idx) => {
+                const isActive = (idx === ekuiActiveIndex);
+                const activeCls = isActive 
+                    ? 'bg-indigo-600 text-white font-bold shadow-xs' 
+                    : 'bg-white text-slate-700 hover:bg-slate-100 border border-slate-200 font-semibold';
+                return `
+                    <button type="button" onclick="selectEkuiTab(${idx})" class="px-3 py-1 rounded-xl text-xs flex items-center gap-1.5 transition shrink-0 cursor-pointer ${activeCls}">
+                        <span class="font-mono font-bold">${escapeHtml(mk.kode_mk)}</span>
+                        <span class="text-[11px] opacity-80">(${mk.sks} SKS)</span>
+                    </button>
+                `;
+            }).join('');
+        }
+
+        function selectEkuiTab(idx) {
+            if (idx < 0 || idx >= ekuiSelectedMKList.length) return;
+            ekuiActiveIndex = idx;
+            renderEkuiMultiTabs();
+            loadEkuivalensiForMk(ekuiSelectedMKList[idx]);
+        }
+
+        async function loadEkuivalensiForMk(mk) {
+            currentEkuiMK = mk;
+            selectedCandidateIds.clear();
+
+            // Populate header target info
+            const elKode = document.getElementById('ekuiTargetKode');
+            const elNama = document.getElementById('ekuiTargetNama');
+            const elMeta = document.getElementById('ekuiTargetMeta');
+            const elSks = document.getElementById('ekuiTargetSksBadge');
+
+            if (elKode) elKode.innerText = mk.kode_mk || '-';
+            if (elNama) elNama.innerText = mk.nama_mk || '-';
+            if (elMeta) elMeta.innerText = `${mk.prodi || 'Program Studi'} • Kurikulum ${mk.kurikulum || '2024'} • Semester ${mk.semester || 1}`;
+            if (elSks) elSks.innerHTML = `${mk.sks || 0} <span class="text-xs font-semibold text-slate-500">SKS</span>`;
+
+            // Reset status while loading
+            const bar = document.getElementById('ekuiProgressBar');
+            const badge = document.getElementById('ekuiStatusBadge');
+            const txt = document.getElementById('ekuiTotalSksText');
+            if (bar) { bar.style.width = '20%'; bar.className = 'h-full bg-slate-300 transition-all duration-300 rounded-full animate-pulse'; }
+            if (badge) { badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200'; badge.innerText = 'Memuat...'; }
+            if (txt) txt.innerText = `... / ${mk.sks} SKS`;
+
+            try {
+                const res = await fetch(`<?= site_url("prodi/perwalian/get_ekuivalensi_ajax/") ?>${mk.id}`);
+                const json = await res.json();
+                if (json.status === 'success') {
+                    renderEkuiData(json);
+                } else {
+                    Swal.fire('Error', json.message || 'Gagal memuat data ekuivalensi.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Terjadi kesalahan jaringan saat memuat data ekuivalensi.', 'error');
+            }
+        }
+
+        function renderEkuiData(data) {
+            const targetSks = parseInt(data.target_sks, 10) || parseInt(currentEkuiMK?.sks, 10) || 0;
+            const totalSks = parseInt(data.total_sks, 10) || 0;
+            const items = data.items || [];
+
+            // Progress calculation
+            const percent = targetSks > 0 ? Math.min(100, Math.round((totalSks / targetSks) * 100)) : 0;
+            const bar = document.getElementById('ekuiProgressBar');
+            const badge = document.getElementById('ekuiStatusBadge');
+            const txt = document.getElementById('ekuiTotalSksText');
+            const hint = document.getElementById('ekuiStatusHint');
+
+            if (txt) txt.innerText = `${totalSks} / ${targetSks} SKS`;
+            if (bar) {
+                bar.style.width = `${percent}%`;
+                bar.classList.remove('animate-pulse');
+            }
+
+            if (items.length === 0) {
+                if (bar) bar.className = 'h-full bg-slate-300 transition-all duration-300 rounded-full';
+                if (badge) {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-slate-100 text-slate-600 border border-slate-200';
+                    badge.innerText = 'Belum Ada Ekuivalensi';
+                }
+                if (hint) hint.innerHTML = '💡 Belum ada mata kuliah yang dipetakan sebagai ekuivalen untuk mata kuliah ini.';
+            } else if (totalSks === targetSks) {
+                if (bar) bar.className = 'h-full bg-emerald-500 transition-all duration-300 rounded-full';
+                if (badge) {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-emerald-50 text-emerald-700 border border-emerald-300';
+                    badge.innerText = `✅ SKS Terpenuhi (${totalSks}/${targetSks} SKS)`;
+                }
+                if (hint) hint.innerHTML = `🎉 SKS ekuivalensi telah seimbang (pas ${targetSks} SKS). Pemetaan kurikulum telah lengkap.`;
+            } else if (totalSks < targetSks) {
+                const def = targetSks - totalSks;
+                if (bar) bar.className = 'h-full bg-amber-500 transition-all duration-300 rounded-full';
+                if (badge) {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-amber-50 text-amber-800 border border-amber-300';
+                    badge.innerText = `⚠️ Kurang ${def} SKS (${totalSks}/${targetSks} SKS)`;
+                }
+                if (hint) hint.innerHTML = `⚠️ SKS MK ekuivalen (${totalSks} SKS) masih kurang <strong>${def} SKS</strong> dari MK utama (${targetSks} SKS). Silakan tambahkan MK ekuivalen pendamping di bawah agar genap.`;
+            } else {
+                const sur = totalSks - targetSks;
+                if (bar) bar.className = 'h-full bg-indigo-600 transition-all duration-300 rounded-full';
+                if (badge) {
+                    badge.className = 'px-2.5 py-0.5 rounded-full text-[11px] font-extrabold bg-indigo-50 text-indigo-700 border border-indigo-300';
+                    badge.innerText = `ℹ️ Lebih ${sur} SKS (${totalSks}/${targetSks} SKS)`;
+                }
+                if (hint) hint.innerHTML = `ℹ️ Total SKS ekuivalen (${totalSks} SKS) melebihi target SKS utama (${targetSks} SKS). Mahasiswa diakui sesuai aturan konversi.`;
+            }
+
+            // Linked Items Table
+            const countEl = document.getElementById('ekuiLinkedCount');
+            const emptyNotice = document.getElementById('ekuiEmptyNotice');
+            const linkedTable = document.getElementById('ekuiLinkedTable');
+            const linkedBody = document.getElementById('ekuiLinkedBody');
+
+            if (countEl) countEl.innerText = items.length;
+
+            if (items.length === 0) {
+                if (emptyNotice) emptyNotice.classList.remove('hidden');
+                if (linkedTable) linkedTable.classList.add('hidden');
+                if (linkedBody) linkedBody.innerHTML = '';
+            } else {
+                if (emptyNotice) emptyNotice.classList.add('hidden');
+                if (linkedTable) linkedTable.classList.remove('hidden');
+                if (linkedBody) {
+                    linkedBody.innerHTML = items.map(item => `
+                        <tr class="hover:bg-slate-50 transition">
+                            <td class="p-2.5 font-mono font-bold text-indigo-700">${escapeHtml(item.kode_mk_ekuivalen)}</td>
+                            <td class="p-2.5 font-semibold text-slate-800">${escapeHtml(item.nama_mk_ekuivalen)}</td>
+                            <td class="p-2.5 text-center">
+                                <span class="px-2 py-0.5 bg-indigo-50 text-indigo-700 font-bold rounded-md font-mono text-[11px]">${parseInt(item.sks_ekuivalen, 10)} SKS</span>
+                            </td>
+                            <td class="p-2.5 text-slate-600">
+                                <span class="px-2 py-0.5 bg-slate-100 text-slate-700 rounded text-[11px] font-medium">${escapeHtml(item.kurikulum_asal || '-')}</span>
+                            </td>
+                            <td class="p-2.5 text-slate-500 text-[11px]">${escapeHtml(item.keterangan || '-')}</td>
+                            <td class="p-2.5 text-center">
+                                <button type="button" onclick="hapusEkuiItem(${item.id})" class="w-7 h-7 rounded-lg hover:bg-rose-50 text-slate-400 hover:text-rose-600 transition flex items-center justify-center mx-auto cursor-pointer" title="Hapus ekuivalensi ini">
+                                    🗑️
+                                </button>
+                            </td>
+                        </tr>
+                    `).join('');
+                }
+            }
+
+            // Update row badge on background master table
+            updateMainTableRowEkuiBadge(currentEkuiMK.id, items.length, totalSks, targetSks);
+
+            // Populate candidates
+            ekuiCandidates = data.master_candidates || [];
+            renderEkuiCandidatesList();
+        }
+
+        function updateMainTableRowEkuiBadge(mkId, count, totalSks, targetSks) {
+            const col = document.getElementById(`col-ekuivalensi-${mkId}`);
+            if (!col) return;
+
+            const mkObj = (typeof ALL_MASTER_MKS !== 'undefined' ? ALL_MASTER_MKS : []).find(m => String(m.id) === String(mkId)) || currentEkuiMK;
+            const mkJsonStr = escapeHtml(JSON.stringify(mkObj));
+
+            if (count > 0) {
+                const isPas = (totalSks === targetSks);
+                const isKurang = (totalSks < targetSks);
+                const badgeClass = isPas
+                    ? 'bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100'
+                    : (isKurang ? 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100' : 'bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-100');
+                const icon = isPas ? '✅' : (isKurang ? '⚠️' : 'ℹ️');
+
+                col.innerHTML = `
+                    <button onclick='openModalEkuivalensiSingle(${JSON.stringify(mkObj)})' class="px-2 py-0.5 rounded-lg border text-[11px] font-bold inline-flex items-center gap-1 transition cursor-pointer ${badgeClass}" title="${count} MK ekuivalen (${totalSks}/${targetSks} SKS)">
+                        <span>${icon}</span> ${count} MK (${totalSks}/${targetSks} SKS)
+                    </button>
+                `;
+            } else {
+                col.innerHTML = `
+                    <button onclick='openModalEkuivalensiSingle(${JSON.stringify(mkObj)})' class="px-2 py-0.5 rounded-lg border border-dashed border-slate-300 text-[11px] font-semibold text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50/50 transition cursor-pointer" title="Belum ada ekuivalensi. Klik untuk menambahkan.">
+                        + Atur
+                    </button>
+                `;
+            }
+        }
+
+        function switchEkuiAddMode(mode) {
+            const panelMulti = document.getElementById('ekuiPanelMulti');
+            const panelManual = document.getElementById('ekuiPanelManual');
+            const btnMulti = document.getElementById('btnEkuiModeMulti');
+            const btnManual = document.getElementById('btnEkuiModeManual');
+
+            if (mode === 'multiselect') {
+                if (panelMulti) panelMulti.classList.remove('hidden');
+                if (panelManual) panelManual.classList.add('hidden');
+                if (btnMulti) { btnMulti.className = 'px-3 py-1 font-bold rounded-lg bg-white text-indigo-700 shadow-2xs transition cursor-pointer'; }
+                if (btnManual) { btnManual.className = 'px-3 py-1 font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer'; }
+            } else {
+                if (panelMulti) panelMulti.classList.add('hidden');
+                if (panelManual) panelManual.classList.remove('hidden');
+                if (btnManual) { btnManual.className = 'px-3 py-1 font-bold rounded-lg bg-white text-indigo-700 shadow-2xs transition cursor-pointer'; }
+                if (btnMulti) { btnMulti.className = 'px-3 py-1 font-bold rounded-lg text-slate-600 hover:text-slate-900 transition cursor-pointer'; }
+            }
+        }
+
+        function filterEkuiCandidates() {
+            renderEkuiCandidatesList();
+        }
+
+        function renderEkuiCandidatesList() {
+            const listEl = document.getElementById('ekuiCandidateList');
+            if (!listEl) return;
+
+            const q = (document.getElementById('searchEkuiCandidate')?.value || '').toLowerCase().trim();
+            const filtered = ekuiCandidates.filter(c => {
+                if (!q) return true;
+                const txt = `${c.kode_mk || ''} ${c.nama_mk || ''} ${c.prodi || ''}`.toLowerCase();
+                return txt.includes(q);
+            });
+
+            if (filtered.length === 0) {
+                listEl.innerHTML = `
+                    <div class="p-6 text-center text-slate-400 text-xs">
+                        Tidak ada mata kuliah master yang cocok.
+                    </div>
+                `;
+                updateCandidateSelectionInfo();
+                return;
+            }
+
+            listEl.innerHTML = filtered.map(c => {
+                const isChecked = selectedCandidateIds.has(c.id);
+                return `
+                    <label class="flex items-center justify-between p-2.5 hover:bg-slate-50 transition cursor-pointer select-none ${isChecked ? 'bg-indigo-50/50' : ''}">
+                        <div class="flex items-center gap-2.5">
+                            <input type="checkbox" value="${c.id}" ${isChecked ? 'checked' : ''} onchange="toggleCandidateCheckbox(${c.id}, this.checked)" class="w-4 h-4 rounded text-indigo-600 focus:ring-indigo-500 border-slate-300 cursor-pointer">
+                            <div>
+                                <div class="flex items-center gap-2">
+                                    <span class="font-mono font-bold text-slate-800 text-xs">${escapeHtml(c.kode_mk)}</span>
+                                    <span class="font-semibold text-slate-800 text-xs">${escapeHtml(c.nama_mk)}</span>
+                                </div>
+                                <span class="text-[11px] text-slate-400">${escapeHtml(c.prodi || 'Program Studi')} • Kurikulum ${escapeHtml(c.kurikulum || '2024')} • Semester ${c.semester || 1}</span>
+                            </div>
+                        </div>
+                        <div class="shrink-0">
+                            <span class="px-2 py-0.5 rounded font-mono font-bold text-xs bg-indigo-50 text-indigo-700">${c.sks} SKS</span>
+                        </div>
+                    </label>
+                `;
+            }).join('');
+
+            updateCandidateSelectionInfo();
+        }
+
+        function toggleCandidateCheckbox(id, checked) {
+            if (checked) {
+                selectedCandidateIds.add(id);
+            } else {
+                selectedCandidateIds.delete(id);
+            }
+            updateCandidateSelectionInfo();
+        }
+
+        function updateCandidateSelectionInfo() {
+            const count = selectedCandidateIds.size;
+            const btn = document.getElementById('btnLinkCandidate');
+            const cntSpan = document.getElementById('countSelectedCandidate');
+            const sksInfo = document.getElementById('ekuiSelectedCandidateSksInfo');
+
+            if (cntSpan) cntSpan.innerText = count;
+
+            let totalSelSks = 0;
+            selectedCandidateIds.forEach(id => {
+                const c = ekuiCandidates.find(item => item.id == id);
+                if (c) totalSelSks += (parseInt(c.sks, 10) || 0);
+            });
+
+            if (sksInfo) {
+                sksInfo.innerText = count > 0 ? `+${totalSelSks} SKS dari ${count} MK terpilih` : '';
+            }
+
+            if (btn) {
+                btn.disabled = (count === 0);
+            }
+        }
+
+        async function linkSelectedEkuiCandidates() {
+            if (!currentEkuiMK || selectedCandidateIds.size === 0) return;
+
+            const candidateIds = Array.from(selectedCandidateIds);
+            const btn = document.getElementById('btnLinkCandidate');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Menautkan...';
+            }
+
+            try {
+                const res = await fetch('<?= site_url("prodi/perwalian/simpan_ekuivalensi_ajax") ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_mk_utama: currentEkuiMK.id,
+                        kode_mk_utama: currentEkuiMK.kode_mk,
+                        candidate_ids: candidateIds
+                    })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    selectedCandidateIds.clear();
+                    await loadEkuivalensiForMk(currentEkuiMK);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil Ditautkan',
+                        text: json.message || `${candidateIds.length} mata kuliah berhasil dijadikan ekuivalen.`,
+                        timer: 1500,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Gagal', json.message || 'Gagal menautkan mata kuliah.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Terjadi kesalahan sistem saat menautkan mata kuliah.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerHTML = `<span>🔗</span> Tautkan Terpilih (<span id="countSelectedCandidate">${selectedCandidateIds.size}</span>)`;
+                }
+            }
+        }
+
+        async function simpanEkuiManual() {
+            if (!currentEkuiMK) return;
+
+            const kode = (document.getElementById('manual_kode_ekuivalen')?.value || '').trim();
+            const nama = (document.getElementById('manual_nama_ekuivalen')?.value || '').trim();
+            const sks = parseInt(document.getElementById('manual_sks_ekuivalen')?.value, 10);
+            const kur = (document.getElementById('manual_kurikulum_asal')?.value || '').trim() || 'Kurikulum 2020';
+            const ket = (document.getElementById('manual_keterangan')?.value || '').trim();
+
+            if (!kode || !nama) {
+                Swal.fire('Form Belum Lengkap', 'Kode MK dan Nama MK Ekuivalen wajib diisi.', 'warning');
+                return;
+            }
+
+            if (isNaN(sks) || sks <= 0 || sks > 10) {
+                Swal.fire('Format SKS Tidak Valid', 'SKS harus berupa angka antara 1 sampai 10.', 'warning');
+                return;
+            }
+
+            try {
+                const res = await fetch('<?= site_url("prodi/perwalian/simpan_ekuivalensi_ajax") ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id_mk_utama: currentEkuiMK.id,
+                        kode_mk_utama: currentEkuiMK.kode_mk,
+                        items: [{
+                            kode_mk_ekuivalen: kode,
+                            nama_mk_ekuivalen: nama,
+                            sks_ekuivalen: sks,
+                            kurikulum_asal: kur,
+                            keterangan: ket
+                        }]
+                    })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    // Reset input
+                    document.getElementById('manual_kode_ekuivalen').value = '';
+                    document.getElementById('manual_nama_ekuivalen').value = '';
+                    document.getElementById('manual_keterangan').value = '';
+                    await loadEkuivalensiForMk(currentEkuiMK);
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Tersimpan',
+                        text: 'Mata kuliah ekuivalen berhasil ditambahkan.',
+                        timer: 1300,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire('Gagal', json.message || 'Gagal menyimpan ekuivalensi.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Terjadi kesalahan sistem saat menyimpan ekuivalensi.', 'error');
+            }
+        }
+
+        async function hapusEkuiItem(idItem) {
+            if (!idItem) return;
+
+            Swal.fire({
+                title: 'Hapus Ekuivalensi?',
+                text: 'Mata kuliah ini tidak akan lagi dipetakan sebagai ekuivalen.',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#e11d48',
+                cancelButtonColor: '#94a3b8',
+                confirmButtonText: 'Ya, Hapus',
+                cancelButtonText: 'Batal'
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const fd = new FormData();
+                        fd.append('id', idItem);
+                        const res = await fetch('<?= site_url("prodi/perwalian/hapus_ekuivalensi_ajax") ?>', {
+                            method: 'POST',
+                            body: fd
+                        });
+                        const json = await res.json();
+                        if (json.status === 'success') {
+                            if (currentEkuiMK) {
+                                await loadEkuivalensiForMk(currentEkuiMK);
+                            }
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Dihapus',
+                                text: json.message || 'Ekuivalensi berhasil dihapus.',
+                                timer: 1200,
+                                showConfirmButton: false
+                            });
+                        } else {
+                            Swal.fire('Gagal', json.message || 'Gagal menghapus ekuivalensi.', 'error');
+                        }
+                    } catch (err) {
+                        console.error(err);
+                        Swal.fire('Error', 'Terjadi kesalahan saat menghapus.', 'error');
+                    }
+                }
+            });
+        }
+
+        // --- EKUIVALENSI EXCEL BULK IMPORT ---
+        function openModalImportEkuivalensi() {
+            parsedEkuiExcelData = [];
+            const fileInput = document.getElementById('fileEkuiInput');
+            if (fileInput) fileInput.value = '';
+
+            const preview = document.getElementById('previewEkuiContainer');
+            if (preview) preview.classList.add('hidden');
+
+            const btnSave = document.getElementById('btnSaveImportEkui');
+            if (btnSave) {
+                btnSave.disabled = true;
+                btnSave.innerText = 'Simpan ke Database';
+            }
+
+            const note = document.getElementById('footerEkuiNote');
+            if (note) note.innerText = 'Pilih file excel untuk memproses ekuivalensi.';
+
+            document.getElementById('modalImportEkuivalensi').classList.remove('hidden');
+        }
+
+        function closeModalImportEkuivalensi() {
+            document.getElementById('modalImportEkuivalensi').classList.add('hidden');
+        }
+
+        function handleEkuiFileSelect(e) {
+            const files = e.target.files;
+            if (files && files.length > 0) {
+                processEkuiFile(files[0]);
+            }
+        }
+
+        function processEkuiFile(file) {
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const rawRows = XLSX.utils.sheet_to_json(firstSheet, { defval: '' });
+
+                    if (!rawRows || rawRows.length === 0) {
+                        Swal.fire('File Kosong', 'Tidak ada data pada sheet pertama file Excel.', 'warning');
+                        return;
+                    }
+
+                    parseAndPreviewEkuiRows(rawRows);
+                } catch (err) {
+                    console.error(err);
+                    Swal.fire('Gagal Membaca File', 'Pastikan file berekstensi .xlsx, .xls, atau .csv yang valid.', 'error');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function parseAndPreviewEkuiRows(rawRows) {
+            parsedEkuiExcelData = [];
+            let validCount = 0;
+            let errorCount = 0;
+
+            rawRows.forEach((r, idx) => {
+                const kodeUtama = String(r['Kode MK Utama'] || r['kode_mk_utama'] || r['Kode Utama'] || r['Kode MK'] || '').trim().toUpperCase();
+                const kodeEkui = String(r['Kode MK Ekuivalen'] || r['kode_mk_ekuivalen'] || r['Kode Ekuivalen'] || '').trim().toUpperCase();
+                const namaEkui = String(r['Nama MK Ekuivalen'] || r['nama_mk_ekuivalen'] || r['Nama Ekuivalen'] || r['Nama MK'] || '').trim();
+                const sksRaw = r['SKS Ekuivalen'] !== undefined ? r['SKS Ekuivalen'] : (r['sks_ekuivalen'] !== undefined ? r['sks_ekuivalen'] : r['SKS']);
+                const sksEkui = parseInt(sksRaw, 10) || 0;
+                const kurAsal = String(r['Kurikulum Asal'] || r['kurikulum_asal'] || r['Kurikulum'] || 'Kurikulum 2020').trim();
+                const ket = String(r['Keterangan'] || r['keterangan'] || '').trim();
+
+                const errors = [];
+                if (!kodeUtama) errors.push('Kode MK Utama kosong');
+                if (!kodeEkui) errors.push('Kode MK Ekuivalen kosong');
+                if (!namaEkui) errors.push('Nama MK Ekuivalen kosong');
+                if (sksEkui <= 0 || sksEkui > 10) errors.push('SKS tidak valid (1-10)');
+
+                const isValid = (errors.length === 0);
+                if (isValid) validCount++; else errorCount++;
+
+                parsedEkuiExcelData.push({
+                    rowNum: idx + 1,
+                    kode_mk_utama: kodeUtama,
+                    kode_mk_ekuivalen: kodeEkui,
+                    nama_mk_ekuivalen: namaEkui,
+                    sks_ekuivalen: sksEkui || 2,
+                    kurikulum_asal: kurAsal,
+                    keterangan: ket,
+                    isValid: isValid,
+                    errors: errors
+                });
+            });
+
+            // Update stats
+            const totalEl = document.getElementById('statEkuiTotal');
+            const validEl = document.getElementById('statEkuiValid');
+            const errorEl = document.getElementById('statEkuiError');
+            const tbody = document.getElementById('tbodyPreviewEkui');
+            const previewContainer = document.getElementById('previewEkuiContainer');
+            const btnSave = document.getElementById('btnSaveImportEkui');
+            const note = document.getElementById('footerEkuiNote');
+
+            if (totalEl) totalEl.innerText = parsedEkuiExcelData.length;
+            if (validEl) validEl.innerText = validCount;
+            if (errorEl) errorEl.innerText = errorCount;
+
+            if (previewContainer) previewContainer.classList.remove('hidden');
+
+            if (tbody) {
+                tbody.innerHTML = parsedEkuiExcelData.map(row => `
+                    <tr class="hover:bg-slate-50 transition ${row.isValid ? '' : 'bg-rose-50/60'}">
+                        <td class="p-2.5 text-center font-mono text-slate-400">${row.rowNum}</td>
+                        <td class="p-2.5 font-mono font-bold ${row.kode_mk_utama ? 'text-indigo-900' : 'text-rose-600'}">${escapeHtml(row.kode_mk_utama || 'KOSONG')}</td>
+                        <td class="p-2.5 font-mono font-bold ${row.kode_mk_ekuivalen ? 'text-indigo-600' : 'text-rose-600'}">${escapeHtml(row.kode_mk_ekuivalen || 'KOSONG')}</td>
+                        <td class="p-2.5">
+                            <div class="font-medium text-slate-800">${escapeHtml(row.nama_mk_ekuivalen || '-')}</div>
+                            ${row.isValid ? '' : `<div class="text-[10px] text-rose-600 font-bold mt-0.5">✕ ${escapeHtml(row.errors.join(', '))}</div>`}
+                        </td>
+                        <td class="p-2.5 text-center font-mono font-bold">${row.sks_ekuivalen}</td>
+                        <td class="p-2.5 text-slate-600 text-[11px]">${escapeHtml(row.kurikulum_asal)}</td>
+                        <td class="p-2.5 text-slate-500 text-[11px]">${escapeHtml(row.keterangan || '-')}</td>
+                    </tr>
+                `).join('');
+            }
+
+            if (btnSave) {
+                if (validCount > 0) {
+                    btnSave.disabled = false;
+                    btnSave.innerText = `Simpan (${validCount} Baris Valid) ke Database`;
+                } else {
+                    btnSave.disabled = true;
+                    btnSave.innerText = 'Tidak Ada Data Valid';
+                }
+            }
+
+            if (note) {
+                note.innerText = `${validCount} baris valid siap diimport. ${errorCount > 0 ? `${errorCount} baris tidak lengkap akan dilewati.` : ''}`;
+            }
+        }
+
+        async function sendImportEkuivalensi() {
+            const validRows = parsedEkuiExcelData.filter(r => r.isValid);
+            if (validRows.length === 0) {
+                Swal.fire('Peringatan', 'Tidak ada data ekuivalensi valid untuk disimpan.', 'warning');
+                return;
+            }
+
+            const btn = document.getElementById('btnSaveImportEkui');
+            if (btn) {
+                btn.disabled = true;
+                btn.innerText = 'Memproses ke database...';
+            }
+
+            try {
+                const res = await fetch('<?= site_url("prodi/perwalian/import_ekuivalensi_bulk") ?>', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows: validRows })
+                });
+                const json = await res.json();
+                if (json.status === 'success') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Import Berhasil!',
+                        html: `
+                            <div class="text-left text-xs space-y-1 mt-2">
+                                <p class="font-bold text-slate-800">${json.message}</p>
+                                <p class="text-emerald-700 font-medium">✓ ${json.imported || validRows.length} pemetaan ekuivalensi berhasil dimasukkan/diperbarui.</p>
+                            </div>
+                        `
+                    }).then(() => {
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire('Gagal Import', json.message || 'Terjadi kesalahan saat mengimport data.', 'error');
+                }
+            } catch (err) {
+                console.error(err);
+                Swal.fire('Error', 'Gagal memproses import data ekuivalensi.', 'error');
+            } finally {
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Simpan ke Database';
+                }
+            }
+        }
+
+        function downloadTemplateEkuivalensi() {
+            const sampleData = [
+                {
+                    'Kode MK Utama': 'CS101',
+                    'Kode MK Ekuivalen': 'IF101',
+                    'Nama MK Ekuivalen': 'Algoritma & Pemrograman I',
+                    'SKS Ekuivalen': 2,
+                    'Kurikulum Asal': 'Kurikulum 2020',
+                    'Keterangan': 'MK Pendamping 1 (Kombinasi SKS)'
+                },
+                {
+                    'Kode MK Utama': 'CS101',
+                    'Kode MK Ekuivalen': 'IF102',
+                    'Nama MK Ekuivalen': 'Praktikum Algoritma & Pemrograman',
+                    'SKS Ekuivalen': 1,
+                    'Kurikulum Asal': 'Kurikulum 2020',
+                    'Keterangan': 'MK Pendamping 2 (Kombinasi SKS)'
+                },
+                {
+                    'Kode MK Utama': 'CS102',
+                    'Kode MK Ekuivalen': 'IF201',
+                    'Nama MK Ekuivalen': 'Struktur Data & Algoritma',
+                    'SKS Ekuivalen': 4,
+                    'Kurikulum Asal': 'Kurikulum 2020',
+                    'Keterangan': 'Ekuivalensi Penuh'
+                },
+                {
+                    'Kode MK Utama': 'CS201',
+                    'Kode MK Ekuivalen': 'IF301',
+                    'Nama MK Ekuivalen': 'Pemrograman Berbasis Web',
+                    'SKS Ekuivalen': 3,
+                    'Kurikulum Asal': 'Kurikulum MBKM',
+                    'Keterangan': 'Ekuivalensi MBKM'
+                }
+            ];
+
+            const ws = XLSX.utils.json_to_sheet(sampleData);
+            ws['!cols'] = [
+                { wch: 18 }, // Kode MK Utama
+                { wch: 20 }, // Kode MK Ekuivalen
+                { wch: 38 }, // Nama MK Ekuivalen
+                { wch: 14 }, // SKS Ekuivalen
+                { wch: 20 }, // Kurikulum Asal
+                { wch: 36 }  // Keterangan
+            ];
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, 'Template Ekuivalensi MK');
+            XLSX.writeFile(wb, 'template_ekuivalensi_mata_kuliah.xlsx');
         }
 
         // --- DOSEN WALI ASSIGNMENT ---
@@ -1803,6 +2841,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             setupDropzone(document.getElementById('krsDropzone'), document.getElementById('fileKRSInput'), processKRSFile);
             setupDropzone(document.getElementById('mkDropzone'), document.getElementById('fileMKInput'), processMKFile);
+            setupDropzone(document.getElementById('ekuiDropzone'), document.getElementById('fileEkuiInput'), processEkuiFile);
         });
     </script>
 </body>

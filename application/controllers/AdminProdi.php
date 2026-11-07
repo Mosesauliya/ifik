@@ -90,10 +90,11 @@ class AdminProdi extends CI_Controller {
         }
         $data['prodi_list'] = $prodiList;
 
-        // 1. Data Mata Kuliah
+        // 1. Data Mata Kuliah & Ekuivalensi
         $data['mata_kuliah'] = $this->Perwalian_model->get_mata_kuliah([
             'prodi' => $selectedProdi,
         ]);
+        $data['ekuivalensi_summary'] = $this->Perwalian_model->get_all_ekuivalensi_summary();
 
         // 2. Data Monitoring Mahasiswa
         $data['monitoring'] = $this->Perwalian_model->get_monitoring_list([
@@ -362,5 +363,230 @@ class AdminProdi extends CI_Controller {
                 'message' => 'Gagal mereset status perwalian mahasiswa.'
             ]));
         }
+    }
+
+    // =========================================================================
+    // AJAX: EKUIVALENSI MATA KULIAH
+    // =========================================================================
+
+    /**
+     * AJAX: Ambil data ekuivalensi untuk MK utama & calon kandidat MK ekuivalen
+     */
+    public function get_ekuivalensi_ajax($id_mk_utama) {
+        $this->output->set_content_type('application/json');
+        $id = (int)$id_mk_utama;
+        $mkUtama = $this->Perwalian_model->get_mata_kuliah_by_id($id);
+
+        if (!$mkUtama) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Mata kuliah utama tidak ditemukan.'
+            ]));
+            return;
+        }
+
+        $items = $this->Perwalian_model->get_ekuivalensi_by_mk_utama($id);
+        $totalSksEkuiv = 0;
+        foreach ($items as $it) {
+            $totalSksEkuiv += (int)$it['sks_ekuivalen'];
+        }
+
+        $targetSks = (int)$mkUtama['sks'];
+        $selisih = $totalSksEkuiv - $targetSks;
+        $statusSks = 'terpenuhi';
+        if ($totalSksEkuiv < $targetSks) {
+            $statusSks = 'kurang';
+        } elseif ($totalSksEkuiv > $targetSks) {
+            $statusSks = 'lebih';
+        }
+
+        // Ambil semua master MK untuk opsi multi-select (kecuali MK ini sendiri)
+        $allMK = $this->Perwalian_model->get_mata_kuliah([], 1000, 0);
+        $kandidatMK = [];
+        $existingCodes = array_column($items, 'kode_mk_ekuivalen');
+
+        foreach ($allMK as $m) {
+            if ($m['id'] != $id) {
+                $isLinked = in_array($m['kode_mk'], $existingCodes);
+                $kandidatMK[] = [
+                    'id'        => $m['id'],
+                    'kode_mk'   => $m['kode_mk'],
+                    'nama_mk'   => $m['nama_mk'],
+                    'sks'       => (int)$m['sks'],
+                    'semester'  => (int)$m['semester'],
+                    'prodi'     => $m['prodi'] ?: '-',
+                    'kurikulum' => $m['kurikulum'] ?: '2024',
+                    'is_linked' => $isLinked
+                ];
+            }
+        }
+
+        $this->output->set_output(json_encode([
+            'status'              => 'success',
+            'mk_utama'            => $mkUtama,
+            'ekuivalensi'         => $items,
+            'items'               => $items,
+            'total_sks_ekuivalen' => $totalSksEkuiv,
+            'total_sks'           => $totalSksEkuiv,
+            'target_sks'          => $targetSks,
+            'status_sks'          => $statusSks,
+            'sks_status'          => $statusSks,
+            'selisih_sks'         => $selisih,
+            'kandidat_mk'         => $kandidatMK,
+            'master_candidates'   => $kandidatMK
+        ]));
+    }
+
+    /**
+     * AJAX: Simpan item ekuivalensi (Single Manual atau Batch Multi-Select MK)
+     */
+    public function simpan_ekuivalensi_ajax() {
+        $this->output->set_content_type('application/json');
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true) ?: [];
+
+        $idMkUtama = (int)($json['id_mk_utama'] ?? $this->input->post('id_mk_utama'));
+        $mkUtama = $this->Perwalian_model->get_mata_kuliah_by_id($idMkUtama);
+
+        if (!$mkUtama) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Mata kuliah utama tidak ditemukan.'
+            ]));
+            return;
+        }
+
+        // Jika dikirim array multi-select kandidat MK (candidate_ids / selected_mk_ids)
+        $multiCandidateIds = $json['candidate_ids'] ?? ($json['selected_mk_ids'] ?? ($json['ids'] ?? []));
+        if (!empty($multiCandidateIds) && is_array($multiCandidateIds)) {
+            $ids = array_map('intval', $multiCandidateIds);
+            $count = 0;
+            foreach ($ids as $candidateId) {
+                $cand = $this->Perwalian_model->get_mata_kuliah_by_id($candidateId);
+                if ($cand && $cand['id'] != $idMkUtama) {
+                    $this->Perwalian_model->save_ekuivalensi_item([
+                        'id_mk_utama'       => $idMkUtama,
+                        'kode_mk_utama'     => $mkUtama['kode_mk'],
+                        'kode_mk_ekuivalen' => $cand['kode_mk'],
+                        'nama_mk_ekuivalen' => $cand['nama_mk'],
+                        'sks_ekuivalen'     => (int)$cand['sks'],
+                        'kurikulum_asal'    => $cand['kurikulum'] ?: 'Master Kurikulum',
+                        'prodi_asal'        => $cand['prodi'] ?: ($mkUtama['prodi'] ?? ''),
+                        'keterangan'        => 'Ditautkan dari Master MK'
+                    ]);
+                    $count++;
+                }
+            }
+
+            $this->output->set_output(json_encode([
+                'status'  => 'success',
+                'message' => "$count mata kuliah ekuivalen berhasil ditambahkan."
+            ]));
+            return;
+        }
+
+        // Jika dikirim manual item (bisa di root atau di dalam array items[0])
+        $manualItem = (!empty($json['items']) && is_array($json['items'])) ? $json['items'][0] : $json;
+
+        $kodeEkuiv = strtoupper(trim((string)($manualItem['kode_mk_ekuivalen'] ?? $this->input->post('kode_mk_ekuivalen'))));
+        $namaEkuiv = trim((string)($manualItem['nama_mk_ekuivalen'] ?? $this->input->post('nama_mk_ekuivalen')));
+        $sksEkuiv  = (int)($manualItem['sks_ekuivalen'] ?? $this->input->post('sks_ekuivalen'));
+        $kurikulum = trim((string)($manualItem['kurikulum_asal'] ?? $this->input->post('kurikulum_asal')));
+        $prodiAsal = trim((string)($manualItem['prodi_asal'] ?? $this->input->post('prodi_asal')));
+        $ket       = trim((string)($manualItem['keterangan'] ?? $this->input->post('keterangan')));
+
+        if (empty($kodeEkuiv) || empty($namaEkuiv) || $sksEkuiv <= 0) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Kode MK, Nama MK, dan SKS ekuivalen wajib diisi.'
+            ]));
+            return;
+        }
+
+        $saveId = $this->Perwalian_model->save_ekuivalensi_item([
+            'id_mk_utama'       => $idMkUtama,
+            'kode_mk_utama'     => $mkUtama['kode_mk'],
+            'kode_mk_ekuivalen' => $kodeEkuiv,
+            'nama_mk_ekuivalen' => $namaEkuiv,
+            'sks_ekuivalen'     => $sksEkuiv,
+            'kurikulum_asal'    => !empty($kurikulum) ? $kurikulum : 'Kurikulum Lama',
+            'prodi_asal'        => !empty($prodiAsal) ? $prodiAsal : ($mkUtama['prodi'] ?? ''),
+            'keterangan'        => $ket
+        ]);
+
+        if ($saveId) {
+            $this->output->set_output(json_encode([
+                'status'  => 'success',
+                'message' => 'Mata kuliah ekuivalen berhasil disimpan.'
+            ]));
+        } else {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Gagal menyimpan mata kuliah ekuivalen.'
+            ]));
+        }
+    }
+
+    /**
+     * AJAX: Hapus item ekuivalensi
+     */
+    public function hapus_ekuivalensi_ajax() {
+        $this->output->set_content_type('application/json');
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true);
+
+        $id = (int)($json['id'] ?? $this->input->post('id'));
+        if ($id <= 0) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'ID ekuivalensi tidak valid.'
+            ]));
+            return;
+        }
+
+        $this->Perwalian_model->delete_ekuivalensi_item($id);
+        $this->output->set_output(json_encode([
+            'status'  => 'success',
+            'message' => 'Item ekuivalensi berhasil dihapus.'
+        ]));
+    }
+
+    /**
+     * AJAX: Import Bulk Ekuivalensi dari Excel SheetJS
+     */
+    public function import_ekuivalensi_bulk() {
+        @set_time_limit(300);
+        $this->output->set_content_type('application/json');
+
+        $rawInput = file_get_contents('php://input');
+        $json = json_decode($rawInput, true) ?: [];
+
+        $rows = $json['items'] ?? ($json['rows'] ?? []);
+        if (empty($rows) || !is_array($rows)) {
+            $this->output->set_output(json_encode([
+                'status'  => 'error',
+                'message' => 'Data ekuivalensi kosong atau format tidak sesuai.'
+            ]));
+            return;
+        }
+
+        $res = $this->Perwalian_model->upsert_ekuivalensi_bulk($rows);
+
+        $msgParts = [];
+        if ($res['inserted'] > 0) $msgParts[] = "{$res['inserted']} data baru berhasil disimpan";
+        if ($res['updated'] > 0)  $msgParts[] = "{$res['updated']} data berhasil diperbarui";
+        if ($res['skipped'] > 0)  $msgParts[] = "{$res['skipped']} data dilewati/tidak valid";
+
+        $message = !empty($msgParts) ? implode(', ', $msgParts) . '.' : 'Tidak ada data valid yang diproses.';
+        $status = ($res['inserted'] > 0 || $res['updated'] > 0) ? 'success' : 'warning';
+
+        $this->output->set_output(json_encode([
+            'status'   => $status,
+            'message'  => $message,
+            'inserted' => $res['inserted'],
+            'updated'  => $res['updated'],
+            'skipped'  => $res['skipped'],
+            'errors'   => $res['errors']
+        ]));
     }
 }

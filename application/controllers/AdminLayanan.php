@@ -1944,6 +1944,162 @@ class AdminLayanan extends CI_Controller {
     }
 
     /**
+     * AJAX Endpoint: Update status kelayakan referensi langsung dari Dokumen BAP (Klik langsung di dokumen)
+     */
+    public function ajax_update_layak_referensi() {
+        header('Content-Type: application/json');
+
+        $nim = trim($this->input->post('nim') ?? '');
+        $is_layak = $this->input->post('is_layak');
+
+        if (empty($nim) || $is_layak === null) {
+            echo json_encode(['status' => false, 'message' => 'NIM atau status kelayakan referensi tidak valid.']);
+            return;
+        }
+
+        $is_layak = (int)$is_layak ? 1 : 0;
+
+        $g = $this->db->where('id_mhs', $nim)->order_by('id', 'DESC')->get('guidance')->row_array();
+        if (!$g) {
+            $u = $this->db->where('nim', $nim)->get('user')->row_array();
+            if ($u) {
+                $g = $this->db->where('id_mhs', $u['id'])->order_by('id', 'DESC')->get('guidance')->row_array();
+            }
+        }
+
+        if (!$g) {
+            echo json_encode(['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.']);
+            return;
+        }
+
+        $update = [];
+
+        if ($this->db->field_exists('layak_referensi', 'guidance')) {
+            $update['layak_referensi'] = $is_layak;
+        }
+
+        $map_catatan = ['penilaiansidang_penguji1', 'catatan_penguji1', 'catatansidang_penguji1'];
+        foreach ($map_catatan as $colCatatan) {
+            if ($this->db->field_exists($colCatatan, 'guidance')) {
+                $raw = $g[$colCatatan] ?? '';
+                $payload = [];
+                if (!empty($raw)) {
+                    $decoded = json_decode($raw, true);
+                    if (is_array($decoded)) {
+                        $payload = $decoded;
+                    } else {
+                        $payload = ['catatan' => (string)$raw];
+                    }
+                }
+                if (!isset($payload['catatan']) || (is_string($payload['catatan']) && !empty($payload['catatan']) && $payload['catatan'][0] === '{')) {
+                    if (isset($payload['catatan']) && is_string($payload['catatan']) && !empty($payload['catatan']) && $payload['catatan'][0] === '{') {
+                        $subDec = json_decode($payload['catatan'], true);
+                        $payload['catatan'] = is_array($subDec) ? ($subDec['catatan'] ?? '') : '';
+                    } else {
+                        $payload['catatan'] = '';
+                    }
+                }
+                $payload['layak_referensi'] = $is_layak;
+                $update[$colCatatan] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        if (!empty($update)) {
+            $this->db->where('id', $g['id'])->update('guidance', $update);
+        }
+
+        if ($this->db->table_exists('thesis') && $this->db->field_exists('layak_referensi', 'thesis')) {
+            $this->db->where('id_guidance', $g['id'])->update('thesis', ['layak_referensi' => $is_layak]);
+        }
+
+        echo json_encode([
+            'status'   => true,
+            'message'  => $is_layak ? 'Status diubah: LAYAK dijadikan referensi.' : 'Status diubah: TIDAK LAYAK dijadikan referensi.',
+            'is_layak' => $is_layak
+        ]);
+    }
+
+    /**
+     * AJAX Endpoint: Update status keputusan kelulusan sidang fakultas langsung dari Dokumen BAP (Dokumen 2)
+     */
+    public function ajax_update_keputusan_sidang() {
+        header('Content-Type: application/json');
+
+        $nim = trim($this->input->post('nim') ?? '');
+        $keputusan = trim($this->input->post('keputusan') ?? '');
+
+        $valid_options = [
+            'lulus'         => 'Lulus',
+            'lulus_revisi'  => 'Lulus, dengan keharusan untuk memperbaiki selama 1 Minggu',
+            'ditangguhkan'  => 'Ditangguhkan dengan keharusan untuk memperbaiki Karya Seni/Desain selama 1 Minggu'
+        ];
+
+        if (empty($nim) || !isset($valid_options[$keputusan])) {
+            echo json_encode(['status' => false, 'message' => 'NIM atau opsi keputusan tidak valid.']);
+            return;
+        }
+
+        $g = $this->db->where('id_mhs', $nim)->order_by('id', 'DESC')->get('guidance')->row_array();
+        if (!$g) {
+            $u = $this->db->where('nim', $nim)->get('user')->row_array();
+            if ($u) {
+                $g = $this->db->where('id_mhs', $u['id'])->order_by('id', 'DESC')->get('guidance')->row_array();
+            }
+        }
+
+        if (!$g) {
+            echo json_encode(['status' => false, 'message' => 'Data bimbingan mahasiswa tidak ditemukan.']);
+            return;
+        }
+
+        $update = [];
+
+        if ($this->db->field_exists('keputusan_sidang_fakultas', 'guidance')) {
+            $update['keputusan_sidang_fakultas'] = $keputusan;
+        }
+
+        $map_catatan = ['penilaiansidang_penguji1', 'catatan_penguji1', 'catatansidang_penguji1'];
+        foreach ($map_catatan as $colCatatan) {
+            if ($this->db->field_exists($colCatatan, 'guidance')) {
+                $raw = $g[$colCatatan] ?? '';
+                $payload = [];
+                if (!empty($raw)) {
+                    $decoded = json_decode($raw, true);
+                    if (is_array($decoded)) {
+                        $payload = $decoded;
+                    } else {
+                        $payload = ['catatan' => (string)$raw];
+                    }
+                }
+                if (!isset($payload['catatan']) || (is_string($payload['catatan']) && !empty($payload['catatan']) && $payload['catatan'][0] === '{')) {
+                    if (isset($payload['catatan']) && is_string($payload['catatan']) && !empty($payload['catatan']) && $payload['catatan'][0] === '{') {
+                        $subDec = json_decode($payload['catatan'], true);
+                        $payload['catatan'] = is_array($subDec) ? ($subDec['catatan'] ?? '') : '';
+                    } else {
+                        $payload['catatan'] = '';
+                    }
+                }
+                $payload['keputusan_sidang_fakultas'] = $keputusan;
+                $update[$colCatatan] = json_encode($payload, JSON_UNESCAPED_UNICODE);
+            }
+        }
+
+        if (!empty($update)) {
+            $this->db->where('id', $g['id'])->update('guidance', $update);
+        }
+
+        if ($this->db->table_exists('thesis') && $this->db->field_exists('keputusan_sidang_fakultas', 'thesis')) {
+            $this->db->where('id_guidance', $g['id'])->update('thesis', ['keputusan_sidang_fakultas' => $keputusan]);
+        }
+
+        echo json_encode([
+            'status'    => true,
+            'message'   => 'Keputusan diubah: ' . $valid_options[$keputusan],
+            'keputusan' => $keputusan
+        ]);
+    }
+
+    /**
      * Routing Kelola Berita LAA -> News/newsroom
      */
     public function berita() {

@@ -3244,20 +3244,9 @@ class AdminLayanan_model extends CI_Model {
             return $trimmed;
         };
 
-        $notes = [];
+        // 3. Catatan khusus dari Ketua Tim Penguji (Penguji 1 / Ketua Sidang)
         $note_pj1 = $extract_note($g_row['penilaiansidang_penguji1'] ?? ($g_row['evaluasi_penguji1'] ?? ''));
-        $note_pj2 = $extract_note($g_row['penilaiansidang_penguji2'] ?? ($g_row['evaluasi_penguji2'] ?? ''));
-        $note_p1  = $extract_note($g_row['penilaiansidang_pembimbing1'] ?? ($g_row['evaluasi_pembimbing1'] ?? ''));
-        $note_p2  = $extract_note($g_row['penilaiansidang_pembimbing2'] ?? ($g_row['evaluasi_pembimbing2'] ?? ''));
-
-        if (!empty($note_pj1)) $notes[] = "Penguji 1: " . $note_pj1;
-        if (!empty($note_pj2)) $notes[] = "Penguji 2: " . $note_pj2;
-        if (!empty($note_p1))  $notes[] = "Pembimbing 1: " . $note_p1;
-        if (!empty($note_p2))  $notes[] = "Pembimbing 2: " . $note_p2;
-
-        $catatan_penguji = !empty($notes) 
-            ? implode("\n", $notes) 
-            : ($has_real_scores ? '-' : 'Perbaiki beberapa format sitasi pada Bab 4 dan perjelas diagram kerangka penelitian.');
+        $catatan_penguji = !empty($note_pj1) ? $note_pj1 : '-';
 
         // 3b. Cek keputusan kelayakan referensi khusus dari Penguji 1 (Ketua Sidang)
         $is_layak_referensi = null;
@@ -3272,6 +3261,25 @@ class AdminLayanan_model extends CI_Model {
         }
         if ($is_layak_referensi === null) {
             $is_layak_referensi = ($indeks !== 'E' && $indeks !== 'D' && $indeks !== '-');
+        }
+
+        // 3c. Cek keputusan status kelulusan khusus BAP Fakultas dari Penguji 1 (Ketua Sidang)
+        $keputusan_fakultas = null;
+        if (!empty($g_row['penilaiansidang_penguji1'])) {
+            $dec_pj1 = json_decode($g_row['penilaiansidang_penguji1'], true);
+            if (is_array($dec_pj1) && !empty($dec_pj1['keputusan_sidang_fakultas'])) {
+                $keputusan_fakultas = $dec_pj1['keputusan_sidang_fakultas'];
+            }
+        }
+        if ($keputusan_fakultas === null && isset($g_row['keputusan_sidang_fakultas']) && !empty($g_row['keputusan_sidang_fakultas'])) {
+            $keputusan_fakultas = $g_row['keputusan_sidang_fakultas'];
+        }
+        if ($keputusan_fakultas === null) {
+            if ($indeks === 'E' || $indeks === 'D') {
+                $keputusan_fakultas = 'ditangguhkan';
+            } else {
+                $keputusan_fakultas = 'lulus';
+            }
         }
 
         // 4. Jadwal & Waktu Sidang Dinamis
@@ -3375,6 +3383,7 @@ class AdminLayanan_model extends CI_Model {
             'nilai_akhir'      => $nilai_akhir,
             'indeks_huruf'     => $indeks,
             'hasil_sidang'     => $hasil_sidang,
+            'keputusan_sidang_fakultas' => $keputusan_fakultas,
             'ketua_sidang'     => $mhs['penguji_1']
         );
     }

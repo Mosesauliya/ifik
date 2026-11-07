@@ -52,7 +52,8 @@
                 border-radius: 0 !important;
             }
             .page-break { page-break-before: always; border-top: none; margin-top: 0; padding-top: 0; }
-            .no-print, #bapToolbar { display: none !important; }
+            .checkbox-item { cursor: default !important; padding: 0 !important; background: none !important; box-shadow: none !important; }
+            .live-hint-badge, .live-toast, .no-print, #bapToolbar { display: none !important; }
         }
         /* Mode Embed / Iframe: Hapus padding luar dan sembunyikan toolbar */
         body.is-embedded {
@@ -210,12 +211,29 @@
         }
         .checkbox-group {
             margin: 15px 0 25px 0;
+            position: relative;
         }
         .checkbox-item {
             display: flex;
             align-items: flex-start;
             gap: 10px;
             margin: 6px 0;
+            padding: 4px 8px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.15s ease-in-out;
+            user-select: none;
+        }
+        .checkbox-item:hover {
+            background-color: #fef3c7;
+            color: #b45309;
+            box-shadow: 0 0 0 1px #f59e0b;
+        }
+        .checkbox-item:hover .checkbox-box {
+            border-color: #b45309;
+        }
+        .checkbox-item.is-selected {
+            background-color: #fffbeb;
         }
         .checkbox-box {
             width: 15px;
@@ -225,9 +243,49 @@
             align-items: center;
             justify-content: center;
             font-weight: bold;
-            font-size: 10pt;
+            font-size: 11pt;
+            line-height: 1;
             margin-top: 1px;
             flex-shrink: 0;
+            background: #ffffff;
+            transition: all 0.15s ease;
+        }
+        .live-hint-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-size: 8pt;
+            font-weight: 700;
+            color: #b45309;
+            background: #fffbeb;
+            border: 1px solid #fde68a;
+            padding: 2px 8px;
+            border-radius: 12px;
+            margin-left: 8px;
+            vertical-align: middle;
+            user-select: none;
+        }
+        .live-toast {
+            position: absolute;
+            left: 0;
+            bottom: -28px;
+            font-size: 8.5pt;
+            font-weight: 700;
+            color: #065f46;
+            background: #d1fae5;
+            border: 1px solid #6ee7b7;
+            padding: 3px 12px;
+            border-radius: 6px;
+            opacity: 0;
+            transform: translateY(4px);
+            transition: all 0.25s ease;
+            pointer-events: none;
+            z-index: 10;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+        }
+        .live-toast.show {
+            opacity: 1;
+            transform: translateY(0);
         }
         .range-table {
             width: 60%;
@@ -480,28 +538,41 @@
                 </tbody>
             </table>
 
-            <p style="margin-top: 15px;">
-                Atas nama Tim Penguji menetapkan hasil akhir penilaian pada Sidang Tugas Akhir adalah:
+            <p style="margin-top: 15px; display: flex; align-items: center; flex-wrap: wrap;">
+                <span>Atas nama Tim Penguji menetapkan hasil akhir penilaian pada Sidang Tugas Akhir adalah:</span>
+                <span class="live-hint-badge no-print" title="Klik langsung opsi di bawah untuk menetapkan keputusan kelulusan sidang">
+                    👆 Klik langsung opsi di bawah untuk ubah
+                </span>
             </p>
 
             <!-- Checkbox Keputusan Kelulusan -->
             <?php 
                 $indeks = $bap['indeks_huruf'] ?? 'B';
-                $status_lulus = ($indeks !== 'E' && $indeks !== 'D');
+                $cur_keputusan = $bap['keputusan_sidang_fakultas'] ?? (($indeks !== 'E' && $indeks !== 'D') ? 'lulus' : 'ditangguhkan');
             ?>
             <div class="checkbox-group">
-                <div class="checkbox-item">
-                    <div class="checkbox-box"><?= $status_lulus ? '&#10003;' : ''; ?></div>
+                <div id="itemKeputusan_lulus" 
+                     class="checkbox-item <?= $cur_keputusan === 'lulus' ? 'is-selected' : ''; ?>"
+                     onclick="setKeputusanFakultas('lulus')"
+                     title="Klik untuk memilih: Lulus">
+                    <div class="checkbox-box" id="boxKeputusan_lulus"><?= $cur_keputusan === 'lulus' ? '&#10003;' : ''; ?></div>
                     <div><strong>Lulus</strong></div>
                 </div>
-                <div class="checkbox-item">
-                    <div class="checkbox-box"></div>
+                <div id="itemKeputusan_lulus_revisi" 
+                     class="checkbox-item <?= $cur_keputusan === 'lulus_revisi' ? 'is-selected' : ''; ?>"
+                     onclick="setKeputusanFakultas('lulus_revisi')"
+                     title="Klik untuk memilih: Lulus, dengan keharusan untuk memperbaiki selama 1 Minggu">
+                    <div class="checkbox-box" id="boxKeputusan_lulus_revisi"><?= $cur_keputusan === 'lulus_revisi' ? '&#10003;' : ''; ?></div>
                     <div>Lulus, dengan keharusan untuk memperbaiki selama 1 Minggu</div>
                 </div>
-                <div class="checkbox-item">
-                    <div class="checkbox-box"><?= !$status_lulus ? '&#10003;' : ''; ?></div>
+                <div id="itemKeputusan_ditangguhkan" 
+                     class="checkbox-item <?= $cur_keputusan === 'ditangguhkan' ? 'is-selected' : ''; ?>"
+                     onclick="setKeputusanFakultas('ditangguhkan')"
+                     title="Klik untuk memilih: Ditangguhkan dengan keharusan untuk memperbaiki Karya Seni/Desain selama 1 Minggu">
+                    <div class="checkbox-box" id="boxKeputusan_ditangguhkan"><?= $cur_keputusan === 'ditangguhkan' ? '&#10003;' : ''; ?></div>
                     <div>Ditangguhkan dengan keharusan untuk memperbaiki Karya Seni/Desain selama 1 Minggu</div>
                 </div>
+                <div id="liveToastKeputusan" class="live-toast no-print"></div>
             </div>
 
             <!-- Tanggal & TTD Ketua Sidang -->
@@ -551,6 +622,70 @@
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <script>
+        const ST_NIM_MHS = '<?= htmlspecialchars($bap['nim'] ?? '') ?>';
+        let isSavingKeputusan = false;
+
+        function setKeputusanFakultas(keputusan) {
+            if (isSavingKeputusan || !ST_NIM_MHS) return;
+
+            const allKeys = ['lulus', 'lulus_revisi', 'ditangguhkan'];
+            allKeys.forEach(k => {
+                const item = document.getElementById('itemKeputusan_' + k);
+                const box  = document.getElementById('boxKeputusan_' + k);
+                if (k === keputusan) {
+                    if (item) item.classList.add('is-selected');
+                    if (box)  box.innerHTML = '&#10003;';
+                } else {
+                    if (item) item.classList.remove('is-selected');
+                    if (box)  box.innerHTML = '';
+                }
+            });
+
+            const toast = document.getElementById('liveToastKeputusan');
+            isSavingKeputusan = true;
+
+            const fd = new FormData();
+            fd.append('nim', ST_NIM_MHS);
+            fd.append('keputusan', keputusan);
+
+            fetch('<?= site_url('adminlayanan/ajax_update_keputusan_sidang') ?>', {
+                method: 'POST',
+                body: fd,
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            })
+            .then(r => r.json())
+            .then(res => {
+                isSavingKeputusan = false;
+                if (toast) {
+                    if (res && res.status) {
+                        toast.textContent = '✓ ' + (res.message || 'Keputusan sidang berhasil diperbarui.');
+                        toast.style.color = '#065f46';
+                        toast.style.background = '#d1fae5';
+                        toast.style.borderColor = '#6ee7b7';
+                    } else {
+                        toast.textContent = '⚠ ' + (res.message || 'Gagal menyimpan perubahan.');
+                        toast.style.color = '#991b1b';
+                        toast.style.background = '#fee2e2';
+                        toast.style.borderColor = '#fca5a5';
+                    }
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2500);
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                isSavingKeputusan = false;
+                if (toast) {
+                    toast.textContent = '⚠ Gagal koneksi ke server.';
+                    toast.style.color = '#991b1b';
+                    toast.style.background = '#fee2e2';
+                    toast.style.borderColor = '#fca5a5';
+                    toast.classList.add('show');
+                    setTimeout(() => toast.classList.remove('show'), 2500);
+                }
+            });
+        }
+
         function downloadBapPdf() {
             const element = document.querySelector('.page-container');
             const btn = document.getElementById('btnDownloadPdf');
@@ -558,6 +693,10 @@
                 btn.disabled = true;
                 btn.innerText = '⏳ Mengunduh PDF...';
             }
+
+            // Sembunyikan elemen no-print sementara agar tidak masuk ke PDF
+            const noPrints = element.querySelectorAll('.no-print, .live-hint-badge, .live-toast');
+            noPrints.forEach(el => el.style.visibility = 'hidden');
 
             const opt = {
                 margin:       [10, 15, 10, 15],
@@ -569,9 +708,16 @@
             };
 
             html2pdf().set(opt).from(element).save().then(function() {
+                noPrints.forEach(el => el.style.visibility = '');
                 if (btn) {
                     btn.disabled = false;
                     btn.innerText = '✅ Terunduh (Klik Ulang)';
+                }
+            }).catch(function() {
+                noPrints.forEach(el => el.style.visibility = '');
+                if (btn) {
+                    btn.disabled = false;
+                    btn.innerText = 'Cetak / Unduh PDF';
                 }
             });
         }
